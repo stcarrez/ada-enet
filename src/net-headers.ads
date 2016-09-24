@@ -15,7 +15,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Interfaces;
 package Net.Headers is
 
    --  Convert integers to network byte order.
@@ -30,7 +29,7 @@ package Net.Headers is
    type Ether_Header is record
       Ether_Dhost : Ether_Addr;
       Ether_Shost : Ether_Addr;
-      Ether_Type  : UInt16;
+      Ether_Type  : Uint16;
    end record;
    type Ether_Header_Access is access all Ether_Header;
 

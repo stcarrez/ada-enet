@@ -15,7 +15,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Net.Headers;
 with Net.Interfaces;
 with Net.Buffers;
 package Net.Protos.Arp is

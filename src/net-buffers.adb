@@ -18,9 +18,10 @@
 with Ada.Unchecked_Conversion;
 package body Net.Buffers is
 
-   ETHER_POS : constant Natural := 0;
-   IP_POS    : constant Natural := ETHER_POS + 14;
-   UDP_POS   : constant Natural := IP_POS + 20;
+   ETHER_POS  : constant Natural := 0;
+   IP_POS     : constant Natural := ETHER_POS + 14;
+   UDP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
+   IGMP_POS   : constant Natural := IP_POS + 24;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
    function As_Ethernet is
@@ -38,6 +39,10 @@ package body Net.Buffers is
    function As_Udp_Header is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.UDP_Header_Access);
+   function As_Igmp_Header is
+     new Ada.Unchecked_Conversion (Source => System.Address,
+                                   Target => Net.Headers.IGMP_Header_Access);
+
 
    protected Manager is
       procedure Allocate (Packet : out Packet_Buffer_Access);
@@ -173,6 +178,14 @@ package body Net.Buffers is
    begin
       return As_Udp_Header (Buf.Packet.Data (UDP_POS)'Address);
    end UDP;
+
+   --  ------------------------------
+   --  Get access to the IGMP header.
+   --  ------------------------------
+   function IGMP (Buf : in Buffer_Type) return Net.Headers.IGMP_Header_Access is
+   begin
+      return As_Igmp_Header (Buf.Packet.Data (IGMP_POS)'Address);
+   end IGMP;
 
    --  ------------------------------
    --  Returns True if the list is empty.

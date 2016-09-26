@@ -84,6 +84,10 @@ package Net.Buffers is
    function UDP (Buf : in Buffer_Type) return Net.Headers.UDP_Header_Access with
      Pre => not Buf.Is_Null;
 
+   --  Get access to the IGMP header.
+   function IGMP (Buf : in Buffer_Type) return Net.Headers.IGMP_Header_Access with
+     Pre => not Buf.Is_Null;
+
    --  The <tt>Buffer_List</tt> holds a set of network buffers.
    type Buffer_List is limited private;
 
@@ -128,7 +132,7 @@ private
    type Packet_Buffer;
    type Packet_Buffer_Access is access all Packet_Buffer;
 
-   type Packet_Buffer is record
+   type Packet_Buffer is limited record
       Next : Packet_Buffer_Access;
       Data : aliased Data_Type;
    end record;
@@ -143,7 +147,7 @@ private
       Tail : Packet_Buffer_Access := null;
    end record;
 
-   NET_ALLOC_SIZE : constant Uint32 := Packet_Buffer'Size / 8;
+   NET_ALLOC_SIZE : constant Uint32 := 4 + (Packet_Buffer'Size / 8);
    NET_BUF_SIZE   : constant Uint32 := Data_Type'Size / 8;
 
 end Net.Buffers;

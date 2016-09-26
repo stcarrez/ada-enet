@@ -38,4 +38,7 @@ package Net is
    use type Interfaces.Unsigned_16;
    use type Interfaces.Unsigned_32;
 
+   --  Returns true if the IPv4 address is a multicast address.
+   function Is_Multicast (IP : in Ip_Addr) return Boolean;
+
 end Net;

@@ -81,4 +81,21 @@ package Net.Headers is
    end record;
    type UDP_Header_Access is access all UDP_Header;
 
+   --  IGMP v2 packet header RFC 2236.
+   type IGMP_Header is record
+      Igmp_Type   : Uint8;
+      Igmp_Code   : Uint8;
+      Igmp_Cksum  : Uint16;
+      Igmp_Group  : Ip_Addr;
+   end record;
+   type IGMP_Header_Access is access all IGMP_Header;
+
+   IGMP_MEMBERSHIP_QUERY     : constant Uint8 := 16#11#;
+   IGMP_V1_MEMBERSHIP_REPORT : constant Uint8 := 16#12#;
+   IGMP_V2_MEMBERSHIP_REPORT : constant Uint8 := 16#16#;
+   IGMP_V3_MEMBERSHIP_REPORT : constant Uint8 := 16#22#; --  RFC 3376.
+   IGMP_V2_LEAVE_GROUP       : constant Uint8 := 16#17#;
+   IGMP_DVMRP                : constant Uint8 := 16#13#;
+   IGMP_PIM                  : constant Uint8 := 16#14#;
+
 end Net.Headers;

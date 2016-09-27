@@ -23,8 +23,8 @@ with Net.Buffers;
 package Net.Interfaces is
 
    type Stats_Type is record
+      Bytes    : Uint64 := 0;
       Packets  : Uint32 := 0;
-      Bytes    : Uint32 := 0;
       Dropped  : Uint32 := 0;
       Ignored  : Uint32 := 0;
    end record;

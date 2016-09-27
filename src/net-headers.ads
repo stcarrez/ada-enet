@@ -98,4 +98,17 @@ package Net.Headers is
    IGMP_DVMRP                : constant Uint8 := 16#13#;
    IGMP_PIM                  : constant Uint8 := 16#14#;
 
+   type TCP_Header is record
+      Th_Sport    : Uint16;
+      Th_Dport    : Uint16;
+      Th_Seq      : Uint32;
+      Th_Ack      : Uint32;
+      Th_Off      : Uint8;
+      Th_Flags    : Uint8;
+      Th_Win      : Uint16;
+      Th_Sum      : Uint16;
+      Th_Urp      : Uint16;
+   end record;
+   type TCP_Header_Access is access all TCP_Header;
+
 end Net.Headers;

@@ -84,6 +84,10 @@ package Net.Buffers is
    function UDP (Buf : in Buffer_Type) return Net.Headers.UDP_Header_Access with
      Pre => not Buf.Is_Null;
 
+   --  Get access to the TCP header.
+   function TCP (Buf : in Buffer_Type) return Net.Headers.TCP_Header_Access with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the IGMP header.
    function IGMP (Buf : in Buffer_Type) return Net.Headers.IGMP_Header_Access with
      Pre => not Buf.Is_Null;

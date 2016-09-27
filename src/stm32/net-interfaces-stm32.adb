@@ -139,8 +139,11 @@ package body Net.Interfaces.STM32 is
    procedure Receive (Ifnet : in out STM32_Ifnet;
                       Buf   : in out Net.Buffers.Buffer_Type) is
       pragma Unreferenced (Ifnet);
+      use type Net.Uint32;
    begin
       Receive_Queue.Wait_Packet (Buf);
+      Ifnet.Rx_Stats.Packets := Ifnet.Rx_Stats.Packets + 1;
+      Ifnet.Rx_Stats.Bytes := Ifnet.Rx_Stats.Bytes + Net.Uint32 (Buf.Get_Length);
    end Receive;
 
    --  ------------------------------

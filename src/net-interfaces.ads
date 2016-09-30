@@ -44,10 +44,14 @@ package Net.Interfaces is
 
    --  Send a packet to the interface.
    procedure Send (Ifnet : in out Ifnet_Type;
-                   Buf   : in out Net.Buffers.Buffer_Type) is abstract;
+                   Buf   : in out Net.Buffers.Buffer_Type) is abstract
+     with Pre'Class => not Buf.Is_Null,
+       Post'Class => Buf.Is_Null;
 
    --  Receive a packet from the interface.
    procedure Receive (Ifnet : in out Ifnet_Type;
-                      Buf   : in out Net.Buffers.Buffer_Type) is abstract;
+                      Buf   : in out Net.Buffers.Buffer_Type) is abstract
+     with Pre'Class => not Buf.Is_Null,
+       Post'Class => not Buf.Is_Null;
 
 end Net.Interfaces;

@@ -92,6 +92,10 @@ package Net.Buffers is
    function IGMP (Buf : in Buffer_Type) return Net.Headers.IGMP_Header_Access with
      Pre => not Buf.Is_Null;
 
+   --  Get access to the ICMP header.
+   function ICMP (Buf : in Buffer_Type) return Net.Headers.ICMP_Header_Access with
+     Pre => not Buf.Is_Null;
+
    --  The <tt>Buffer_List</tt> holds a set of network buffers.
    type Buffer_List is limited private;
 

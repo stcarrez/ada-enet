@@ -111,4 +111,13 @@ package Net.Headers is
    end record;
    type TCP_Header_Access is access all TCP_Header;
 
+   type ICMP_Header is record
+      Icmp_Type     : Uint8;
+      Icmp_Code     : Uint8;
+      Icmp_Checksum : Uint16;
+      Icmp_Id       : Uint16;  --  This should be an union
+      Icmp_Seq      : Uint16;
+   end record;
+   type ICMP_Header_Access is access all ICMP_Header;
+
 end Net.Headers;

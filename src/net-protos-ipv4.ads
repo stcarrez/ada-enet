@@ -24,6 +24,16 @@ package Net.Protos.IPv4 is
    P_TCP  : constant Net.Uint8 := 6;
    P_UDP  : constant Net.Uint8 := 17;
 
+   --  Make an IP packet identifier.
+   procedure Make_Ident (Ip : in Net.Headers.IP_Header_Access);
+
+   --  Make the IPv4 header for the source and destination IP addresses and protocol.
+   procedure Make_Header (Ip     : in Net.Headers.IP_Header_Access;
+                          Src    : in Ip_Addr;
+                          Dst    : in Ip_Addr;
+                          Proto  : in Uint8;
+                          Length : in Uint16);
+
    --  Send the raw IPv4 packet to the interface.  The destination Ethernet address is
    --  resolved from the ARP table and the packet Ethernet header updated.  The packet
    --  is send immediately when the destination Ethernet address is known, otherwise

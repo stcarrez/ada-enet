@@ -259,6 +259,9 @@ package body Net.Interfaces.STM32 is
          Ethernet_MAC_Periph.MACCR.TE := True;
          Ethernet_DMA_Periph.DMAIER.TIE := True;
          Ethernet_DMA_Periph.DMAIER.TBUIE := True;
+
+         --  Use Store-and-forward mode for the TCP/UDP/ICMP/IP checksum offload calculation.
+         Ethernet_DMA_Periph.DMAOMR.TSF := True;
          Ethernet_DMA_Periph.DMAOMR.SR := True;
       end Initialize;
 

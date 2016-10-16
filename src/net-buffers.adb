@@ -23,7 +23,7 @@ package body Net.Buffers is
    UDP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
    TCP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Natural := IP_POS + 24;
-   ICMP_POS   : constant Natural := IP_POS + 24;
+   ICMP_POS   : constant Natural := IP_POS + 20;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
    function As_Ethernet is

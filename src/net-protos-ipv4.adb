@@ -72,7 +72,7 @@ package body Net.Protos.IPv4 is
    begin
       Ip.Ip_Ihl := 16#45#;
       Ip.Ip_Tos := 0;
-      Ip.Ip_Off := 0;
+      Ip.Ip_Off := Net.Headers.To_Network (16#4000#);
       Ip.Ip_Ttl := 64;
       Ip.Ip_Sum := 0;
       Ip.Ip_Src := Src;

@@ -16,33 +16,25 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Net.Headers;
-with Net.Buffers;
 with Net.Protos.Arp;
 package body Net.Protos.IPv4 is
 
    use type Net.Protos.Arp.Arp_Status;
 
-   procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
-                   Target_Ip : in Ip_Addr;
-                   Packet    : in out Net.Buffers.Buffer_Type) is
+   --  ------------------------------
+   --  Send the raw IPv4 packet to the interface.  The destination Ethernet address is
+   --  resolved from the ARP table and the packet Ethernet header updated.  The packet
+   --  is send immediately when the destination Ethernet address is known, otherwise
+   --  it is queued and sent when the ARP resolution is successful.
+   --  ------------------------------
+   procedure Send_Raw (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
+                       Target_Ip : in Ip_Addr;
+                       Packet    : in out Net.Buffers.Buffer_Type) is
       Ether  : constant Net.Headers.Ether_Header_Access := Packet.Ethernet;
-      Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
       Status : Net.Protos.Arp.Arp_Status;
    begin
-      Ip.Ip_Ihl := 4;
-      Ip.Ip_Tos := 0;
-      Ip.Ip_Id  := 2;
-      Ip.Ip_Off := 0;
-      Ip.Ip_Ttl := 255;
-      Ip.Ip_Sum := 0;
-      Ip.Ip_Src := Ifnet.Ip;
-      Ip.Ip_Dst := Target_Ip;
-      Ip.Ip_P   := 4;
-      --  Ip.Ip_Len := Net.Headers.To_Network (Packet.Get_Length);
-      --  if Ifnet.Is_Local_Address (Target_Ip) then
-
       Ether.Ether_Shost := Ifnet.Mac;
-      Ether.Ether_Type  := Net.Headers.To_Network(Net.Protos.ETHERTYPE_IP);
+      Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
       Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Status);
       case Status is
          when Net.Protos.Arp.ARP_FOUND =>
@@ -56,6 +48,26 @@ package body Net.Protos.IPv4 is
             Net.Buffers.Release (Packet);
 
       end case;
+   end Send_Raw;
+
+   procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
+                   Target_Ip : in Ip_Addr;
+                   Packet    : in out Net.Buffers.Buffer_Type) is
+      Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
+   begin
+      Ip.Ip_Ihl := 4;
+      Ip.Ip_Tos := 0;
+      Ip.Ip_Id  := 2;
+      Ip.Ip_Off := 0;
+      Ip.Ip_Ttl := 255;
+      Ip.Ip_Sum := 0;
+      Ip.Ip_Src := Ifnet.Ip;
+      Ip.Ip_Dst := Target_Ip;
+      Ip.Ip_P   := 4;
+      --  Ip.Ip_Len := Net.Headers.To_Network (Packet.Get_Length);
+      --  if Ifnet.Is_Local_Address (Target_Ip) then
+
+      Send_Raw (Ifnet, Target_Ip, Packet);
    end Send;
 
 end Net.Protos.IPv4;

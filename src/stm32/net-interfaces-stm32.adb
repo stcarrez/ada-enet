@@ -191,9 +191,10 @@ package body Net.Interfaces.STM32 is
          Cortex_M.Cache.Clean_DCache (Addr, Integer (Size));
          Tx.Desc.Tdes2 := Addr;
          Tx.Desc.Tdes1.Tbs1 := Size;
-         Tx.Desc.Tdes0 := (Own => 1, Ter => 1, Cic => 0, Reserved_2 => 0,
-                           Ls  => 1, Fs  => 1, Ic => 0,
-                           Cc => 0,
+         Tx.Desc.Tdes0 := (Own => 1, Cic => 3, Reserved_2 => 0,
+                           Ls  => 1, Fs  => 1, Ic => 1,
+                           Cc => 0, Tch => 1,
+                           Ter => (if (Cur_Tx = Tx_Position'Last) then 1 else 0),
                            others => 0);
          Cortex_M.Cache.Clean_DCache (Tx.Desc'Address, Tx.Desc'Size / 8);
          Tx_Space := Tx_Space - 1;
@@ -225,6 +226,7 @@ package body Net.Interfaces.STM32 is
             Dma_Tx := Next_Tx (Dma_Tx);
             exit when Dma_Tx = Cur_Tx;
          end loop;
+         Ethernet_DMA_Periph.DMATPDR := 1;
       end Transmit_Interrupt;
 
       procedure Initialize is

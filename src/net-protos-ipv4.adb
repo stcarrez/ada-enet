@@ -21,6 +21,8 @@ package body Net.Protos.IPv4 is
 
    use type Net.Protos.Arp.Arp_Status;
 
+   Packet_Id : Uint16 := 1;
+
    --  ------------------------------
    --  Send the raw IPv4 packet to the interface.  The destination Ethernet address is
    --  resolved from the ARP table and the packet Ethernet header updated.  The packet
@@ -50,11 +52,41 @@ package body Net.Protos.IPv4 is
       end case;
    end Send_Raw;
 
+   --  ------------------------------
+   --  Make an IP packet identifier.
+   --  ------------------------------
+   procedure Make_Ident (Ip : in Net.Headers.IP_Header_Access) is
+   begin
+      Ip.Ip_Id  := Net.Headers.To_Network (Packet_Id);
+      Packet_Id := Packet_Id + 1;
+   end Make_Ident;
+
+   --  ------------------------------
+   --  Make the IPv4 header for the source and destination IP addresses and protocol.
+   --  ------------------------------
+   procedure Make_Header (Ip     : in Net.Headers.IP_Header_Access;
+                          Src    : in Ip_Addr;
+                          Dst    : in Ip_Addr;
+                          Proto  : in Uint8;
+                          Length : in Uint16) is
+   begin
+      Ip.Ip_Ihl := 16#45#;
+      Ip.Ip_Tos := 0;
+      Ip.Ip_Off := 0;
+      Ip.Ip_Ttl := 64;
+      Ip.Ip_Sum := 0;
+      Ip.Ip_Src := Src;
+      Ip.Ip_Dst := Dst;
+      Ip.Ip_P   := Proto;
+      Ip.Ip_Len := Net.Headers.To_Network (Length);
+   end Make_Header;
+
    procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                    Target_Ip : in Ip_Addr;
                    Packet    : in out Net.Buffers.Buffer_Type) is
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
    begin
+      Make_Header (Ip, Ifnet.Ip, Target_Ip, P_UDP, Uint16 (Packet.Get_Length));
       Ip.Ip_Ihl := 4;
       Ip.Ip_Tos := 0;
       Ip.Ip_Id  := 2;

@@ -48,7 +48,7 @@ package body Net.Protos.IPv4 is
          when Net.Protos.Arp.ARP_FOUND =>
             Ifnet.Send (Packet);
 
-         when Net.Protos.Arp.ARP_PENDING =>
+         when Net.Protos.Arp.ARP_PENDING | Net.Protos.Arp.ARP_NEEDED =>
             --  Net.Protos.Arp.Queue (Ifnet, Target_Ip, Packet);
             null;
 

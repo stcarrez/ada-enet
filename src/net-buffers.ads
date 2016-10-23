@@ -120,6 +120,12 @@ package Net.Buffers is
    procedure Peek (From : in out Buffer_List;
                    Buf  : in out Buffer_Type);
 
+   --  Transfer the list of buffers held by <tt>From</tt> at end of the list held
+   --  by <tt>To</tt>.  After the transfer, the <tt>From</tt> list is empty.
+   --  The complexity is in O(1).
+   procedure Transfer (To   : in out Buffer_List;
+                       From : in out Buffer_List) with
+     Post => Is_Empty (From);
 
    use type System.Address;
 

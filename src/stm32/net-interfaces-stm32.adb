@@ -244,6 +244,10 @@ package body Net.Interfaces.STM32 is
             Tx_Ring (I).Desc.Tdes1 := (Tbs2 => 0, Tbs1 => 0, Reserved_13_15 => 0,
                                        Reserved_29_31 => 0);
             Tx_Ring (I).Desc.Tdes2 := System.Null_Address;
+            Tx_Ring (I).Desc.Tdes4 := 0;
+            Tx_Ring (I).Desc.Tdes5 := 0;
+            Tx_Ring (I).Desc.Tdes6 := 0;
+            Tx_Ring (I).Desc.Tdes7 := 0;
             if I /= Tx_Ring'Last then
                Tx_Ring (I).Desc.Tdes3 := Tx_Ring (I + 1).Desc'Address;
             else
@@ -319,6 +323,10 @@ package body Net.Interfaces.STM32 is
             Net.Buffers.Peek (List, Rx_Ring (I).Buffer);
             Rx_Ring (I).Desc.Rdes0 := (Own => 1, others => <>);
             Rx_Ring (I).Desc.Rdes2 := W (Rx_Ring (I).Buffer.Get_Data_Address);
+            Rx_Ring (I).Desc.Rdes4 := (Reserved_31_14 => 0, Pmt => 0, Ippt => 0, others => 0);
+            Rx_Ring (I).Desc.Rdes5 := 0;
+            Rx_Ring (I).Desc.Rdes6 := 0;
+            Rx_Ring (I).Desc.Rdes7 := 0;
             if I /= Rx_Ring'Last then
                Rx_Ring (I).Desc.Rdes1 := (Dic => 0, Rbs2 => 0,
                                           Rer => 0,

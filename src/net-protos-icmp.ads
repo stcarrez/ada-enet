@@ -19,6 +19,15 @@ with Net.Interfaces;
 with Net.Buffers;
 package Net.Protos.Icmp is
 
+   --  Send a ICMP echo request packet to the target IP.  The ICMP header is
+   --  initialized with the given sequence and identifier so that ICMP reply
+   --  can be identified.
+   procedure Echo_Request (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
+                           Target_Ip : in Ip_Addr;
+                           Packet    : in out Net.Buffers.Buffer_Type;
+                           Seq       : in Net.Uint16;
+                           Ident     : in Net.Uint16);
+
    --  Receive and handle an ICMP packet.
    procedure Receive (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Packet    : in out Net.Buffers.Buffer_Type)

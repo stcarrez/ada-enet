@@ -121,6 +121,10 @@ package STM32.Eth is
       Tdes1 : TDES1_Type;
       Tdes2 : Address;
       Tdes3 : Address;
+      Tdes4 : Word;
+      Tdes5 : Word;
+      Tdes6 : Word;
+      Tdes7 : Word;
    end record;
 
    for Tx_Desc_Type use record
@@ -128,6 +132,10 @@ package STM32.Eth is
       Tdes1 at 4 range 0 .. 31;
       Tdes2 at 8 range 0 .. 31;
       Tdes3 at 12 range 0 .. 31;
+      Tdes4 at 16 range 0 .. 31;
+      Tdes5 at 20 range 0 .. 31;
+      Tdes6 at 24 range 0 .. 31;
+      Tdes7 at 28 range 0 .. 31;
    end record;
 
    type Rdes0_Type is record
@@ -194,11 +202,41 @@ package STM32.Eth is
       Dic at 0 range 31 .. 31;
    end record;
 
+   type Rdes4_Type is record
+      Reserved_31_14  : Uint18;
+      Pv              : Bit;
+      Pft             : Bit;
+      Pmt             : Uint4;
+      Ipv6pr          : Bit;
+      Ipv4pr          : Bit;
+      Ipcb            : Bit;
+      Ippe            : Bit;
+      Iphe            : Bit;
+      Ippt            : Uint3;
+   end record;
+
+   for Rdes4_Type use record
+      Ippt at 0 range 0 .. 2;
+      Iphe at 3 range 3 .. 3;
+      Ippe at 4 range 4 .. 4;
+      Ipcb at 5 range 5 .. 5;
+      Ipv4pr at 6 range 6 .. 6;
+      Ipv6pr at 7 range 7 .. 7;
+      Pmt at 8 range 8 .. 11;
+      Pft at 12 range 12 .. 12;
+      Pv at 13 range 13 .. 13;
+      Reserved_31_14 at 14 range 14 .. 31;
+   end record;
+
    type Rx_Desc_Type is record
       Rdes0 : Rdes0_Type;
       Rdes1 : Rdes1_Type;
       Rdes2 : Word;
       Rdes3 : Word;
+      Rdes4 : Rdes4_Type;
+      Rdes5 : Word;
+      Rdes6 : Word;
+      Rdes7 : Word;
    end record;
 
    for Rx_Desc_Type use record

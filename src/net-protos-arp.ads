@@ -28,7 +28,7 @@ package Net.Protos.Arp is
    ARPOP_INVREQUEST : constant Uint16 := 8;
    ARPOP_INVREPLY   : constant Uint16 := 8;
 
-   type Arp_Status is (ARP_FOUND, ARP_PENDING, ARP_NEEDED, ARP_UNREACHABLE);
+   type Arp_Status is (ARP_FOUND, ARP_PENDING, ARP_NEEDED, ARP_QUEUE_FULL, ARP_UNREACHABLE);
 
    procedure Request (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Source_Ip : in Ip_Addr;
@@ -41,6 +41,7 @@ package Net.Protos.Arp is
    procedure Resolve (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Target_Ip : in Ip_Addr;
                       Mac       : out Ether_Addr;
+                      Packet    : in out Net.Buffers.Buffer_Type;
                       Status    : out Arp_Status);
 
    procedure Receive (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;

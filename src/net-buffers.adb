@@ -190,7 +190,7 @@ package body Net.Buffers is
    --  ------------------------------
    function TCP (Buf : in Buffer_Type) return Net.Headers.TCP_Header_Access is
    begin
-      return As_Tcp_Header (Buf.Packet.Data (TCP_POS)'Address);
+      return As_Tcp_Header (Buf.Packet.Data (20 + 14)'Address);
    end TCP;
 
    --  ------------------------------

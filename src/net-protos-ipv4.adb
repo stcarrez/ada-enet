@@ -37,16 +37,15 @@ package body Net.Protos.IPv4 is
    begin
       Ether.Ether_Shost := Ifnet.Mac;
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
-      Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Status);
-      case Status is
+      Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Status);
+       case Status is
          when Net.Protos.Arp.ARP_FOUND =>
             Ifnet.Send (Packet);
 
          when Net.Protos.Arp.ARP_PENDING | Net.Protos.Arp.ARP_NEEDED =>
-            --  Net.Protos.Arp.Queue (Ifnet, Target_Ip, Packet);
             null;
 
-         when Net.Protos.Arp.ARP_UNREACHABLE =>
+         when Net.Protos.Arp.ARP_UNREACHABLE | Net.Protos.Arp.ARP_QUEUE_FULL =>
             Net.Buffers.Release (Packet);
 
       end case;
@@ -79,6 +78,7 @@ package body Net.Protos.IPv4 is
       Ip.Ip_Dst := Dst;
       Ip.Ip_P   := Proto;
       Ip.Ip_Len := Net.Headers.To_Network (Length);
+      Make_Ident (Ip);
    end Make_Header;
 
    procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;

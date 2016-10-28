@@ -148,6 +148,7 @@ private
 
    type Packet_Buffer is limited record
       Next : Packet_Buffer_Access;
+      Size : Natural;
       Data : aliased Data_Type;
    end record;
 

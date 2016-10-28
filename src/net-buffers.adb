@@ -23,6 +23,7 @@ package body Net.Buffers is
    UDP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
    TCP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Natural := IP_POS + 24;
+   ICMP_POS   : constant Natural := IP_POS + 20;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
    function As_Ethernet is
@@ -49,6 +50,9 @@ package body Net.Buffers is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.IGMP_Header_Access);
 
+   function As_Icmp_Header is
+     new Ada.Unchecked_Conversion (Source => System.Address,
+                                   Target => Net.Headers.ICMP_Header_Access);
 
    protected Manager is
       procedure Allocate (Packet : out Packet_Buffer_Access);
@@ -141,6 +145,7 @@ package body Net.Buffers is
    procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Natural) is
    begin
       Buf.Size := Size;
+      Buf.Packet.Size := Size;
    end Set_Data_Size;
 
    function Get_Length (Buf : in Buffer_Type) return Natural is
@@ -151,6 +156,7 @@ package body Net.Buffers is
    procedure Set_Length (Buf : in out Buffer_Type; Size : in Natural) is
    begin
       Buf.Size := Size;
+      Buf.Packet.Size := Size;
    end Set_Length;
 
    --  ------------------------------
@@ -202,6 +208,14 @@ package body Net.Buffers is
    end IGMP;
 
    --  ------------------------------
+   --  Get access to the ICMP header.
+   --  ------------------------------
+   function ICMP (Buf : in Buffer_Type) return Net.Headers.ICMP_Header_Access is
+   begin
+      return As_Icmp_Header (Buf.Packet.Data (ICMP_POS)'Address);
+   end ICMP;
+
+   --  ------------------------------
    --  Returns True if the list is empty.
    --  ------------------------------
    function Is_Empty (List : in Buffer_List) return Boolean is
@@ -250,9 +264,28 @@ package body Net.Buffers is
                    Buf  : in out Buffer_Type) is
    begin
       Buf.Packet := From.Head;
-      Buf.Size   := 0;
+      Buf.Size   := Buf.Packet.Size;
       From.Head  := From.Head.Next;
    end Peek;
+
+   --  ------------------------------
+   --  Transfer the list of buffers held by <tt>From</tt> at end of the list held
+   --  by <tt>To</tt>.  After the transfer, the <tt>From</tt> list is empty.
+   --  The complexity is in O(1).
+   --  ------------------------------
+   procedure Transfer (To   : in out Buffer_List;
+                       From : in out Buffer_List) is
+   begin
+      if To.Tail /= null then
+         To.Tail.Next := From.Head;
+         From.Head := To.Head;
+      else
+         To.Tail := From.Tail;
+         To.Head := From.Head;
+      end if;
+      From.Head := null;
+      From.Tail := null;
+   end Transfer;
 
    --  ------------------------------
    --  Add a memory region to the buffer pool.
@@ -283,6 +316,7 @@ package body Net.Buffers is
          Packet    := Free_List;
          if Packet /= null then
             Free_List := Packet.Next;
+            Packet.Size := 0;
          end if;
       end Allocate;
 

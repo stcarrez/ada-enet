@@ -30,12 +30,16 @@ package body Net.Protos.Arp is
 
    type Arp_Index is new Uint8;
 
+   --  Accept to queue at most 30 packets.
+   QUEUE_LIMIT : constant Natural := 30;
+
    BAD_INDEX : constant Arp_Index := 255;
 
    type Arp_Entry is record
       Ether       : Ether_Addr;
       Expire      : Ada.Real_Time.Time;
       Queue       : Net.Buffers.Buffer_List;
+      Queue_Size  : Natural := 0;
       Retry       : Natural := 0;
       Valid       : Boolean := False;
       Unreachable : Boolean := False;
@@ -56,19 +60,18 @@ package body Net.Protos.Arp is
       procedure Resolve (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                          Ip     : in Ip_Addr;
                          Mac    : out Ether_Addr;
+                         Packet : in out Net.Buffers.Buffer_Type;
                          Result : out Arp_Status);
 
       procedure Update (Ip   : in Ip_Addr;
                         Mac  : in Ether_Addr;
                         List : out Net.Buffers.Buffer_List);
 
-      procedure Queue (Ip     : in Ip_Addr;
-                       Packet : in out Net.Buffers.Buffer_Type);
-
    private
       Table      : Arp_Table;
       Indexes    : Arp_Index_Table := (others => BAD_INDEX);
       Last_Index : Uint8 := 0;
+      Queue_Size : Natural := 0;
    end Database;
 
 
@@ -100,6 +103,7 @@ package body Net.Protos.Arp is
       procedure Resolve (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                          Ip     : in Ip_Addr;
                          Mac    : out Ether_Addr;
+                         Packet : in out Net.Buffers.Buffer_Type;
                          Result : out Arp_Status) is
          Index : constant Arp_Index := Arp_Index (Ip (Ip'Last));
       begin
@@ -110,15 +114,23 @@ package body Net.Protos.Arp is
          elsif Table (Index).Unreachable then
             Result := ARP_UNREACHABLE;
 
+            --  Send the first ARP request for the target IP resolution.
+         elsif not Table (Index).Pending then
+            Table (Index).Pending := True;
+            Table (Index).Retry   := 1;
+            Table (Index).Expire  := Ada.Real_Time.Clock + Arp_Retry_Timeout;
+            Result := ARP_NEEDED;
+
          else
             Result := ARP_PENDING;
-
-            --  Send the first ARP request for the target IP resolution.
-            if not Table (Index).Pending then
-               Table (Index).Pending := True;
-               Table (Index).Retry   := 1;
-               Table (Index).Expire  := Ada.Real_Time.Clock + Arp_Retry_Timeout;
-               Request (Ifnet, Ifnet.Ip, Ip, Ifnet.Mac);
+         end if;
+         if Result = ARP_PENDING or Result = ARP_NEEDED then
+            if Queue_Size < QUEUE_LIMIT then
+               Queue_Size := Queue_Size + 1;
+               Net.Buffers.Insert (Table (Index).Queue, Packet);
+               Table (Index).Queue_Size := Table (Index).Queue_Size + 1;
+            else
+               Result := ARP_QUEUE_FULL;
             end if;
          end if;
       end Resolve;
@@ -134,16 +146,13 @@ package body Net.Protos.Arp is
          Table (Index).Pending := False;
          Table (Index).Expire := Ada.Real_Time.Clock + Arp_Entry_Timeout;
 
-      end Update;
-
-      procedure Queue (Ip     : in Ip_Addr;
-                       Packet : in out Net.Buffers.Buffer_Type) is
-         Index : constant Arp_Index := Arp_Index (Ip (Ip'Last));
-      begin
-         if Table (Index).Pending then
-            Net.Buffers.Insert (Table (Index).Queue, Packet);
+         --  If we have some packets waiting for the ARP resolution, return the packet list.
+         if Table (Index).Queue_Size > 0 then
+            Net.Buffers.Transfer (List, Table (Index).Queue);
+            Queue_Size := Queue_Size - Table (Index).Queue_Size;
+            Table (Index).Queue_Size := 0;
          end if;
-      end Queue;
+      end Update;
 
    end Database;
 
@@ -155,17 +164,33 @@ package body Net.Protos.Arp is
    procedure Resolve (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Target_Ip : in Ip_Addr;
                       Mac       : out Ether_Addr;
+                      Packet    : in out Net.Buffers.Buffer_Type;
                       Status    : out Arp_Status) is
    begin
-      Database.Resolve (Ifnet, Target_Ip, Mac, Status);
+      Database.Resolve (Ifnet, Target_Ip, Mac, Packet, Status);
+      if Status = ARP_NEEDED then
+         Request (Ifnet, Ifnet.Ip, Target_Ip, Ifnet.Mac);
+      end if;
    end Resolve;
 
-   procedure Queue (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
-                    Target_Ip : in Ip_Addr;
-                    Packet    : in out Net.Buffers.Buffer_Type) is
+   --  ------------------------------
+   --  Update the arp table with the IP address and the associated Ethernet address.
+   --  ------------------------------
+   procedure Update (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
+                     Target_Ip : in Ip_Addr;
+                     Mac       : in Ether_Addr) is
+      Waiting : Net.Buffers.Buffer_List;
+      Ether   : Net.Headers.Ether_Header_Access;
+      Packet  : Net.Buffers.Buffer_Type;
    begin
-      Database.Queue (Target_Ip, Packet);
-   end Queue;
+      Database.Update (Target_Ip, Mac, Waiting);
+      while not Net.Buffers.Is_Empty (Waiting) loop
+         Net.Buffers.Peek (Waiting, Packet);
+         Ether := Packet.Ethernet;
+         Ether.Ether_Dhost := Mac;
+         Ifnet.Send (Packet);
+      end loop;
+   end Update;
 
    procedure Request (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Source_Ip : in Ip_Addr;
@@ -175,6 +200,9 @@ package body Net.Protos.Arp is
       Req : Net.Headers.Arp_Packet_Access;
    begin
       Net.Buffers.Allocate (Buf);
+      if Buf.Is_Null then
+         return;
+      end if;
       Req := Buf.Arp;
       Req.Ethernet.Ether_Dhost := Broadcast_Mac;
       Req.Ethernet.Ether_Shost := Mac;
@@ -222,18 +250,7 @@ package body Net.Protos.Arp is
 
          when ARPOP_REPLY =>
             if Req.Arp.Arp_Tpa = Ifnet.Ip and Req.Arp.Arp_Tha = Ifnet.Mac then
-               declare
-                  Waiting : Net.Buffers.Buffer_List;
-                  Ether   : Net.Headers.Ether_Header_Access;
-               begin
-                  Database.Update (Req.Arp.Arp_Spa, Req.Arp.Arp_Sha, Waiting);
-                  while not Net.Buffers.Is_Empty (Waiting) loop
-                     Net.Buffers.Peek (Waiting, Packet);
-                     Ether := Packet.Ethernet;
-                     Ether.Ether_Dhost := Req.Arp.Arp_Sha;
-                     Ifnet.Send (Packet);
-                  end loop;
-               end;
+               Update (Ifnet, Req.Arp.Arp_Spa, Req.Arp.Arp_Sha);
             end if;
 
          when others =>

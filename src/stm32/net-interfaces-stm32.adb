@@ -191,9 +191,10 @@ package body Net.Interfaces.STM32 is
          Cortex_M.Cache.Clean_DCache (Addr, Integer (Size));
          Tx.Desc.Tdes2 := Addr;
          Tx.Desc.Tdes1.Tbs1 := Size;
-         Tx.Desc.Tdes0 := (Own => 1, Ter => 1, Cic => 0, Reserved_2 => 0,
-                           Ls  => 1, Fs  => 1, Ic => 0,
-                           Cc => 0,
+         Tx.Desc.Tdes0 := (Own => 1, Cic => 3, Reserved_2 => 0,
+                           Ls  => 1, Fs  => 1, Ic => 1,
+                           Cc => 0, Tch => 1,
+                           Ter => (if (Cur_Tx = Tx_Position'Last) then 1 else 0),
                            others => 0);
          Cortex_M.Cache.Clean_DCache (Tx.Desc'Address, Tx.Desc'Size / 8);
          Tx_Space := Tx_Space - 1;
@@ -225,6 +226,7 @@ package body Net.Interfaces.STM32 is
             Dma_Tx := Next_Tx (Dma_Tx);
             exit when Dma_Tx = Cur_Tx;
          end loop;
+         Ethernet_DMA_Periph.DMATPDR := 1;
       end Transmit_Interrupt;
 
       procedure Initialize is
@@ -242,6 +244,10 @@ package body Net.Interfaces.STM32 is
             Tx_Ring (I).Desc.Tdes1 := (Tbs2 => 0, Tbs1 => 0, Reserved_13_15 => 0,
                                        Reserved_29_31 => 0);
             Tx_Ring (I).Desc.Tdes2 := System.Null_Address;
+            Tx_Ring (I).Desc.Tdes4 := 0;
+            Tx_Ring (I).Desc.Tdes5 := 0;
+            Tx_Ring (I).Desc.Tdes6 := 0;
+            Tx_Ring (I).Desc.Tdes7 := 0;
             if I /= Tx_Ring'Last then
                Tx_Ring (I).Desc.Tdes3 := Tx_Ring (I + 1).Desc'Address;
             else
@@ -257,6 +263,9 @@ package body Net.Interfaces.STM32 is
          Ethernet_MAC_Periph.MACCR.TE := True;
          Ethernet_DMA_Periph.DMAIER.TIE := True;
          Ethernet_DMA_Periph.DMAIER.TBUIE := True;
+
+         --  Use Store-and-forward mode for the TCP/UDP/ICMP/IP checksum offload calculation.
+         Ethernet_DMA_Periph.DMAOMR.TSF := True;
          Ethernet_DMA_Periph.DMAOMR.SR := True;
       end Initialize;
 
@@ -314,6 +323,10 @@ package body Net.Interfaces.STM32 is
             Net.Buffers.Peek (List, Rx_Ring (I).Buffer);
             Rx_Ring (I).Desc.Rdes0 := (Own => 1, others => <>);
             Rx_Ring (I).Desc.Rdes2 := W (Rx_Ring (I).Buffer.Get_Data_Address);
+            Rx_Ring (I).Desc.Rdes4 := (Reserved_31_14 => 0, Pmt => 0, Ippt => 0, others => 0);
+            Rx_Ring (I).Desc.Rdes5 := 0;
+            Rx_Ring (I).Desc.Rdes6 := 0;
+            Rx_Ring (I).Desc.Rdes7 := 0;
             if I /= Rx_Ring'Last then
                Rx_Ring (I).Desc.Rdes1 := (Dic => 0, Rbs2 => 0,
                                           Rer => 0,

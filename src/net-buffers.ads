@@ -92,6 +92,10 @@ package Net.Buffers is
    function IGMP (Buf : in Buffer_Type) return Net.Headers.IGMP_Header_Access with
      Pre => not Buf.Is_Null;
 
+   --  Get access to the ICMP header.
+   function ICMP (Buf : in Buffer_Type) return Net.Headers.ICMP_Header_Access with
+     Pre => not Buf.Is_Null;
+
    --  The <tt>Buffer_List</tt> holds a set of network buffers.
    type Buffer_List is limited private;
 
@@ -116,6 +120,12 @@ package Net.Buffers is
    procedure Peek (From : in out Buffer_List;
                    Buf  : in out Buffer_Type);
 
+   --  Transfer the list of buffers held by <tt>From</tt> at end of the list held
+   --  by <tt>To</tt>.  After the transfer, the <tt>From</tt> list is empty.
+   --  The complexity is in O(1).
+   procedure Transfer (To   : in out Buffer_List;
+                       From : in out Buffer_List) with
+     Post => Is_Empty (From);
 
    use type System.Address;
 
@@ -138,6 +148,7 @@ private
 
    type Packet_Buffer is limited record
       Next : Packet_Buffer_Access;
+      Size : Natural;
       Data : aliased Data_Type;
    end record;
 

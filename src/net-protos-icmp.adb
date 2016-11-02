@@ -60,6 +60,8 @@ package body Net.Protos.Icmp is
          Net.Protos.IPv4.Make_Ident (Ip);
          --  Net.Protos.Arp.Update (Ifnet, Ip.Ip_Dst, Ether.Ether_Shost);
          Net.Protos.IPv4.Send_Raw (Ifnet, Ip.Ip_Dst, Packet);
+      else
+         Net.Buffers.Release (Packet);
       end if;
    end Receive;
 

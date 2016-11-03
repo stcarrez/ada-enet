@@ -54,4 +54,8 @@ package Net.Interfaces is
      with Pre'Class => not Buf.Is_Null,
        Post'Class => not Buf.Is_Null;
 
+   --  Check if the IP address is in the same subnet as the interface IP address.
+   function Is_Local_Network (Ifnet : in Ifnet_Type;
+                              Ip    : in Ip_Addr) return Boolean;
+
 end Net.Interfaces;

@@ -37,8 +37,12 @@ package body Net.Protos.IPv4 is
    begin
       Ether.Ether_Shost := Ifnet.Mac;
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
-      Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Status);
-       case Status is
+      if Ifnet.Is_Local_Network (Target_Ip) then
+         Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Status);
+      else
+         Net.Protos.Arp.Resolve (Ifnet, Ifnet.Gateway, Ether.Ether_Dhost, Packet, Status);
+      end if;
+      case Status is
          when Net.Protos.Arp.ARP_FOUND =>
             Ifnet.Send (Packet);
 

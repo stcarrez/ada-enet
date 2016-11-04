@@ -20,6 +20,8 @@ You can build the library with:
 
   arm-eabi-gnatmake -Panet_stm32f746 -p
 
+## Ping
+
 The ping application implements a simple ping on several hosts and displays
 the ping counters on the STM32F LCD display.  The application has a static
 IP configuration with IP address **192.168.1.2** and gateway **192.168.1.240**.
@@ -33,3 +35,11 @@ network, change the lines in ping.adb:
 Receiver.Ifnet.Ip := (192, 168, 1, 2);
 Receiver.Ifnet.Gateway := (192, 168, 1, 240);
 ```
+
+To build the Ping application you may run:
+
+  make
+
+And to flash the ping image, you can use:
+
+  make flash-ping

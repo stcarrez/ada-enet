@@ -28,7 +28,8 @@ The application will continuously ping the hosts (192.168.1.1, 192.168.1.129,
 to ping requests.  If the static configuration is not suitable for your
 network, change the lines in ping.adb:
 
->   --  Static IP interface, default netmask and no gateway.
->   Receiver.Ifnet.Ip := (192, 168, 1, 2);
->   Receiver.Ifnet.Gateway := (192, 168, 1, 240);
-
+```ada
+--  Static IP interface, default netmask and no gateway.
+Receiver.Ifnet.Ip := (192, 168, 1, 2);
+Receiver.Ifnet.Gateway := (192, 168, 1, 240);
+```

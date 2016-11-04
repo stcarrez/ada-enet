@@ -35,6 +35,8 @@ package body Net.Protos.Arp is
 
    BAD_INDEX : constant Arp_Index := 255;
 
+   ARP_MAX_RETRY : constant Positive := 15;
+
    type Arp_Entry is record
       Ether       : Ether_Addr;
       Expire      : Ada.Real_Time.Time;
@@ -106,21 +108,33 @@ package body Net.Protos.Arp is
                          Packet : in out Net.Buffers.Buffer_Type;
                          Result : out Arp_Status) is
          Index : constant Arp_Index := Arp_Index (Ip (Ip'Last));
+         Now   : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
-         if Table (Index).Valid then
+         if Table (Index).Valid and then Now < Table (Index).Expire then
             Mac := Table (Index).Ether;
             Result := ARP_FOUND;
 
-         elsif Table (Index).Unreachable then
+         elsif Table (Index).Unreachable and then Now < Table (Index).Expire then
             Result := ARP_UNREACHABLE;
 
             --  Send the first ARP request for the target IP resolution.
          elsif not Table (Index).Pending then
             Table (Index).Pending := True;
             Table (Index).Retry   := 1;
-            Table (Index).Expire  := Ada.Real_Time.Clock + Arp_Retry_Timeout;
+            Table (Index).Expire  := Now + Arp_Retry_Timeout;
             Result := ARP_NEEDED;
 
+         elsif Table (Index).Expire < Ada.Real_Time.Clock then
+            if Table (Index).Retry > ARP_MAX_RETRY then
+               Table (Index).Unreachable := True;
+               Table (Index).Expire := Now + Arp_Unreachable_Timeout;
+               Table (Index).Pending := False;
+               Result := ARP_UNREACHABLE;
+            else
+               Table (Index).Retry := Table (Index).Retry + 1;
+               Table (Index).Expire := Now + Arp_Retry_Timeout;
+               Result := ARP_NEEDED;
+            end if;
          else
             Result := ARP_PENDING;
          end if;

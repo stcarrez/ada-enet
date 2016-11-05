@@ -16,6 +16,13 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Interfaces;
+
+--  == Embedded Network Stack ==
+--  The <b>Embedded Network Stack</b> is a small IPv4 network stack intended to be
+--  used by small embedded Ada applications.
+--
+--  @include net-buffers.ads
+--  @include net-interfaces.ads
 package Net is
 
    pragma Pure;

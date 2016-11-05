@@ -27,6 +27,8 @@ package body Receiver is
    use type Net.Uint8;
    use type Net.Uint16;
 
+   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
+                        Packet : in out Net.Buffers.Buffer_Type);
    procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                        Packet : in out Net.Buffers.Buffer_Type);
 
@@ -49,7 +51,6 @@ package body Receiver is
 
       procedure Receive (Packet : in out Net.Buffers.Buffer_Type) is
          Ip_Hdr : constant Net.Headers.IP_Header_Access := Packet.IP;
-         Hdr    : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
       begin
          for I in 1 .. Last_Host loop
             if Hosts (I).Ip = Ip_Hdr.Ip_Src then
@@ -77,6 +78,11 @@ package body Receiver is
       procedure Add_Host (Ip : in Net.Ip_Addr) is
       begin
          if Last_Host < Hosts'Last then
+            for I in 1 .. Last_Host loop
+               if Hosts (I).Ip = Ip then
+                  return;
+               end if;
+            end loop;
             Last_Host := Last_Host + 1;
             Hosts (Last_Host).Ip  := Ip;
             Hosts (Last_Host).Seq := 0;
@@ -123,11 +129,26 @@ package body Receiver is
       end loop;
    end Do_Ping;
 
+   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
+                        Packet : in out Net.Buffers.Buffer_Type) is
+      Req : constant Net.Headers.Arp_Packet_Access := Packet.Arp;
+   begin
+      if Net.Headers.To_Host (Req.Arp.Ea_Hdr.Ar_Op) = Net.Protos.Arp.ARPOP_REQUEST then
+         Receiver.Add_Host (Req.Arp.Arp_Spa);
+      end if;
+      Net.Protos.Arp.Receive (Ifnet, Packet);
+   end ARP_Input;
+
    procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                        Packet : in out Net.Buffers.Buffer_Type) is
       Ip_Hdr : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr    : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
    begin
+      --  Collect the IP addresses for hosts that send packets.
+      --  Ignore 0.0.0.0 due to DHCP packets.
+      if Ip_Hdr.Ip_Src /= (0, 0, 0, 0) then
+         Receiver.Add_Host (Ip_Hdr.Ip_Src);
+      end if;
       if Ip_Hdr.Ip_P = Net.Protos.IPv4.P_ICMP then
          if Ip_Hdr.Ip_Dst = Ifnet.Ip and Hdr.Icmp_Type = Net.Headers.ICMP_ECHO_REPLY then
             Pinger.Receive (Packet);
@@ -165,7 +186,7 @@ package body Receiver is
             Ifnet.Receive (Packet);
             Ether := Packet.Ethernet;
             if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
-               Net.Protos.Arp.Receive (Ifnet, Packet);
+               ARP_Input (Ifnet, Packet);
             elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
                IP_Input (Ifnet, Packet);
             end if;

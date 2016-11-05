@@ -17,6 +17,54 @@
 -----------------------------------------------------------------------
 with System;
 with Net.Headers;
+
+--  === Network Buffers ===
+--  The <b>Net.Buffers</b> package provides support for network buffer management.
+--  A network buffer can hold a single packet frame so that it is limited to 1500 bytes
+--  of payload with 14 or 16 bytes for the Ethernet header.  The network buffers are
+--  allocated by the Ethernet driver during the initialization to setup the
+--  Ethernet receive queue.  The allocation of network buffers for the transmission
+--  is under the responsibility of the application.
+--
+--  Before receiving a packet, the application also has to allocate a network buffer.
+--  Upon successful reception of a packet by the <b>Receive</b> procedure, the allocated
+--  network buffer will be given to the Ethernet receive queue and the application
+--  will get back the received buffer.  There is no memory copy.
+--
+--  The package defines two important types: <b>Buffer_Type</b> and <b>Buffer_List</b>.
+--  These two types are limited types to forbid copies and force a strict design to
+--  applications.  The <b>Buffer_Type</b> describes the packet frame and it provides
+--  various operations to access the buffer.  The <b>Buffer_List</b> defines a list of buffers.
+--
+--  The network buffers are kept within a single linked list managed by a protected object.
+--  Because interrupt handlers can release a buffer, that protected object has the priority
+--  <b>System.Max_Interrupt_Priority</b>.  The protected operations are very basic and are
+--  in O(1) complexity so that their execution is bounded in time whatever the arguments.
+--
+--  Before anything, the network buffers have to be allocated.  The application can do this
+--  by reserving some memory region (using <b>STM32.SDRAM.Reserve</b>) and adding the region with
+--  the <b>Add_Region</b> procedure.  The region must be a multiple of <b>NET_ALLOC_SIZE</b>
+--  constant.  To allocate 32 buffers, you can do the following:
+--
+--    NET_BUFFER_SIZE  : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 32;
+--    ...
+--    Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);
+--
+--  An application will allocate a buffer by using the <b>Allocate</b> operation and this is as
+--  easy as:
+--
+--    Packet : Net.Buffers.Buffer_Type;
+--    ...
+--    Net.Buffers.Allocate (Packet);
+--
+--  What happens if there is no available buffer? No exception is raised because the networks
+--  stack is intended to be used in embedded systems where exceptions are not available.
+--  You have to check if the allocation succeeded by using the <b>Is_Null</b> function:
+--
+--    if Packet.Is_Null then
+--      null; --  Oops
+--    end if;
+--
 package Net.Buffers is
 
    --  The size of a packet buffer for memory allocation.

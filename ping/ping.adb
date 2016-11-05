@@ -28,11 +28,32 @@ with Net.Buffers;
 with Net.Utils;
 with Net.Interfaces.STM32;
 with Receiver;
+
+--  == Ping Application ==
+--  The <b>Ping</b> application listens to the Ethernet network to identify some local
+--  hosts and ping them using ICMP echo requests.
+--
+--  The <b>Ping</b> application uses the static IP address <b>192.168.1.2</b> and an initial
+--  default gateway <b>192.168.1.254</b>.  While running, it discovers the gateway by looking
+--  at the IGMP query membership packets.
+--
+--  The <b>Ping</b> application displays the lists of hosts that it currently pings with
+--  the number of ICMP requests that are sent and the number of ICMP replies received.
+--
+--  The application has two tasks.  The main task loops to manage the refresh of the STM32
+--  display and send the ICMP echo requests each second.  The second task is responsible for
+--  waiting of Ethernet packets, analyzing them to handle ARP and ICMP packets.  The receiver
+--  task also looks at IGMP packets to identify the IGMP queries sent by routers.
 procedure Ping is
 
    use type Interfaces.Unsigned_32;
    use type Net.Ip_Addr;
    use type Ada.Real_Time.Time;
+
+   procedure Put (X : in Natural; Y : in Natural; Msg : in String);
+   procedure Put (X : in Natural; Y : in Natural; Value : in Net.Uint64);
+   procedure Refresh_Ifnet_Stats;
+   procedure Refresh;
 
    --  Reserve 128 network buffers.
    NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 128;
@@ -50,14 +71,14 @@ procedure Ping is
    end Put;
 
    procedure Put (X : in Natural; Y : in Natural; Value : in Net.Uint64) is
-      Buffer : HAL.Bitmap.Bitmap_Buffer'Class := STM32.Board.Display.Get_Hidden_Buffer (1);
-      FG    : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                  HAL.Bitmap.White);
-      BG    : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                  HAL.Bitmap.Black);
-      V   : constant String := Net.Uint64'Image (Value);
-      Pos : Bitmapped_Drawing.Point := (X + 100, Y);
-      D   : Natural := 1;
+      Buffer : constant HAL.Bitmap.Bitmap_Buffer'Class := STM32.Board.Display.Get_Hidden_Buffer (1);
+      FG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
+                                                                                   HAL.Bitmap.White);
+      BG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
+                                                                                   HAL.Bitmap.Black);
+      V      : constant String := Net.Uint64'Image (Value);
+      Pos    : Bitmapped_Drawing.Point := (X + 100, Y);
+      D      : Natural := 1;
    begin
       for I in reverse V'Range loop
          Bitmapped_Drawing.Draw_Char (Buffer     => Buffer,
@@ -99,13 +120,6 @@ procedure Ping is
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 
-   --  Send the ICMP echo request to each host.
-   procedure Do_Ping is
-   begin
-      Receiver.Do_Ping;
-      Refresh;
-   end Do_Ping;
-
    --  The ping period.
    PING_PERIOD   : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Milliseconds (1000);
 
@@ -130,9 +144,6 @@ begin
    Receiver.Ifnet.Initialize;
 
    Receiver.Add_Host ((192, 168, 1, 1));
-   Receiver.Add_Host ((192, 168, 1, 129));
-   Receiver.Add_Host ((192, 168, 1, 240));
-   Receiver.Add_Host ((192, 168, 1, 254));
    Receiver.Add_Host ((8, 8, 8, 8));
 
    for I in 1 .. 2 loop
@@ -148,6 +159,11 @@ begin
       Put (0, 70, "Host");
       Put (326, 70, "Send");
       Put (402, 70, "Receive");
+      STM32.Board.Display.Get_Hidden_Buffer (1).Draw_Horizontal_Line
+        (Color => HAL.Bitmap.Blue,
+         X     => 0,
+         Y     => 84,
+         Width => 480);
       STM32.Board.Display.Update_Layer (1);
    end loop;
 
@@ -159,7 +175,8 @@ begin
          Now     : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
          if Ping_Deadline < Now then
-            Do_Ping;
+            Receiver.Do_Ping;
+            Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;
          delay until Now + PING_PERIOD;

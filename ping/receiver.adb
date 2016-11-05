@@ -133,6 +133,18 @@ package body Receiver is
             Pinger.Receive (Packet);
          end if;
          Net.Protos.Icmp.Receive (Ifnet, Packet);
+
+         --  To find our gateway, we look at the IGMP query general packets and we assume
+         --  that hosts that send IGMP membership query are gateways.
+         --  224.0.0.1 is the All Hosts multicast group.
+      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_IGMP and Ip_Hdr.Ip_Dst = (224, 0, 0, 1) then
+         declare
+            Group : constant Net.Headers.IGMP_Header_Access := Packet.IGMP;
+         begin
+            if Group.Igmp_Type = Net.Headers.IGMP_MEMBERSHIP_QUERY then
+               Ifnet.Gateway := Ip_Hdr.Ip_Src;
+            end if;
+         end;
       end if;
    end IP_Input;
 

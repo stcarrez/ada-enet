@@ -130,8 +130,11 @@ package body Net.Interfaces.STM32 is
    overriding
    procedure Send (Ifnet : in out STM32_Ifnet;
                    Buf   : in out Net.Buffers.Buffer_Type) is
-      pragma Unreferenced (Ifnet);
+      use type Net.Uint32;
+      use type Net.Uint64;
    begin
+      Ifnet.Tx_Stats.Packets := Ifnet.Tx_Stats.Packets + 1;
+      Ifnet.Tx_Stats.Bytes := Ifnet.Tx_Stats.Bytes + Net.Uint64 (Buf.Get_Length);
       Transmit_Queue.Send (Buf);
    end Send;
 

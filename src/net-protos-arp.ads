@@ -17,6 +17,25 @@
 -----------------------------------------------------------------------
 with Net.Interfaces;
 with Net.Buffers;
+
+--  == ARP Protocol ==
+--  The <b>Net.Protos.Arp</b> package implements the support for the ARP protocol used for the
+--  resolution of IPv4 addresses.  The package maintains a ARP database within an Ada protected
+--  object.
+--
+--  The <b>Resolve</b> procedure is the main entry point for the resolution of the IPv4 address.
+--  Given a target IP address, it first looks in the ARP database for the associated Ethernet
+--  address.  When the Ethernet address is known, it updates the Ethernet header so that the
+--  packet can be sent to the network interface.
+--
+--  When the Ethernet address is now known, the <b>Resolve</b> procedure puts the packet in a
+--  queue and it makes an ARP request.
+--
+--  The <b>Receive</b> procedure should be called when a ARP packet is received.  It is responsible
+--  for replying to ARP requests from other hosts on the network and handling ARP response for
+--  our requests.  It updates the ARP database only when we receive a ARP response from one of
+--  our ARP query.
+--
 package Net.Protos.Arp is
 
    ARPHRD_ETHER     : constant Uint16 := 1;

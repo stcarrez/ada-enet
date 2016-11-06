@@ -102,6 +102,16 @@ package body Net.Protos.Arp is
          end loop;
       end Timeout;
 
+      procedure Drop_Queue (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                            Item   : in out Arp_Entry) is
+      begin
+         if Item.Queue_Size > 0 then
+            Queue_Size := Queue_Size - Item.Queue_Size;
+            Item.Queue_Size := 0;
+            Net.Buffers.Release (Item.Queue);
+         end if;
+      end Drop_Queue;
+
       procedure Resolve (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                          Ip     : in Ip_Addr;
                          Mac    : out Ether_Addr;
@@ -116,6 +126,7 @@ package body Net.Protos.Arp is
 
          elsif Table (Index).Unreachable and then Now < Table (Index).Expire then
             Result := ARP_UNREACHABLE;
+            Drop_Queue (Ifnet, Table (Index));
 
             --  Send the first ARP request for the target IP resolution.
          elsif not Table (Index).Pending then
@@ -130,6 +141,7 @@ package body Net.Protos.Arp is
                Table (Index).Expire := Now + Arp_Unreachable_Timeout;
                Table (Index).Pending := False;
                Result := ARP_UNREACHABLE;
+               Drop_Queue (Ifnet, Table (Index));
             else
                Table (Index).Retry := Table (Index).Retry + 1;
                Table (Index).Expire := Now + Arp_Retry_Timeout;

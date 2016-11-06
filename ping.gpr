@@ -1,4 +1,4 @@
-with "../Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
+with "Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
 with "anet_stm32f746.gpr";
 
 project Ping is

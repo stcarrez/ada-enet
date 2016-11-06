@@ -1,5 +1,5 @@
-with "../Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
-with "../Ada_Drivers_Library/boards/common_config";
+with "Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
+with "Ada_Drivers_Library/boards/common_config";
 
 library project Anet_STM32F746  is
 

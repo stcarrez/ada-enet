@@ -32,7 +32,7 @@ package body Net.Interfaces.STM32 is
    use STM32_SVD.Ethernet;
 
    function W is new Ada.Unchecked_Conversion
-     (System.Address, Word);
+     (System.Address, UInt32);
 
    type Tx_Position is new Uint32 range 0 .. TX_RING_SIZE;
    type Rx_Position is new Uint32 range 0 .. RX_RING_SIZE;

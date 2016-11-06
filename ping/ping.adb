@@ -26,6 +26,7 @@ with Bitmapped_Drawing;
 with HAL.Bitmap;
 with Net.Buffers;
 with Net.Utils;
+with Net.Protos.Arp;
 with Net.Interfaces.STM32;
 with Receiver;
 
@@ -55,8 +56,8 @@ procedure Ping is
    procedure Refresh_Ifnet_Stats;
    procedure Refresh;
 
-   --  Reserve 128 network buffers.
-   NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 128;
+   --  Reserve 256 network buffers.
+   NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
 
@@ -174,6 +175,7 @@ begin
       declare
          Now     : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
+         Net.Protos.Arp.Timeout (Receiver.Ifnet);
          if Ping_Deadline < Now then
             Receiver.Do_Ping;
             Refresh;

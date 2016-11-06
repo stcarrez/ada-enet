@@ -54,6 +54,10 @@ package Net.Protos.Arp is
                       Target_Ip : in Ip_Addr;
                       Mac       : in Ether_Addr);
 
+   --  Proceed to the ARP database timeouts, cleaning entries and re-sending pending
+   --  ARP requests.
+   procedure Timeout (Ifnet : in out Net.Interfaces.Ifnet_Type'Class);
+
    --  Resolve the target IP address to obtain the associated Ethernet address
    --  from the ARP table.  The Status indicates whether the IP address is
    --  found, or a pending ARP resolution is in progress or it was unreachable.

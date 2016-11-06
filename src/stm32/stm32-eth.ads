@@ -121,10 +121,10 @@ package STM32.Eth is
       Tdes1 : TDES1_Type;
       Tdes2 : Address;
       Tdes3 : Address;
-      Tdes4 : Word;
-      Tdes5 : Word;
-      Tdes6 : Word;
-      Tdes7 : Word;
+      Tdes4 : UInt32;
+      Tdes5 : UInt32;
+      Tdes6 : UInt32;
+      Tdes7 : UInt32;
    end record;
 
    for Tx_Desc_Type use record
@@ -231,12 +231,12 @@ package STM32.Eth is
    type Rx_Desc_Type is record
       Rdes0 : Rdes0_Type;
       Rdes1 : Rdes1_Type;
-      Rdes2 : Word;
-      Rdes3 : Word;
+      Rdes2 : UInt32;
+      Rdes3 : UInt32;
       Rdes4 : Rdes4_Type;
-      Rdes5 : Word;
-      Rdes6 : Word;
-      Rdes7 : Word;
+      Rdes5 : UInt32;
+      Rdes6 : UInt32;
+      Rdes7 : UInt32;
    end record;
 
    for Rx_Desc_Type use record

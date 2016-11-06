@@ -13,5 +13,8 @@ ethdemo:
 flash-ping:		all
 	st-flash write ping.bin 0x8000000
 
+checkout:
+	git submodule update --init --recursive
+
 .PHONY: ping
 

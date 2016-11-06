@@ -17,9 +17,18 @@ Before build the library you will need:
 * The GNAT Ada compiler for ARM
   http://libre.adacore.com/
 
+The Ada_Drivers_Library is imported as part of a Git submodule.  To checkout everything, you may use
+the following commands:
+
+```shell
+  make checkout
+```
+
 You can build the library with:
 
+```shell
   arm-eabi-gnatmake -Panet_stm32f746 -p
+```
 
 ## Ping
 
@@ -39,8 +48,12 @@ Receiver.Ifnet.Gateway := (192, 168, 1, 240);
 
 To build the Ping application you may run:
 
+```shell
   make
+```
 
 And to flash the ping image, you can use:
 
+```shell
   make flash-ping
+```

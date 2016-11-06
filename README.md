@@ -1,5 +1,6 @@
 # Ada Embedded Network Stack
 
+[![Build Status](https://img.shields.io/jenkins/s/http/jenkins.vacs.fr/Ada-Enet.svg)](http://jenkins.vacs.fr/job/Ada-Enet/)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)](LICENSE)
 
 This library is a small network stack that implements ARP, IPv4 protocols

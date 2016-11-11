@@ -23,6 +23,7 @@ with Interfaces;
 --
 --  @include net-buffers.ads
 --  @include net-interfaces.ads
+--  @include net-protos-arp.ads
 package Net is
 
    pragma Pure;

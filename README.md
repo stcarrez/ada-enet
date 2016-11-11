@@ -58,6 +58,31 @@ And to flash the ping image, you can use:
   make flash-ping
 ```
 
+## Echo
+
+The echo application shows a simple UDP server that echos the received packet (RFC 862).
+It listens on UDP port 7, loops to wait for UDP packets, returns them and increment a
+counter of received packets which is displayed on the STM32 LCD display.
+
+To build the Echo application you may run:
+
+```shell
+  make
+```
+
+And to flash the echo image, you can use:
+
+```shell
+  make flash-echo
+```
+
+And to test the echo UDP server, you may use the **echoping** command on GNU/Linux.
+For example:
+
+```shell
+  echoping -v -u 192.168.1.2
+```
+
 ## Documentation
 
 - https://github.com/stcarrez/ada-enet/wiki

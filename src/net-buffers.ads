@@ -146,6 +146,10 @@ package Net.Buffers is
 
    procedure Set_Length (Buf : in out Buffer_Type; Size : in Natural);
 
+   --  Set the packet type.
+   procedure Set_Type (Buf  : in out Buffer_Type;
+                       Kind : in Packet_Type);
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;
@@ -231,6 +235,7 @@ private
    end record;
 
    type Buffer_Type is tagged limited record
+      Kind   : Packet_Type := RAW_PACKET;
       Size   : Natural := 0;
       Pos    : Natural := 0;
       Packet : Packet_Buffer_Access;

@@ -58,4 +58,7 @@ package Net.Interfaces is
    function Is_Local_Network (Ifnet : in Ifnet_Type;
                               Ip    : in Ip_Addr) return Boolean;
 
+   --  Get a 32-bit random number.
+   function Random (Ifnet : in Ifnet_Type) return Uint32 is abstract;
+
 end Net.Interfaces;

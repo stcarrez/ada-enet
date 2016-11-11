@@ -169,6 +169,16 @@ package body Net.Buffers is
    end Set_Type;
 
    --  ------------------------------
+   --  Add a byte to the buffer data, moving the buffer write position.
+   --  ------------------------------
+   procedure Put_Uint8 (Buf   : in out Buffer_Type;
+                        Value : in Net.Uint8) is
+   begin
+      Buf.Packet.Data (Buf.Pos) := Value;
+      Buf.Pos := Buf.Pos + 1;
+   end Put_Uint8;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

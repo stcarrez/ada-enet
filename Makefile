@@ -1,10 +1,14 @@
 MODE=-XBUILD=Debug -XBUILD_RTS=Debug
 
-all:	ping
+all:	ping echo
 
 ping:
 	arm-eabi-gnatmake $(MODE) -Pping -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/stm32f746disco/ping ping.bin
+
+echo:
+	arm-eabi-gnatmake $(MODE) -Pecho -p -cargs -mno-unaligned-access
+	arm-eabi-objcopy -O binary obj/stm32f746disco/echo echo.bin
 
 ethdemo:
 	arm-eabi-gnatmake -Panet -p -cargs -mno-unaligned-access
@@ -13,8 +17,11 @@ ethdemo:
 flash-ping:		all
 	st-flash write ping.bin 0x8000000
 
+flash-echo:		all
+	st-flash write echo.bin 0x8000000
+
 checkout:
 	git submodule update --init --recursive
 
-.PHONY: ping
+.PHONY: ping echo
 

@@ -45,8 +45,10 @@ private
 
    type Query is new Net.Sockets.Udp.Socket with record
       Name     : String (1 .. DNS_NAME_MAX_LENGTH);
+      Name_Len : Natural := 0;
       Status   : Status_Type := NOQUERY;
       Deadline : Ada.Real_Time.Time;
+      Xid      : Net.Uint16;
    end record;
 
 end Net.DNS;

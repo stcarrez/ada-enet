@@ -26,6 +26,16 @@ package body Net.Buffers is
    ICMP_POS   : constant Natural := IP_POS + 20;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
+   type Offset_Table is array (Packet_Type) of Natural;
+
+   Offsets : constant Offset_Table :=
+     (RAW_PACKET   => 0,
+      ETHER_PACKET => 14,
+      ARP_PACKET   => 14 + 8,
+      IP_PACKET    => 14 + 20,
+      ICMP_PACKET  => 14 + 20 + 8,
+      UDP_PACKET   => 14 + 20 + 8);
+
    function As_Ethernet is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.Ether_Header_Access);
@@ -166,6 +176,7 @@ package body Net.Buffers is
                        Kind : in Packet_Type) is
    begin
       Buf.Kind := Kind;
+      Buf.Pos  := Offsets (Kind);
    end Set_Type;
 
    --  ------------------------------

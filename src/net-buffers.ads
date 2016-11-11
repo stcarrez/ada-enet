@@ -161,6 +161,12 @@ package Net.Buffers is
                          Value : in Net.Uint16) with
      Pre => not Buf.Is_Null;
 
+   --  Add a 32-bit value in network byte order to the buffer data,
+   --  moving the buffer write position.
+   procedure Put_Uint32 (Buf   : in out Buffer_Type;
+                         Value : in Net.Uint32) with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

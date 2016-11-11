@@ -40,7 +40,7 @@ package Net is
    type Ip_Addr is array (1 .. 4) of Uint8;
 
    --  Ethernet address representation.
-   type Ether_Addr is array (1 .. 6) of UInt8;
+   type Ether_Addr is array (1 .. 6) of Uint8;
 
    use type Interfaces.Unsigned_8;
    use type Interfaces.Unsigned_16;

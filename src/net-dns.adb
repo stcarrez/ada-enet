@@ -15,7 +15,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-
+with Interfaces; use Interfaces;
+with Net.Buffers;
 package body Net.DNS is
 
    function Get_Status (Request : in Query) return Status_Type is
@@ -27,8 +28,30 @@ package body Net.DNS is
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
                       Timeout : in Natural := 10) is
+      Xid  : Uint32 := Ifnet.Random;
+      Addr : Net.Sockets.Sockaddr_In;
+      To   : Net.Sockets.Sockaddr_In;
+      Buf  : Net.Buffers.Buffer_Type;
    begin
-      null;
+      Request.Name_Len := Name'Length;
+      Request.Name (1 .. Name'Length) := Name;
+      Request.Status := PENDING;
+      Addr.Port := Net.Uint16 (Shift_Right (Xid, 16));
+      Request.Xid := Net.Uint16 (Xid and 16#0ffff#);
+      Request.Bind (Ifnet, Addr);
+      Buf.Set_Type (Net.Buffers.UDP_PACKET);
+      Buf.Put_Uint16 (Request.Xid);
+      Buf.Put_Uint16 (16#0100#);
+      Buf.Put_Uint16 (1);
+      Buf.Put_Uint16 (0);
+      Buf.Put_Uint16 (0);
+      Buf.Put_Uint8 (3);
+      Buf.Put_String (Request.Name (1 .. Request.Name_Len), With_Null => True);
+      Buf.Put_Uint16 (1);
+      Buf.Put_Uint16 (1);
+      To.Port := 53;
+      To.Addr := Ifnet.Dns;
+      Request.Send (To, Buf);
    end Resolve;
 
    overriding

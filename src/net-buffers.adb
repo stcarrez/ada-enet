@@ -216,6 +216,26 @@ package body Net.Buffers is
    end Put_Uint32;
 
    --  ------------------------------
+   --  Add a string to the buffer data, moving the buffer write position.
+   --  When <tt>With_Null</tt> is set, a NUL byte is added after the string.
+   --  ------------------------------
+   procedure Put_String (Buf       : in out Buffer_Type;
+                         Value     : in String;
+                         With_Null : in Boolean := False) is
+      Pos  : Natural := Buf.Pos;
+   begin
+      for C of Value loop
+         Buf.Packet.Data (Pos) := Character'Pos (C);
+         Pos := Pos + 1;
+      end loop;
+      if With_Null then
+         Buf.Packet.Data (Pos) := 0;
+         Pos := Pos + 1;
+      end if;
+      Buf.Pos := Pos;
+   end Put_String;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

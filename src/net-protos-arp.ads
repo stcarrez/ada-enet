@@ -55,7 +55,7 @@ package Net.Protos.Arp is
                       Mac       : in Ether_Addr);
 
    --  Proceed to the ARP database timeouts, cleaning entries and re-sending pending
-   --  ARP requests.
+   --  ARP requests.  The procedure should be called once every second.
    procedure Timeout (Ifnet : in out Net.Interfaces.Ifnet_Type'Class);
 
    --  Resolve the target IP address to obtain the associated Ethernet address

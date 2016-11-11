@@ -34,6 +34,7 @@ package Net.Interfaces is
       Ip       : Ip_Addr := (others => 0);
       Netmask  : Ip_Addr := (255, 255, 255, 0);
       Gateway  : Ip_Addr := (others => 0);
+      Dns      : Ip_Addr := (others => 0);
       Mtu      : Ip_Length := 1500;
       Rx_Stats : Stats_Type;
       Tx_Stats : Stats_Type;

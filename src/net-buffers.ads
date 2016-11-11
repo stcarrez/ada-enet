@@ -167,6 +167,13 @@ package Net.Buffers is
                          Value : in Net.Uint32) with
      Pre => not Buf.Is_Null;
 
+   --  Add a string to the buffer data, moving the buffer write position.
+   --  When <tt>With_Null</tt> is set, a NUL byte is added after the string.
+   procedure Put_String (Buf       : in out Buffer_Type;
+                         Value     : in String;
+                         With_Null : in Boolean := False) with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

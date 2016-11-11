@@ -15,29 +15,33 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Net.Headers;
 with Net.Buffers;
 with Net.Interfaces;
 package Net.Sockets.Udp is
 
    type Socket is abstract tagged limited private;
 
-   procedure Bind (Endpoint : in out Socket;
+   procedure Bind (Endpoint : access Socket'Class;
                    Ifnet    : access Net.Interfaces.Ifnet_Type'Class;
                    Addr     : in Sockaddr_In);
 
    --  Send the UDP packet to the destination IP and port.
    procedure Send (Endpoint : in out Socket;
-                   To       : in Sockaddr_in;
+                   To       : in Sockaddr_In;
                    Packet   : in out Net.Buffers.Buffer_Type);
 
    procedure Receive (Endpoint : in out Socket;
-                      From     : in Sockaddr_in;
+                      From     : in Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is abstract;
+
+   --  Input a UDP packet and dispatch it to the associated UDP socket.
+   procedure Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                    Packet : in out Net.Buffers.Buffer_Type);
 
 private
 
    type Socket is abstract tagged limited record
+      Next   : access Socket'Class;
       Listen : Sockaddr_In;
       Ifnet  : access Net.Interfaces.Ifnet_Type'Class;
    end record;

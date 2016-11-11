@@ -65,6 +65,33 @@ with Net.Headers;
 --      null; --  Oops
 --    end if;
 --
+--  === Serialization ===
+--  Several serialization operations are provided to build or extract information from a packet.
+--  Before proceeding to the serialization, it is necessary to set the packet type.  The packet
+--  type is necessary to reserve room for the protocol headers.  To build a UDP packet, the
+--  <tt>UDP_PACKET</tt> type will be used:
+--
+--    Packet.Set_Type (Net.Buffers.UDP_PACKET);
+--
+--  Then, several <tt>Put</tt> operations are provided to serialize the data.  By default
+--  integers are serialized in network byte order.  The <tt>Put_Uint8</tt> serializes one byte,
+--  the <tt>Put_Uint16</tt> two bytes, the <tt>Put_Uint32</tt> four bytes.  The <tt>Put_String</tt>
+--  operation will serialize a string.  A NUL byte is optional and can be added when the
+--  <tt>With_Null</tt> optional parameter is set.  The example below creates a DNS query packet:
+--
+--    Packet.Put_Uint16 (1234);  -- XID
+--    Packet.Put_Uint16 (16#0100#); -- Flags
+--    Packet.Put_Uint16 (1); --  # queries
+--    Packet.Put_Uint16 (0);
+--    Packet.Put_Uint32 (0);
+--    Packet.Put_Uint8 (16#3#);  -- Query
+--    Packet.Put_String ("www.google.fr", With_Null => True);
+--    Packet.Put_Uint16 (16#1#); --  A record
+--    Packet.Put_Uint16 (16#1#); --  IN class
+--
+--  After a packet is serialized, the length get be obtained by using the
+--
+--    Len : Net.Uint16 := Packet.Get_Data_Length;
 package Net.Buffers is
 
    --  The size of a packet buffer for memory allocation.
@@ -73,6 +100,9 @@ package Net.Buffers is
    --  The maximum available size of the packet buffer for the application.
    --  We always have NET_BUF_SIZE < NET_ALLOC_SIZE.
    NET_BUF_SIZE   : constant Uint32;
+
+   --  The packet type identifies the content of the packet for the serialization/deserialization.
+   type Packet_Type is (RAW_PACKET, ETHER_PACKET, ARP_PACKET, IP_PACKET, UDP_PACKET, ICMP_PACKET);
 
    type Data_Type is array (0 .. 1500 + 31) of aliased Uint8 with
      Alignment => 32;
@@ -202,6 +232,7 @@ private
 
    type Buffer_Type is tagged limited record
       Size   : Natural := 0;
+      Pos    : Natural := 0;
       Packet : Packet_Buffer_Access;
    end record;
 

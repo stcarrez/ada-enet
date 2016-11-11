@@ -23,6 +23,7 @@ with Ada.Unchecked_Conversion;
 with STM32.SDRAM;
 with STM32.Eth; use STM32;
 with STM32_SVD.Ethernet;
+with STM32.RNG.Interrupts;
 
 with HAL;
 with Cortex_M.Cache;
@@ -157,6 +158,13 @@ package body Net.Interfaces.STM32 is
    begin
       return Receive_Queue.Is_Ready and Transmit_Queue.Is_Ready;
    end Is_Ready;
+
+   --  Get a 32-bit random number.
+   overriding
+   function Random (Ifnet : in STM32_Ifnet) return Uint32 is
+   begin
+      return RNG.Interrupts.Random;
+   end Random;
 
    --  ------------------------------
    --  Initialize the network interface.

@@ -15,27 +15,58 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
+with Net.Headers;
 with Net.Protos.IPv4;
 package body Net.Sockets.Udp is
 
-   procedure Bind (Endpoint : in out Socket;
+   List : access Socket'Class;
+
+   procedure Bind (Endpoint : access Socket'Class;
                    Ifnet    : access Net.Interfaces.Ifnet_Type'Class;
                    Addr     : in Sockaddr_In) is
    begin
+      Endpoint.Next := List;
+      List := Endpoint;
       Endpoint.Ifnet  := Ifnet;
-      Endpoint.Listen := Addr;
+      Endpoint.Listen.Port := Net.Headers.To_Network (Addr.Port);
+      Endpoint.Listen.Addr := Ifnet.Ip;
    end Bind;
 
    procedure Send (Endpoint : in out Socket;
-                   To       : in Sockaddr_in;
-                   Packet   : in out Net.Buffers.Buffer_Type) is
+                   To       : in Sockaddr_In;
+                   Packet   : in out Net.Buffers.Buffer_Type)
+   is
+      Ip  : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr : constant Net.Headers.UDP_Header_Access := Packet.UDP;
+      Len : Net.Uint16 := Net.Uint16 (Packet.Get_Data_Size);
    begin
-      Hdr.Uh_Dport := Net.Headers.To_Network (To.Port);
-      Hdr.Uh_Sport := Net.Headers.To_Network (Endpoint.Listen.Port);
+      Hdr.Uh_Dport := To.Port;
+      Hdr.Uh_Sport := Endpoint.Listen.Port;
       Hdr.Uh_Sum   := 0;
-      Hdr.Uh_Ulen  := Net.Headers.To_Network (Net.Uint16 (Packet.Get_Data_Size));
-      Net.Protos.IPv4.Send (Endpoint.Ifnet.all, To.Addr, Packet);
+      Hdr.Uh_Ulen  := Net.Headers.To_Network (Len - 20 - 14);
+      Net.Protos.IPv4.Make_Header (Ip, Endpoint.Listen.Addr, To.Addr, Net.Protos.IPv4.P_UDP, Len - 14);
+      Net.Protos.IPv4.Send_Raw (Endpoint.Ifnet.all, To.Addr, Packet);
    end Send;
+
+   --  ------------------------------
+   --  Input a UDP packet and dispatch it to the associated UDP socket.
+   --  ------------------------------
+   procedure Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                    Packet : in out Net.Buffers.Buffer_Type) is
+      Ip   : constant Net.Headers.IP_Header_Access := Packet.IP;
+      Hdr  : constant Net.Headers.UDP_Header_Access := Packet.UDP;
+      Addr : Net.Sockets.Sockaddr_In;
+      Soc  : access Socket'Class := List;
+   begin
+      Addr.Addr := Ip.Ip_Src;
+      Addr.Port := Hdr.Uh_Sport;
+      while Soc /= null loop
+         if Soc.Listen.Port = Hdr.Uh_Dport then
+            Soc.Receive (Addr, Packet);
+            return;
+         end if;
+         Soc := Soc.Next;
+      end loop;
+   end Input;
 
 end Net.Sockets.Udp;

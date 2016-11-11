@@ -150,6 +150,11 @@ package Net.Buffers is
    procedure Set_Type (Buf  : in out Buffer_Type;
                        Kind : in Packet_Type);
 
+   --  Add a byte to the buffer data, moving the buffer write position.
+   procedure Put_Uint8 (Buf   : in out Buffer_Type;
+                        Value : in Net.Uint8) with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

@@ -20,7 +20,7 @@ package body Net.Buffers is
 
    ETHER_POS  : constant Natural := 0;
    IP_POS     : constant Natural := ETHER_POS + 14;
-   UDP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
+   UDP_POS    : constant Natural := IP_POS + 20;  --  Note: this is wrong due to IP options.
    TCP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Natural := IP_POS + 24;
    ICMP_POS   : constant Natural := IP_POS + 20;
@@ -158,6 +158,15 @@ package body Net.Buffers is
       Buf.Size := Size;
       Buf.Packet.Size := Size;
    end Set_Length;
+
+   --  ------------------------------
+   --  Set the packet type.
+   --  ------------------------------
+   procedure Set_Type (Buf  : in out Buffer_Type;
+                       Kind : in Packet_Type) is
+   begin
+      Buf.Kind := Kind;
+   end Set_Type;
 
    --  ------------------------------
    --  Get access to the Ethernet header.

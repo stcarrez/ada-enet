@@ -274,6 +274,21 @@ package body Net.Buffers is
    end Get_Uint32;
 
    --  ------------------------------
+   --  Get an IPv4 value from the buffer, moving the buffer read position.
+   --  ------------------------------
+   function Get_Ip (Buf : in out Buffer_Type) return Net.Ip_Addr is
+      Pos    : constant Net.Uint16 := Buf.Pos;
+      Result : Ip_Addr;
+   begin
+      Buf.Pos := Pos + 4;
+      Result (1) := Buf.Packet.Data (Pos);
+      Result (2) := Buf.Packet.Data (Pos + 1);
+      Result (3) := Buf.Packet.Data (Pos + 2);
+      Result (4) := Buf.Packet.Data (Pos + 3);
+      return Result;
+   end Get_Uint32;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

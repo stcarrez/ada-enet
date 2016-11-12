@@ -1,0 +1,19 @@
+with "Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
+with "anet_stm32f746.gpr";
+
+project Dns is
+
+   for Runtime ("Ada") use STM32F746_Discovery'Runtime("Ada");
+   for Object_Dir use "obj/stm32f746disco";
+
+   for Main use ("dns.adb");
+   for Source_Dirs use ("demos/dns", "demos/utils", "Ada_Drivers_Library/examples/common/gui");
+
+   package Compiler is
+      --  The network packets are stored in the SDRAM and the SDRAM raises a hardware
+      --  fault when we access un-aligned 32-bit words.
+      for Default_Switches ("Ada")
+         use Anet_STM32F746.Compiler'Default_Switches ("Ada");
+   end Compiler;
+
+end Dns;

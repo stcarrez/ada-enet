@@ -256,7 +256,7 @@ package body Net.Buffers is
       Pos : constant Net.Uint16 := Buf.Pos;
    begin
       Buf.Pos := Pos + 2;
-      return Net.Uint16 (Interfaces.Shift_Left (Buf.Packet.Data (Pos), 8))
+      return Interfaces.Shift_Left (Net.Uint16 (Buf.Packet.Data (Pos)), 8)
         or Net.Uint16 (Buf.Packet.Data (Pos + 1));
    end Get_Uint16;
 
@@ -267,9 +267,9 @@ package body Net.Buffers is
       Pos : constant Net.Uint16 := Buf.Pos;
    begin
       Buf.Pos := Pos + 4;
-      return Net.Uint32 (Interfaces.Shift_Left (Buf.Packet.Data (Pos), 24))
-        or Net.Uint32 (Interfaces.Shift_Left (Buf.Packet.Data (Pos), 16))
-        or Net.Uint32 (Interfaces.Shift_Left (Buf.Packet.Data (Pos), 8))
+      return Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 24)
+        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 16)
+        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 8)
         or Net.Uint32 (Buf.Packet.Data (Pos + 1));
    end Get_Uint32;
 

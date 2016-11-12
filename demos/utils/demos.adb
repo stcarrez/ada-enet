@@ -85,7 +85,8 @@ package body Demos is
    --  ------------------------------
    --  Initialize the board and the interface.
    --  ------------------------------
-   procedure Initialize (Ifnet : in out Net.Interfaces.Ifnet_Type'Class) is
+   procedure Initialize (Title  : in String;
+                         Ifnet  : in out Net.Interfaces.Ifnet_Type'Class) is
    begin
       STM32.Board.Display.Initialize;
       STM32.Board.Display.Initialize_Layer (1, HAL.Bitmap.ARGB_1555);
@@ -102,6 +103,28 @@ package body Demos is
       --  Setup some receive buffers and initialize the Ethernet driver.
       Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);
       Ifnet.Initialize;
+
+      for I in 1 .. 2 loop
+         Current_Font := BMP_Fonts.Font16x24;
+         Put (0, 0, Title);
+         Current_Font := BMP_Fonts.Font8x8;
+         Put (5, 30, "IP");
+         Put (4, 40, "Gateway");
+         Put (250, 30, "Rx");
+         Put (250, 40, "Tx");
+         Put (302, 14, "Packets");
+         Put (418, 14, "Bytes");
+--           Put (0, 70, "Host");
+--           Put (326, 70, "Send");
+--           Put (402, 70, "Receive");
+         Header;
+         STM32.Board.Display.Get_Hidden_Buffer (1).Draw_Horizontal_Line
+           (Color => HAL.Bitmap.Blue,
+            X     => 0,
+            Y     => 84,
+            Width => 480);
+         STM32.Board.Display.Update_Layer (1);
+      end loop;
    end Initialize;
 
 end Demos;

@@ -16,6 +16,8 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with BMP_Fonts;
+with Net;
+with Net.Interfaces;
 package Demos is
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
@@ -29,5 +31,8 @@ package Demos is
    procedure Put (X : in Natural;
                   Y : in Natural;
                   Value : in Net.Uint64);
+
+   --  Refresh the ifnet statistics on the display.
+   procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class);
 
 end Demos;

@@ -178,6 +178,10 @@ package Net.Buffers is
    function Get_Uint8 (Buf : in out Buffer_Type) return Net.Uint8 with
      Pre => not Buf.Is_Null;
 
+   --  Get a 16-bit value in network byte order from the buffer, moving the buffer read position.
+   function Get_Uint16 (Buf : in out Buffer_Type) return Net.Uint16 with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

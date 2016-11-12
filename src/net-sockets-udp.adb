@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------
 with Net.Headers;
 with Net.Protos.IPv4;
+
 package body Net.Sockets.Udp is
 
    List : access Socket'Class;
@@ -38,8 +39,9 @@ package body Net.Sockets.Udp is
    is
       Ip  : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr : constant Net.Headers.UDP_Header_Access := Packet.UDP;
-      Len : Net.Uint16 := Net.Uint16 (Packet.Get_Data_Size);
+      Len : constant Net.Uint16 := Packet.Get_Data_Size;
    begin
+      Packet.Set_Length (Len);
       Hdr.Uh_Dport := To.Port;
       Hdr.Uh_Sport := Endpoint.Listen.Port;
       Hdr.Uh_Sum   := 0;

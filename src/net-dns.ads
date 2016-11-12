@@ -34,6 +34,9 @@ package Net.DNS is
    --  Get the name defined for the DNS query.
    function Get_Name (Request : in Query) return String;
 
+   --  Get the IP address that was resolved by the DNS query.
+   function Get_Ip (Request : in Query) return Net.Ip_Addr;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
@@ -52,6 +55,7 @@ private
       Status   : Status_Type := NOQUERY;
       Deadline : Ada.Real_Time.Time;
       Xid      : Net.Uint16;
+      Ip       : Net.Ip_Addr := (others => 0);
    end record;
 
 end Net.DNS;

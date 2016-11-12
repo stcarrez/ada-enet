@@ -190,6 +190,11 @@ package Net.Buffers is
    function Get_Ip (Buf : in out Buffer_Type) return Net.Ip_Addr with
      Pre => not Buf.Is_Null;
 
+   --  Skip a number of bytes in the buffer, moving the buffer position <tt>Size<tt> bytes ahead.
+   procedure Skip (Buf  : in out Buffer_Type;
+                   Size : in Net.Uint16) with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

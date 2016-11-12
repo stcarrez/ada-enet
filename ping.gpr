@@ -7,7 +7,7 @@ project Ping is
    for Object_Dir use "obj/stm32f746disco";
 
    for Main use ("ping.adb");
-   for Source_Dirs use ("demos/ping", "Ada_Drivers_Library/examples/common/gui");
+   for Source_Dirs use ("demos/ping", "demos/utils", "Ada_Drivers_Library/examples/common/gui");
 
    package Compiler is
       --  The network packets are stored in the SDRAM and the SDRAM raises a hardware

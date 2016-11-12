@@ -56,6 +56,7 @@ private
       Deadline : Ada.Real_Time.Time;
       Xid      : Net.Uint16;
       Ip       : Net.Ip_Addr := (others => 0);
+      Ttl      : Net.Uint32;
    end record;
 
 end Net.DNS;

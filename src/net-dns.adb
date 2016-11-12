@@ -40,6 +40,14 @@ package body Net.DNS is
       return Request.Ip;
    end Get_Ip;
 
+   --  ------------------------------
+   --  Get the TTL associated with the response.
+   --  ------------------------------
+   function Get_Ttl (Request : in Query) return Net.Uint32 is
+   begin
+      return Request.Ttl;
+   end Get_ttl;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

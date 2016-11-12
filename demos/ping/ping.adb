@@ -49,6 +49,7 @@ procedure Ping is
    use type Ada.Real_Time.Time;
 
    procedure Refresh;
+   procedure Header;
 
    procedure Refresh is
       Y     : Natural := 90;
@@ -64,6 +65,15 @@ procedure Ping is
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 
+   procedure Header is
+   begin
+      Demos.Put (0, 70, "Host");
+      Demos.Put (326, 70, "Send");
+      Demos.Put (402, 70, "Receive");
+   end Header;
+
+   procedure Initialize is new Demos.Initialize (Header);
+
    --  The ping period.
    PING_PERIOD   : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Milliseconds (1000);
 
@@ -71,31 +81,10 @@ procedure Ping is
    Ping_Deadline : Ada.Real_Time.Time;
 
 begin
-   Demos.Initialize (Receiver.Ifnet);
+   Initialize ("STM32 Ping", Receiver.Ifnet);
 
    Receiver.Add_Host ((192, 168, 1, 1));
    Receiver.Add_Host ((8, 8, 8, 8));
-
-   for I in 1 .. 2 loop
-      Demos.Current_Font := BMP_Fonts.Font16x24;
-      Demos.Put (0, 0, "STM32 Ping");
-      Demos.Current_Font := BMP_Fonts.Font8x8;
-      Demos.Put (5, 30, "IP");
-      Demos.Put (4, 40, "Gateway");
-      Demos.Put (250, 30, "Rx");
-      Demos.Put (250, 40, "Tx");
-      Demos.Put (302, 14, "Packets");
-      Demos.Put (418, 14, "Bytes");
-      Demos.Put (0, 70, "Host");
-      Demos.Put (326, 70, "Send");
-      Demos.Put (402, 70, "Receive");
-      STM32.Board.Display.Get_Hidden_Buffer (1).Draw_Horizontal_Line
-        (Color => HAL.Bitmap.Blue,
-         X     => 0,
-         Y     => 84,
-         Width => 480);
-      STM32.Board.Display.Update_Layer (1);
-   end loop;
 
    --  Change font to 8x8.
    Demos.Current_Font := BMP_Fonts.Font8x8;

@@ -289,6 +289,15 @@ package body Net.Buffers is
    end Get_Ip;
 
    --  ------------------------------
+   --  Skip a number of bytes in the buffer, moving the buffer position <tt>Size<tt> bytes ahead.
+   --  ------------------------------
+   procedure Skip (Buf  : in out Buffer_Type;
+                   Size : in Net.Uint16) is
+   begin
+      Buf.Pos := Buf.Pos + Size;
+   end Skip;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

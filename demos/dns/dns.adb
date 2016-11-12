@@ -24,6 +24,7 @@ with HAL.Bitmap;
 with Net.Buffers;
 with Net.Utils;
 with Net.Protos.Arp;
+with Net.DNS;
 with Receiver;
 with Demos;
 
@@ -51,6 +52,22 @@ procedure Dns is
    procedure Refresh;
    procedure Header;
 
+   function Get_Status (Query : in Net.DNS.Query) return String is
+      use type Net.DNS.Status_Type;
+
+      S : constant Net.DNS.Status_Type := Query.Get_Status;
+   begin
+      if S = Net.DNS.PENDING then
+         return "...";
+      elsif S = Net.DNS.NOERROR then
+         return "OK";
+      elsif S = Net.DNS.NOQUERY then
+         return "";
+      else
+         return "FAIL";
+      end if;
+   end Get_Status;
+
    procedure Refresh is
       Y     : Natural := 90;
    begin
@@ -58,6 +75,7 @@ procedure Dns is
          if Receiver.Queries (I).Get_Name'Length > 0 then
             Demos.Put (0, Y, Receiver.Queries (I).Get_Name);
             Demos.Put (200, Y, Net.Utils.To_String (Receiver.Queries (I).Get_Ip));
+            Demos.Put (350, Y, Get_Status (Receiver.Queries (I)));
             --  Put (250, Y, Net.Uint64 (Hosts (I).Seq));
             --  Put (350, Y, Net.Uint64 (Hosts (I).Received));
             Y := Y + 16;

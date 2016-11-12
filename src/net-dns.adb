@@ -24,6 +24,14 @@ package body Net.DNS is
       return Request.Status;
    end Get_Status;
 
+   --  ------------------------------
+   --  Get the name defined for the DNS query.
+   --  ------------------------------
+   function Get_Name (Request : in Query) return String is
+   begin
+      return Request.Name (1 .. Request.Name_Len);
+   end Get_Name;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

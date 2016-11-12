@@ -18,16 +18,12 @@
 
 with Ada.Real_Time;
 with Interfaces;
-with STM32.Eth;
-with STM32.SDRAM;
 with STM32.Board;
 with BMP_Fonts;
-with Bitmapped_Drawing;
 with HAL.Bitmap;
 with Net.Buffers;
 with Net.Utils;
 with Net.Protos.Arp;
-with Net.Interfaces.STM32;
 with Receiver;
 with Demos;
 
@@ -54,9 +50,6 @@ procedure Ping is
 
    procedure Refresh;
 
-   --  Reserve 256 network buffers.
-   NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
-
    procedure Refresh is
       Y     : Natural := 90;
       Hosts : constant Receiver.Ping_Info_Array := Receiver.Get_Hosts;
@@ -78,21 +71,7 @@ procedure Ping is
    Ping_Deadline : Ada.Real_Time.Time;
 
 begin
-   STM32.Board.Display.Initialize;
-   STM32.Board.Display.Initialize_Layer (1, HAL.Bitmap.ARGB_1555);
-
-   --  Static IP interface, default netmask and no gateway.
-   Receiver.Ifnet.Ip := (192, 168, 1, 2);
-   Receiver.Ifnet.Gateway := (192, 168, 1, 254);
-
-   --  STMicroelectronics OUI = 00 81 E1
-   Receiver.Ifnet.Mac := (0, 16#81#, 16#E1#, 5, 5, 1);
-
-   STM32.Eth.Initialize_RMII;
-
-   --  Setup some receive buffers and initialize the Ethernet driver.
-   Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);
-   Receiver.Ifnet.Initialize;
+   Demos.Initialize (Receiver.Ifnet);
 
    Receiver.Add_Host ((192, 168, 1, 1));
    Receiver.Add_Host ((8, 8, 8, 8));

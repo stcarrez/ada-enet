@@ -25,7 +25,7 @@ package Net.DNS is
    DNS_NAME_MAX_LENGTH : constant Positive := 255;
 
    type Status_Type is (NOQUERY, NOERROR, FORMERR, SERVFAIL, NXDOMAIN, NOTIMP,
-                        REFUSED, YXDOMAIN, XRRSET, NOTAUTH, NOTZONE, PENDING);
+                        REFUSED, YXDOMAIN, XRRSET, NOTAUTH, NOTZONE, OTHERERROR, PENDING);
 
    type Query is new Net.Sockets.Udp.Socket with private;
 

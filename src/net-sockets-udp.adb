@@ -26,8 +26,10 @@ package body Net.Sockets.Udp is
                    Ifnet    : access Net.Interfaces.Ifnet_Type'Class;
                    Addr     : in Sockaddr_In) is
    begin
-      Endpoint.Next := List;
-      List := Endpoint;
+      if Endpoint.Next = null then
+         Endpoint.Next := List;
+         List := Endpoint;
+      end if;
       Endpoint.Ifnet  := Ifnet;
       Endpoint.Listen.Port := Net.Headers.To_Network (Addr.Port);
       Endpoint.Listen.Addr := Ifnet.Ip;

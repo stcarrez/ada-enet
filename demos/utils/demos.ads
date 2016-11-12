@@ -15,10 +15,17 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
+with Interfaces;
 with BMP_Fonts;
 with Net;
+with Net.Buffers;
 with Net.Interfaces;
 package Demos is
+
+   use type Interfaces.Unsigned_32;
+
+   --  Reserve 256 network buffers.
+   NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
 
@@ -34,5 +41,8 @@ package Demos is
 
    --  Refresh the ifnet statistics on the display.
    procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class);
+
+   --  Initialize the board and the interface.
+   procedure Initialize (Ifnet : in out Net.Interfaces.Ifnet_Type'Class);
 
 end Demos;

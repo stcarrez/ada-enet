@@ -250,6 +250,17 @@ package body Net.Buffers is
    end Get_Uint8;
 
    --  ------------------------------
+   --  Get a 16-bit value in network byte order from the buffer, moving the buffer read position.
+   --  ------------------------------
+   function Get_Uint16 (Buf : in out Buffer_Type) return Net.Uint16 is
+      Pos : constant Net.Uint16 := Buf.Pos;
+   begin
+      Buf.Pos := Pos + 2;
+      return Net.Uint16 (Interfaces.Shift_Left (Buf.Packet.Data (Pos), 8))
+        or Net.Uint16 (Buf.Packet.Data (Pos + 1));
+   end Get_Uint16;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

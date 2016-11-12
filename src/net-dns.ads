@@ -31,6 +31,9 @@ package Net.DNS is
 
    function Get_Status (Request : in Query) return Status_Type;
 
+   --  Get the name defined for the DNS query.
+   function Get_Name (Request : in Query) return String;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

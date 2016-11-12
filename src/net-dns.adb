@@ -48,6 +48,8 @@ package body Net.DNS is
       Addr : Net.Sockets.Sockaddr_In;
       To   : Net.Sockets.Sockaddr_In;
       Buf  : Net.Buffers.Buffer_Type;
+      C    : Character;
+      Cnt  : Net.Uint8;
    begin
       Request.Name_Len := Name'Length;
       Request.Name (1 .. Name'Length) := Name;
@@ -55,17 +57,35 @@ package body Net.DNS is
       Addr.Port := Net.Uint16 (Shift_Right (Xid, 16));
       Request.Xid := Net.Uint16 (Xid and 16#0ffff#);
       Request.Bind (Ifnet, Addr);
+      Net.Buffers.Allocate (Buf);
       Buf.Set_Type (Net.Buffers.UDP_PACKET);
       Buf.Put_Uint16 (Request.Xid);
       Buf.Put_Uint16 (16#0100#);
       Buf.Put_Uint16 (1);
       Buf.Put_Uint16 (0);
       Buf.Put_Uint16 (0);
-      Buf.Put_Uint8 (3);
-      Buf.Put_String (Request.Name (1 .. Request.Name_Len), With_Null => True);
+      Buf.Put_Uint16 (0);
+      for I in 1 .. Request.Name_Len loop
+         C := Request.Name (I);
+         if C = '.' or I = 1 then
+            Cnt := (if I = 1 then 1 else 0);
+            for J in I + 1 .. Request.Name_Len loop
+               C := Request.Name (J);
+               exit when C = '.';
+               Cnt := Cnt + 1;
+            end loop;
+            Buf.Put_Uint8 (Cnt);
+            if I = 1 then
+               Buf.Put_Uint8 (Character'Pos (Request.Name (1)));
+            end if;
+         else
+            Buf.Put_Uint8 (Character'Pos (C));
+         end if;
+      end loop;
+      Buf.Put_Uint8 (0);
       Buf.Put_Uint16 (1);
       Buf.Put_Uint16 (1);
-      To.Port := 53;
+      To.Port := Net.Headers.To_Network (53);
       To.Addr := Ifnet.Dns;
       Request.Send (To, Buf);
    end Resolve;

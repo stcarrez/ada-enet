@@ -90,12 +90,89 @@ package body Net.DNS is
       Request.Send (To, Buf);
    end Resolve;
 
+   procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type) is
+      Cnt : Net.Uint8;
+      Val : Net.Uint16;
+      C   : Net.Uint8;
+   begin
+      loop
+         Cnt := Packet.Get_Uint8;
+         exit when Cnt = 0;
+         while Cnt > 0 loop
+            C := Packet.Get_Uint8;
+            Cnt := Cnt - 1;
+         end loop;
+      end loop;
+      Val := Packet.Get_Uint16;
+      Val := Packet.Get_Uint16;
+   end Skip_Query;
+
    overriding
    procedure Receive (Request  : in out Query;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
+      Val     : Net.Uint16;
+      Answers : Net.Uint16;
+      Ttl     : Net.Uint32;
+      Len     : Net.Uint16;
+      Cls     : Net.Uint16;
    begin
-      null;
+      Packet.Set_Type (Net.Buffers.UDP_PACKET);
+      Val := Packet.Get_Uint16;
+      if Val /= Request.Xid then
+         return;
+      end if;
+      Val := Packet.Get_Uint16;
+      if (Val and 16#ff00#) /= 16#8100# then
+         return;
+      end if;
+      if (Val and 16#0F#) /= 0 then
+         case Val and 16#0F# is
+            when 1 =>
+               Request.Status := FORMERR;
+
+            when 2 =>
+               Request.Status := SERVFAIL;
+
+            when 3 =>
+               Request.Status := NXDOMAIN;
+
+            when 4 =>
+               Request.Status := NOTIMP;
+
+            when  5 =>
+               Request.Status := REFUSED;
+
+            when others =>
+               Request.Status := OTHERERROR;
+
+         end case;
+         return;
+      end if;
+      Val := Packet.Get_Uint16;
+      Answers := Packet.Get_Uint16;
+      if Val /= 1 then
+         Request.Status := SERVFAIL;
+         return;
+      end if;
+      Packet.Skip (4);
+      Skip_Query (Packet);
+      for I in 1 .. Answers loop
+         Packet.Skip (2);
+         Val := Packet.Get_Uint16;
+         Cls := Packet.Get_Uint16;
+         Ttl := Packet.Get_Uint32;
+         Len := Packet.Get_Uint16;
+         if Val = 1 then
+            Request.Ttl := Ttl;
+            if Len = 4 then
+               Request.Ip := Packet.Get_Ip;
+               Request.Status := NOERROR;
+               return;
+            end if;
+          end if;
+         Packet.Skip (Len);
+      end loop;
    end Receive;
 
 end Net.DNS;

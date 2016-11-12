@@ -18,7 +18,8 @@
 with Bitmapped_Drawing;
 with HAL.Bitmap;
 with STM32.Board;
-
+with Net.Utils;
+with Interfaces;
 package body Demos is
 
    --  ------------------------------
@@ -66,5 +67,18 @@ package body Demos is
          end if;
       end loop;
    end Put;
+
+   --  ------------------------------
+   --  Refresh the ifnet statistics on the display.
+   --  ------------------------------
+   procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class) is
+   begin
+      Put (80, 30, Net.Utils.To_String (Ifnet.Ip));
+      Put (80, 40, Net.Utils.To_String (Ifnet.Gateway));
+      Put (250, 30, Net.Uint64 (Ifnet.Rx_Stats.Packets));
+      Put (350, 30, Ifnet.Rx_Stats.Bytes);
+      Put (250, 40, Net.Uint64 (Ifnet.Tx_Stats.Packets));
+      Put (350, 40, Ifnet.Tx_Stats.Bytes);
+   end Refresh_Ifnet_Stats;
 
 end Demos;

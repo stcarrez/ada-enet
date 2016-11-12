@@ -186,6 +186,10 @@ package Net.Buffers is
    function Get_Uint32 (Buf : in out Buffer_Type) return Net.Uint32 with
      Pre => not Buf.Is_Null;
 
+   --  Get an IPv4 value from the buffer, moving the buffer read position.
+   function Get_Ip (Buf : in out Buffer_Type) return Net.Ip_Addr with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

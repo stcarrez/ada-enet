@@ -43,6 +43,9 @@ package Demos is
    procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class);
 
    --  Initialize the board and the interface.
-   procedure Initialize (Ifnet : in out Net.Interfaces.Ifnet_Type'Class);
+   generic
+      with procedure Header;
+   procedure Initialize (Title  : in String;
+                         Ifnet  : in out Net.Interfaces.Ifnet_Type'Class);
 
 end Demos;

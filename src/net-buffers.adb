@@ -240,6 +240,16 @@ package body Net.Buffers is
    end Put_String;
 
    --  ------------------------------
+   --  Get a byte from the buffer, moving the buffer read position.
+   --  ------------------------------
+   function Get_Uint8 (Buf : in out Buffer_Type) return Net.Uint8 is
+      Pos : constant Net.Uint16 := Buf.Pos;
+   begin
+      Buf.Pos := Pos + 1;
+      return Buf.Packet.Data (Pos);
+   end Get_Uint8;
+
+   --  ------------------------------
    --  Get access to the Ethernet header.
    --  ------------------------------
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access is

@@ -83,6 +83,23 @@ For example:
   echoping -v -u 192.168.1.2
 ```
 
+## DNS
+
+The dns application shows a simple DNS client resolver that queries a DNS to resolve a list
+of hosts. 
+
+To build the dns application you may run:
+
+```shell
+  make
+```
+
+And to flash the dns image, you can use:
+
+```shell
+  make flash-dns
+```
+
 ## Documentation
 
 - https://github.com/stcarrez/ada-enet/wiki

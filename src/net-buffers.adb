@@ -18,15 +18,15 @@
 with Ada.Unchecked_Conversion;
 package body Net.Buffers is
 
-   ETHER_POS  : constant Natural := 0;
-   IP_POS     : constant Natural := ETHER_POS + 14;
-   UDP_POS    : constant Natural := IP_POS + 20;  --  Note: this is wrong due to IP options.
-   TCP_POS    : constant Natural := IP_POS + 24;  --  Note: this is wrong due to IP options.
-   IGMP_POS   : constant Natural := IP_POS + 24;
-   ICMP_POS   : constant Natural := IP_POS + 20;
+   ETHER_POS  : constant Uint16 := 0;
+   IP_POS     : constant Uint16 := ETHER_POS + 14;
+   UDP_POS    : constant Uint16 := IP_POS + 20;  --  Note: this is wrong due to IP options.
+   TCP_POS    : constant Uint16 := IP_POS + 24;  --  Note: this is wrong due to IP options.
+   IGMP_POS   : constant Uint16 := IP_POS + 24;
+   ICMP_POS   : constant Uint16 := IP_POS + 20;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
-   type Offset_Table is array (Packet_Type) of Natural;
+   type Offset_Table is array (Packet_Type) of Uint16;
 
    Offsets : constant Offset_Table :=
      (RAW_PACKET   => 0,
@@ -133,7 +133,7 @@ package body Net.Buffers is
    --  ------------------------------
    procedure Switch (To   : in out Buffer_Type;
                      From : in out Buffer_Type) is
-      Size   : constant Natural := To.Size;
+      Size   : constant Uint16 := To.Size;
       Packet : constant Packet_Buffer_Access := To.Packet;
    begin
       To.Size   := From.Size;
@@ -147,23 +147,27 @@ package body Net.Buffers is
       return Buf.Packet.Data (Buf.Packet.Data'First)'Address;
    end Get_Data_Address;
 
-   function Get_Data_Size (Buf : in Buffer_Type) return Natural is
+   function Get_Data_Size (Buf : in Buffer_Type) return Uint16 is
    begin
-      return Buf.Size;
+      if Buf.Size = 0 then
+         return Buf.Pos;
+      else
+         return Buf.Size;
+      end if;
    end Get_Data_Size;
 
-   procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Natural) is
+   procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Uint16) is
    begin
       Buf.Size := Size;
       Buf.Packet.Size := Size;
    end Set_Data_Size;
 
-   function Get_Length (Buf : in Buffer_Type) return Natural is
+   function Get_Length (Buf : in Buffer_Type) return Uint16 is
    begin
       return Buf.Size;
    end Get_Length;
 
-   procedure Set_Length (Buf : in out Buffer_Type; Size : in Natural) is
+   procedure Set_Length (Buf : in out Buffer_Type; Size : in Uint16) is
    begin
       Buf.Size := Size;
       Buf.Packet.Size := Size;
@@ -222,7 +226,7 @@ package body Net.Buffers is
    procedure Put_String (Buf       : in out Buffer_Type;
                          Value     : in String;
                          With_Null : in Boolean := False) is
-      Pos  : Natural := Buf.Pos;
+      Pos  : Uint16 := Buf.Pos;
    begin
       for C of Value loop
          Buf.Packet.Data (Pos) := Character'Pos (C);

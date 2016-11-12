@@ -20,6 +20,7 @@ with HAL.Bitmap;
 with STM32.Board;
 with STM32.Eth;
 with STM32.SDRAM;
+with STM32.RNG.Interrupts;
 with Net.Utils;
 package body Demos is
 
@@ -88,12 +89,14 @@ package body Demos is
    procedure Initialize (Title  : in String;
                          Ifnet  : in out Net.Interfaces.Ifnet_Type'Class) is
    begin
+      STM32.RNG.Interrupts.Initialize_RNG;
       STM32.Board.Display.Initialize;
       STM32.Board.Display.Initialize_Layer (1, HAL.Bitmap.ARGB_1555);
 
       --  Static IP interface, default netmask and no gateway.
       Ifnet.Ip := (192, 168, 1, 2);
       Ifnet.Gateway := (192, 168, 1, 254);
+      Ifnet.Dns := (192, 168, 1, 254);
 
       --  STMicroelectronics OUI = 00 81 E1
       Ifnet.Mac := (0, 16#81#, 16#E1#, 5, 5, 1);

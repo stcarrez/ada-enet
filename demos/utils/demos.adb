@@ -18,8 +18,9 @@
 with Bitmapped_Drawing;
 with HAL.Bitmap;
 with STM32.Board;
+with STM32.Eth;
+with STM32.SDRAM;
 with Net.Utils;
-with Interfaces;
 package body Demos is
 
    --  ------------------------------
@@ -80,5 +81,27 @@ package body Demos is
       Put (250, 40, Net.Uint64 (Ifnet.Tx_Stats.Packets));
       Put (350, 40, Ifnet.Tx_Stats.Bytes);
    end Refresh_Ifnet_Stats;
+
+   --  ------------------------------
+   --  Initialize the board and the interface.
+   --  ------------------------------
+   procedure Initialize (Ifnet : in out Net.Interfaces.Ifnet_Type'Class) is
+   begin
+      STM32.Board.Display.Initialize;
+      STM32.Board.Display.Initialize_Layer (1, HAL.Bitmap.ARGB_1555);
+
+      --  Static IP interface, default netmask and no gateway.
+      Ifnet.Ip := (192, 168, 1, 2);
+      Ifnet.Gateway := (192, 168, 1, 254);
+
+      --  STMicroelectronics OUI = 00 81 E1
+      Ifnet.Mac := (0, 16#81#, 16#E1#, 5, 5, 1);
+
+      STM32.Eth.Initialize_RMII;
+
+      --  Setup some receive buffers and initialize the Ethernet driver.
+      Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);
+      Ifnet.Initialize;
+   end Initialize;
 
 end Demos;

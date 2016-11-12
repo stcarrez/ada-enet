@@ -174,6 +174,10 @@ package Net.Buffers is
                          With_Null : in Boolean := False) with
      Pre => not Buf.Is_Null;
 
+   --  Get a byte from the buffer, moving the buffer read position.
+   function Get_Uint8 (Buf : in out Buffer_Type) return Net.Uint8 with
+     Pre => not Buf.Is_Null;
+
    --  Get access to the Ethernet header.
    function Ethernet (Buf : in Buffer_Type) return Net.Headers.Ether_Header_Access with
      Pre => not Buf.Is_Null;

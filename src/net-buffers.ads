@@ -104,7 +104,7 @@ package Net.Buffers is
    --  The packet type identifies the content of the packet for the serialization/deserialization.
    type Packet_Type is (RAW_PACKET, ETHER_PACKET, ARP_PACKET, IP_PACKET, UDP_PACKET, ICMP_PACKET);
 
-   type Data_Type is array (0 .. 1500 + 31) of aliased Uint8 with
+   type Data_Type is array (Net.Uint16 range 0 .. 1500 + 31) of aliased Uint8 with
      Alignment => 32;
 
    type Buffer_Type is tagged limited private;
@@ -138,13 +138,13 @@ package Net.Buffers is
    --
    function Get_Data_Address (Buf : in Buffer_Type) return System.Address;
 
-   function Get_Data_Size (Buf : in Buffer_Type) return Natural;
+   function Get_Data_Size (Buf : in Buffer_Type) return Uint16;
 
-   procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Natural);
+   procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Uint16);
 
-   function Get_Length (Buf : in Buffer_Type) return Natural;
+   function Get_Length (Buf : in Buffer_Type) return Uint16;
 
-   procedure Set_Length (Buf : in out Buffer_Type; Size : in Natural);
+   procedure Set_Length (Buf : in out Buffer_Type; Size : in Uint16);
 
    --  Set the packet type.
    procedure Set_Type (Buf  : in out Buffer_Type;
@@ -254,14 +254,14 @@ private
 
    type Packet_Buffer is limited record
       Next : Packet_Buffer_Access;
-      Size : Natural;
+      Size : Uint16;
       Data : aliased Data_Type;
    end record;
 
    type Buffer_Type is tagged limited record
       Kind   : Packet_Type := RAW_PACKET;
-      Size   : Natural := 0;
-      Pos    : Natural := 0;
+      Size   : Uint16 := 0;
+      Pos    : Uint16 := 0;
       Packet : Packet_Buffer_Access;
    end record;
 

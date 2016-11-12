@@ -286,7 +286,7 @@ package body Net.Buffers is
       Result (3) := Buf.Packet.Data (Pos + 2);
       Result (4) := Buf.Packet.Data (Pos + 3);
       return Result;
-   end Get_Uint32;
+   end Get_Ip;
 
    --  ------------------------------
    --  Get access to the Ethernet header.

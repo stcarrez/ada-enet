@@ -37,6 +37,9 @@ package Net.DNS is
    --  Get the IP address that was resolved by the DNS query.
    function Get_Ip (Request : in Query) return Net.Ip_Addr;
 
+   --  Get the TTL associated with the response.
+   function Get_Ttl (Request : in Query) return Net.Uint32;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

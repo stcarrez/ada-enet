@@ -295,7 +295,7 @@ package body Net.Interfaces.STM32 is
       entry Wait_Packet (Buf : in out Net.Buffers.Buffer_Type) when Rx_Available is
          Rx   : constant Rx_Ring_Access := Rx_Ring (Cur_Rx)'Access;
       begin
-         Rx.Buffer.Set_Length (Integer (Rx.Desc.Rdes0.Fl));
+         Rx.Buffer.Set_Length (Net.Uint16 (Rx.Desc.Rdes0.Fl));
          Net.Buffers.Switch (Buf, Rx.Buffer);
          Rx.Desc.Rdes2 := W (Rx.Buffer.Get_Data_Address);
          Rx.Desc.Rdes0.Own := 1;

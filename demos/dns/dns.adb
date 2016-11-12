@@ -76,6 +76,7 @@ procedure Dns is
             Demos.Put (0, Y, Receiver.Queries (I).Get_Name);
             Demos.Put (200, Y, Net.Utils.To_String (Receiver.Queries (I).Get_Ip));
             Demos.Put (350, Y, Get_Status (Receiver.Queries (I)));
+            Demos.Put (400, Y, Net.Uint32'Image (Receiver.Queries (I).Get_Ttl));
             --  Put (250, Y, Net.Uint64 (Hosts (I).Seq));
             --  Put (350, Y, Net.Uint64 (Hosts (I).Received));
             Y := Y + 16;
@@ -90,6 +91,7 @@ procedure Dns is
       Receiver.Queries (4).Resolve (Receiver.Ifnet'Access, "www.adacore.com");
       Receiver.Queries (5).Resolve (Receiver.Ifnet'Access, "github.com");
       Receiver.Queries (6).Resolve (Receiver.Ifnet'Access, "www.twitter.com");
+      Receiver.Queries (7).Resolve (Receiver.Ifnet'Access, "www.kalabosse.com");
    end Refresh;
 
    procedure Header is

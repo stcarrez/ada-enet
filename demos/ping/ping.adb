@@ -29,6 +29,7 @@ with Net.Utils;
 with Net.Protos.Arp;
 with Net.Interfaces.STM32;
 with Receiver;
+with Demos;
 
 --  == Ping Application ==
 --  The <b>Ping</b> application listens to the Ethernet network to identify some local
@@ -51,73 +52,22 @@ procedure Ping is
    use type Net.Ip_Addr;
    use type Ada.Real_Time.Time;
 
-   procedure Put (X : in Natural; Y : in Natural; Msg : in String);
-   procedure Put (X : in Natural; Y : in Natural; Value : in Net.Uint64);
-   procedure Refresh_Ifnet_Stats;
    procedure Refresh;
 
    --  Reserve 256 network buffers.
    NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
-
-   Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
-
-   procedure Put (X : in Natural; Y : in Natural; Msg : in String) is
-   begin
-      Bitmapped_Drawing.Draw_String (Buffer     => STM32.Board.Display.Get_Hidden_Buffer (1),
-                                     Start      => (X, Y),
-                                     Msg        => Msg,
-                                     Font       => Current_Font,
-                                     Foreground => HAL.Bitmap.White,
-                                     Background => HAL.Bitmap.Black);
-   end Put;
-
-   procedure Put (X : in Natural; Y : in Natural; Value : in Net.Uint64) is
-      Buffer : constant HAL.Bitmap.Bitmap_Buffer'Class := STM32.Board.Display.Get_Hidden_Buffer (1);
-      FG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                   HAL.Bitmap.White);
-      BG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                   HAL.Bitmap.Black);
-      V      : constant String := Net.Uint64'Image (Value);
-      Pos    : Bitmapped_Drawing.Point := (X + 100, Y);
-      D      : Natural := 1;
-   begin
-      for I in reverse V'Range loop
-         Bitmapped_Drawing.Draw_Char (Buffer     => Buffer,
-                                      Start      => Pos,
-                                      Char       => V (I),
-                                      Font       => Current_Font,
-                                      Foreground => FG,
-                                      Background => BG);
-         Pos.X := Pos.X - 8;
-         D := D + 1;
-         if D = 4 then
-            D := 1;
-            Pos.X := Pos.X - 4;
-         end if;
-      end loop;
-   end Put;
-
-   procedure Refresh_Ifnet_Stats is
-   begin
-      Put (80, 30, Net.Utils.To_String (Receiver.Ifnet.Ip));
-      Put (80, 40, Net.Utils.To_String (Receiver.Ifnet.Gateway));
-      Put (250, 30, Net.Uint64 (Receiver.Ifnet.Rx_Stats.Packets));
-      Put (350, 30, Receiver.Ifnet.Rx_Stats.Bytes);
-      Put (250, 40, Net.Uint64 (Receiver.Ifnet.Tx_Stats.Packets));
-      Put (350, 40, Receiver.Ifnet.Tx_Stats.Bytes);
-   end Refresh_Ifnet_Stats;
 
    procedure Refresh is
       Y     : Natural := 90;
       Hosts : constant Receiver.Ping_Info_Array := Receiver.Get_Hosts;
    begin
       for I in Hosts'Range loop
-         Put (0, Y, Net.Utils.To_String (Hosts (I).Ip));
-         Put (250, Y, Net.Uint64 (Hosts (I).Seq));
-         Put (350, Y, Net.Uint64 (Hosts (I).Received));
+         Demos.Put (0, Y, Net.Utils.To_String (Hosts (I).Ip));
+         Demos.Put (250, Y, Net.Uint64 (Hosts (I).Seq));
+         Demos.Put (350, Y, Net.Uint64 (Hosts (I).Received));
          Y := Y + 16;
       end loop;
-      Refresh_Ifnet_Stats;
+      Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 
@@ -148,18 +98,18 @@ begin
    Receiver.Add_Host ((8, 8, 8, 8));
 
    for I in 1 .. 2 loop
-      Current_Font := BMP_Fonts.Font16x24;
-      Put (0, 0, "STM32 Ping");
-      Current_Font := BMP_Fonts.Font8x8;
-      Put (5, 30, "IP");
-      Put (4, 40, "Gateway");
-      Put (250, 30, "Rx");
-      Put (250, 40, "Tx");
-      Put (302, 14, "Packets");
-      Put (418, 14, "Bytes");
-      Put (0, 70, "Host");
-      Put (326, 70, "Send");
-      Put (402, 70, "Receive");
+      Demos.Current_Font := BMP_Fonts.Font16x24;
+      Demos.Put (0, 0, "STM32 Ping");
+      Demos.Current_Font := BMP_Fonts.Font8x8;
+      Demos.Put (5, 30, "IP");
+      Demos.Put (4, 40, "Gateway");
+      Demos.Put (250, 30, "Rx");
+      Demos.Put (250, 40, "Tx");
+      Demos.Put (302, 14, "Packets");
+      Demos.Put (418, 14, "Bytes");
+      Demos.Put (0, 70, "Host");
+      Demos.Put (326, 70, "Send");
+      Demos.Put (402, 70, "Receive");
       STM32.Board.Display.Get_Hidden_Buffer (1).Draw_Horizontal_Line
         (Color => HAL.Bitmap.Blue,
          X     => 0,
@@ -169,7 +119,7 @@ begin
    end loop;
 
    --  Change font to 8x8.
-   Current_Font := BMP_Fonts.Font8x8;
+   Demos.Current_Font := BMP_Fonts.Font8x8;
    Ping_Deadline := Ada.Real_Time.Clock;
    loop
       declare

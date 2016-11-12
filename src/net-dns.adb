@@ -32,6 +32,14 @@ package body Net.DNS is
       return Request.Name (1 .. Request.Name_Len);
    end Get_Name;
 
+   --  ------------------------------
+   --  Get the IP address that was resolved by the DNS query.
+   --  ------------------------------
+   function Get_Ip (Request : in Query) return Net.Ip_Addr is
+   begin
+      return Request.Ip;
+   end Get_Ip;
+
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

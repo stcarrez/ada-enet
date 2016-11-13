@@ -124,4 +124,40 @@ package Net.Headers is
    end record;
    type ICMP_Header_Access is access all ICMP_Header;
 
+   --  DHCP header as defined by RFC 1541.
+   type DHCP_Header is record
+      Op     : Uint8;
+      Htype  : Uint8;
+      Hlen   : Uint8;
+      Hops   : Uint8;
+      Xid    : Uint32;
+      Secs   : Uint16;
+      Flags  : Uint16;
+      Ciaddr : Ip_Addr;
+      Yiaddr : Ip_Addr;
+      Siaddr : Ip_Addr;
+      Giaddr : Ip_Addr;
+      Chaddr : String (1 .. 16);
+      Sname  : String (1 .. 64);
+      File   : String (1 .. 128);
+   end record;
+   type DHCP_Header_Access is access all DHCP_Header;
+
+   for DHCP_Header use record
+      Op     at 0 range 0 .. 7;
+      Htype  at 1 range 0 .. 7;
+      Hlen   at 2 range 0 .. 7;
+      Hops   at 3 range 0 .. 7;
+      Xid    at 4 range 0 .. 31;
+      Secs   at 8 range 0 .. 15;
+      Flags  at 10 range 0 .. 15;
+      Ciaddr at 12 range 0 .. 31;
+      Yiaddr at 16 range 0 .. 31;
+      Siaddr at 20 range 0 .. 31;
+      Giaddr at 24 range 0 .. 31;
+      Chaddr at 28 range 0 .. 127;
+      Sname  at 44 range 0 .. 511;
+      File   at 108 range 0 .. 1023;
+   end record;
+
 end Net.Headers;

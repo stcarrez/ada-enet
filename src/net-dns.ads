@@ -27,6 +27,19 @@ package Net.DNS is
    type Status_Type is (NOQUERY, NOERROR, FORMERR, SERVFAIL, NXDOMAIN, NOTIMP,
                         REFUSED, YXDOMAIN, XRRSET, NOTAUTH, NOTZONE, OTHERERROR, PENDING);
 
+   --  The DNS record type is a 16-bit number.
+   type RR_Type is new Net.Uint16;
+
+   --  Common standard DSN record type values from RFC 1035, RFC 3586)
+   --  (See http://www.iana.org/assignments/dns-parameters/dns-parameters.xhtml)
+   A_RR     : constant RR_Type := 1;
+   NS_RR    : constant RR_Type := 2;
+   CNAME_RR : constant RR_Type := 5;
+   PTR_RR   : constant RR_Type := 12;
+   MX_RR    : constant RR_Type := 15;
+   TXT_RR   : constant RR_Type := 16;
+   AAAA_RR  : constant RR_Type := 28;
+
    type Query is new Net.Sockets.Udp.Socket with private;
 
    function Get_Status (Request : in Query) return Status_Type;

@@ -24,6 +24,7 @@ package body Net.Buffers is
    TCP_POS    : constant Uint16 := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Uint16 := IP_POS + 24;
    ICMP_POS   : constant Uint16 := IP_POS + 20;
+   DHCP_POS   : constant Uint16 := IP_POS + 20;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
    type Offset_Table is array (Packet_Type) of Uint16;
@@ -63,6 +64,10 @@ package body Net.Buffers is
    function As_Icmp_Header is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.ICMP_Header_Access);
+
+   function As_Dhcp_Header is
+     new Ada.Unchecked_Conversion (Source => System.Address,
+                                   Target => Net.Headers.DHCP_Header_Access);
 
    protected Manager is
       procedure Allocate (Packet : out Packet_Buffer_Access);
@@ -352,6 +357,14 @@ package body Net.Buffers is
    begin
       return As_Icmp_Header (Buf.Packet.Data (ICMP_POS)'Address);
    end ICMP;
+
+   --  ------------------------------
+   --  Get access to the DHCP header.
+   --  ------------------------------
+   function DHCP (Buf : in Buffer_Type) return Net.Headers.DHCP_Header_Access is
+   begin
+      return As_Dhcp_Header (Buf.Packet.Data (DHCP_POS)'Address);
+   end DHCP;
 
    --  ------------------------------
    --  Returns True if the list is empty.

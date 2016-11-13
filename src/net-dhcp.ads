@@ -29,6 +29,9 @@ package Net.DHCP is
 
    type Client is new Net.Sockets.Udp.Socket with private;
 
+   --  Get the current DHCP client state.
+   function Get_State (Request : in Client) return State_Type;
+
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
    procedure Discover (Request : in out Client;
                        Ifnet   : access Net.Interfaces.Ifnet_Type'Class);

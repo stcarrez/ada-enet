@@ -102,7 +102,8 @@ package Net.Buffers is
    NET_BUF_SIZE   : constant Uint32;
 
    --  The packet type identifies the content of the packet for the serialization/deserialization.
-   type Packet_Type is (RAW_PACKET, ETHER_PACKET, ARP_PACKET, IP_PACKET, UDP_PACKET, ICMP_PACKET);
+   type Packet_Type is (RAW_PACKET, ETHER_PACKET, ARP_PACKET, IP_PACKET, UDP_PACKET, ICMP_PACKET,
+                        DHCP_PACKET);
 
    type Data_Type is array (Net.Uint16 range 0 .. 1500 + 31) of aliased Uint8 with
      Alignment => 32;

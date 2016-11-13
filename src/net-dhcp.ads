@@ -24,6 +24,10 @@ package Net.DHCP is
 
    type Client is new Net.Sockets.Udp.Socket with private;
 
+   --  Send the DHCP discover packet to initiate the DHCP discovery process.
+   procedure Discover (Request : in out Client;
+                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class);
+
    overriding
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;

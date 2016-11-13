@@ -24,11 +24,22 @@ with Net.Protos.IPv4;
 with Net.Sockets.Udp;
 package body Net.DHCP is
 
+   DEF_VENDOR_CLASS : constant String := "Ada Embedded Network";
+
+   DHCP_DISCOVER : constant Net.Uint8 := 1;
+   DHCP_OFFER    : constant Net.Uint8 := 2;
+   DHCP_REQUEST  : constant Net.Uint8 := 3;
+   DHCP_DECLINE  : constant Net.Uint8 := 4;
+   DHCP_ACK      : constant Net.Uint8 := 5;
+   DHCP_NACK     : constant Net.Uint8 := 6;
+   DHCP_RELEASE  : constant Net.Uint8 := 7;
+
    --  ------------------------------
    --  Fill the DHCP options in the request.
    --  ------------------------------
    procedure Fill_Options (Request : in Client;
                            Packet  : in out Net.Buffers.Buffer_Type;
+                           Kind    : in Net.Uint8;
                            Mac     : in Net.Ether_Addr) is
    begin
       --  DHCP magic cookie.
@@ -40,12 +51,19 @@ package body Net.DHCP is
       --  Option 53: DHCP message type
       Packet.Put_Uint8 (53);
       Packet.Put_Uint8 (1);
-      Packet.Put_Uint8 (1); --  Discover
+      Packet.Put_Uint8 (Kind); --  Discover
 
       --  Option 50: Requested IP Address
       Packet.Put_Uint8 (50);
       Packet.Put_Uint8 (4);
       Packet.Put_Ip (Request.Ip);
+
+      --  Option 54: DHCP Server Identifier.
+      if Request.Server_Ip /= (0, 0, 0, 0) then
+         Packet.Put_Uint8 (54);
+         Packet.Put_Uint8 (4);
+         Packet.Put_Ip (Request.Server_Ip);
+      end if;
 
       --  Option 55: Parameter request List
       Packet.Put_Uint8 (55);
@@ -60,6 +78,11 @@ package body Net.DHCP is
       Packet.Put_Uint8 (51);
       Packet.Put_Uint8 (58);
       Packet.Put_Uint8 (59);
+
+      --  Option 60: Vendor class identifier.
+      Packet.Put_Uint8 (60);
+      Packet.Put_Uint8 (DEF_VENDOR_CLASS'Length);
+      Packet.Put_String (DEF_VENDOR_CLASS);
 
       --  Option 61: Client identifier;
       Packet.Put_Uint8 (61);
@@ -84,7 +107,11 @@ package body Net.DHCP is
       Udp    : Net.Headers.UDP_Header_Access;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
+      Addr   : Net.Sockets.Sockaddr_In;
    begin
+      Addr.Port := Net.Headers.To_Network (68);
+      Request.Bind (Ifnet, Addr);
+
       --  Generate a XID for the DHCP process.
       if Request.Xid = 0 then
          Request.Xid := Ifnet.Random;
@@ -115,7 +142,7 @@ package body Net.DHCP is
       end loop;
       Hdr.Sname  := (others => Character'Val (0));
       Hdr.File   := (others => Character'Val (0));
-      Fill_Options (Request, Packet, Ifnet.Mac);
+      Fill_Options (Request, Packet, DHCP_DISCOVER, Ifnet.Mac);
 
       --  Get the packet length and setup the UDP header.
       Len := Packet.Get_Data_Size;
@@ -142,8 +169,18 @@ package body Net.DHCP is
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
+      Hdr    : Net.Headers.DHCP_Header_Access := Packet.DHCP;
    begin
-      null;
+      if Hdr.Op /= 2 or Hdr.Htype /= 1 or Hdr.Hlen /= 6 then
+         return;
+      end if;
+      if Hdr.Xid1 /= Net.Uint16 (Request.Xid and 16#0ffff#) then
+         return;
+      end if;
+      if Hdr.Xid2 /= Net.Uint16 (Shift_Right (Request.Xid, 16)) then
+         return;
+      end if;
+      Request.Ip := Hdr.Yiaddr;
    end Receive;
 
 end Net.DHCP;

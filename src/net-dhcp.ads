@@ -36,9 +36,10 @@ package Net.DHCP is
 private
 
    type Client is new Net.Sockets.Udp.Socket with record
-      Xid      : Net.Uint32;
-      Secs     : Net.Uint16 := 0;
-      Ip       : Net.Ip_Addr := (others => 0);
+      Xid       : Net.Uint32;
+      Secs      : Net.Uint16 := 0;
+      Ip        : Net.Ip_Addr := (others => 0);
+      Server_Ip : Net.Ip_Addr := (others => 0);
    end record;
 
 end Net.DHCP;

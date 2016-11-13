@@ -33,6 +33,7 @@ private
 
    type Client is new Net.Sockets.Udp.Socket with record
       Xid      : Net.Uint32;
+      Secs     : Net.Uint16 := 0;
       Ip       : Net.Ip_Addr := (others => 0);
    end record;
 

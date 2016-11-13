@@ -22,6 +22,11 @@ with Net.Buffers;
 with Net.Sockets.Udp;
 package Net.DHCP is
 
+   --  The <tt>State_Type</tt> defines the DHCP client finite state machine.
+   type State_Type is (STATE_INIT, STATE_INIT_REBOOT, STATE_SELECTING, STATE_REQUESTING,
+                       STATE_BOUND, STATE_RENEWING, STATE_REBINDING,
+                       STATE_REBOOTING);
+
    type Client is new Net.Sockets.Udp.Socket with private;
 
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
@@ -36,6 +41,7 @@ package Net.DHCP is
 private
 
    type Client is new Net.Sockets.Udp.Socket with record
+      State     : State_Type := STATE_INIT;
       Xid       : Net.Uint32;
       Secs      : Net.Uint16 := 0;
       Ip        : Net.Ip_Addr := (others => 0);

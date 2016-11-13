@@ -175,6 +175,11 @@ package Net.Buffers is
                          With_Null : in Boolean := False) with
      Pre => not Buf.Is_Null;
 
+   --  Add an IP address to the buffer data, moving the buffer write position.
+   procedure Put_Ip (Buf   : in out Buffer_Type;
+                     Value : in Ip_Addr) with
+     Pre => not Buf.Is_Null;
+
    --  Get a byte from the buffer, moving the buffer read position.
    function Get_Uint8 (Buf : in out Buffer_Type) return Net.Uint8 with
      Pre => not Buf.Is_Null;

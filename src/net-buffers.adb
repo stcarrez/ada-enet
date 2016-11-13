@@ -246,6 +246,20 @@ package body Net.Buffers is
    end Put_String;
 
    --  ------------------------------
+   --  Add an IP address to the buffer data, moving the buffer write position.
+   --  ------------------------------
+   procedure Put_Ip (Buf   : in out Buffer_Type;
+                     Value : in Ip_Addr) is
+      Pos : Uint16 := Buf.Pos;
+   begin
+      for C of Value loop
+         Buf.Packet.Data (Pos) := C;
+         Pos := Pos + 1;
+      end loop;
+      Buf.Pos := Pos;
+   end Put_Ip;
+
+   --  ------------------------------
    --  Get a byte from the buffer, moving the buffer read position.
    --  ------------------------------
    function Get_Uint8 (Buf : in out Buffer_Type) return Net.Uint8 is

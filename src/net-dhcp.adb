@@ -35,6 +35,14 @@ package body Net.DHCP is
    DHCP_RELEASE  : constant Net.Uint8 := 7;
 
    --  ------------------------------
+   --  Get the current DHCP client state.
+   --  ------------------------------
+   function Get_State (Request : in Client) return State_Type is
+   begin
+      return Request.State;
+   end Get_State;
+
+   --  ------------------------------
    --  Fill the DHCP options in the request.
    --  ------------------------------
    procedure Fill_Options (Request : in Client;

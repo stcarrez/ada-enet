@@ -130,7 +130,8 @@ package Net.Headers is
       Htype  : Uint8;
       Hlen   : Uint8;
       Hops   : Uint8;
-      Xid    : Uint32;
+      Xid1   : Uint16;
+      Xid2   : Uint16;
       Secs   : Uint16;
       Flags  : Uint16;
       Ciaddr : Ip_Addr;
@@ -148,7 +149,8 @@ package Net.Headers is
       Htype  at 1 range 0 .. 7;
       Hlen   at 2 range 0 .. 7;
       Hops   at 3 range 0 .. 7;
-      Xid    at 4 range 0 .. 31;
+      Xid1   at 4 range 0 .. 15;
+      Xid2   at 6 range 0 .. 15;
       Secs   at 8 range 0 .. 15;
       Flags  at 10 range 0 .. 15;
       Ciaddr at 12 range 0 .. 31;

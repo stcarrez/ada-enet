@@ -24,7 +24,7 @@ package body Net.Buffers is
    TCP_POS    : constant Uint16 := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Uint16 := IP_POS + 24;
    ICMP_POS   : constant Uint16 := IP_POS + 20;
-   DHCP_POS   : constant Uint16 := IP_POS + 20;
+   DHCP_POS   : constant Uint16 := IP_POS + 20 + 8;
    --  DATA_POS  : constant Natural := UDP_POS + 8;
 
    type Offset_Table is array (Packet_Type) of Uint16;
@@ -35,7 +35,8 @@ package body Net.Buffers is
       ARP_PACKET   => 14 + 8,
       IP_PACKET    => 14 + 20,
       ICMP_PACKET  => 14 + 20 + 8,
-      UDP_PACKET   => 14 + 20 + 8);
+      UDP_PACKET   => 14 + 20 + 8,
+      DHCP_PACKET  => 14 + 20 + 8 + 236);
 
    function As_Ethernet is
      new Ada.Unchecked_Conversion (Source => System.Address,

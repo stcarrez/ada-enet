@@ -70,6 +70,8 @@ procedure Dns is
 
    procedure Refresh is
       Y     : Natural := 90;
+      Status : Net.Error_Code;
+      pragma Unreferenced (Status);
    begin
       for I in Receiver.Queries'Range loop
          if Receiver.Queries (I).Get_Name'Length > 0 then
@@ -85,13 +87,13 @@ procedure Dns is
       Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
       STM32.Board.Display.Update_Layer (1);
 
-      Receiver.Queries (1).Resolve (Receiver.Ifnet'Access, "www.google.com");
-      Receiver.Queries (2).Resolve (Receiver.Ifnet'Access, "www.facebook.com");
-      Receiver.Queries (3).Resolve (Receiver.Ifnet'Access, "www.apple.com");
-      Receiver.Queries (4).Resolve (Receiver.Ifnet'Access, "www.adacore.com");
-      Receiver.Queries (5).Resolve (Receiver.Ifnet'Access, "github.com");
-      Receiver.Queries (6).Resolve (Receiver.Ifnet'Access, "www.twitter.com");
-      Receiver.Queries (7).Resolve (Receiver.Ifnet'Access, "www.kalabosse.com");
+      Receiver.Queries (1).Resolve (Receiver.Ifnet'Access, "www.google.com", Status);
+      Receiver.Queries (2).Resolve (Receiver.Ifnet'Access, "www.facebook.com", Status);
+      Receiver.Queries (3).Resolve (Receiver.Ifnet'Access, "www.apple.com", Status);
+      Receiver.Queries (4).Resolve (Receiver.Ifnet'Access, "www.adacore.com", Status);
+      Receiver.Queries (5).Resolve (Receiver.Ifnet'Access, "github.com", Status);
+      Receiver.Queries (6).Resolve (Receiver.Ifnet'Access, "www.twitter.com", Status);
+      Receiver.Queries (7).Resolve (Receiver.Ifnet'Access, "www.kalabosse.com", Status);
    end Refresh;
 
    procedure Header is
@@ -117,6 +119,7 @@ begin
       begin
          Net.Protos.Arp.Timeout (Receiver.Ifnet);
          if Ping_Deadline < Now then
+            Receiver.Dhcp.Discover (Receiver.Ifnet'Access);
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;

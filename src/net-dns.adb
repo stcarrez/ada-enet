@@ -51,6 +51,7 @@ package body Net.DNS is
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
+                      Status  : out Error_Code;
                       Timeout : in Natural := 10) is
       Xid  : Uint32 := Ifnet.Random;
       Addr : Net.Sockets.Sockaddr_In;
@@ -95,7 +96,7 @@ package body Net.DNS is
       Buf.Put_Uint16 (1);
       To.Port := Net.Headers.To_Network (53);
       To.Addr := Ifnet.Dns;
-      Request.Send (To, Buf);
+      Request.Send (To, Buf, Status);
    end Resolve;
 
    procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type) is

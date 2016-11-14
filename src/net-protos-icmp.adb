@@ -29,7 +29,8 @@ package body Net.Protos.Icmp is
                            Target_Ip : in Ip_Addr;
                            Packet    : in out Net.Buffers.Buffer_Type;
                            Seq       : in Net.Uint16;
-                           Ident     : in Net.Uint16) is
+                           Ident     : in Net.Uint16;
+                           Status    : out Error_Code) is
       Ip  : constant Net.Headers.IP_Header_Access   := Packet.IP;
       Hdr : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
    begin
@@ -40,7 +41,7 @@ package body Net.Protos.Icmp is
       Hdr.Icmp_Checksum := 0;
       Net.Protos.IPv4.Make_Header (Ip, Ifnet.Ip, Target_Ip, Net.Protos.IPv4.P_ICMP,
                                    Uint16 (Packet.Get_Length - 14));
-      Net.Protos.IPv4.Send_Raw (Ifnet, Target_Ip, Packet);
+      Net.Protos.IPv4.Send_Raw (Ifnet, Target_Ip, Packet, Status);
    end Echo_Request;
 
    --  ------------------------------
@@ -51,6 +52,7 @@ package body Net.Protos.Icmp is
       Ether  : constant Net.Headers.Ether_Header_Access := Packet.Ethernet;
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr    : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
+      Status : Error_Code;
    begin
       if Hdr.Icmp_Type = Net.Headers.ICMP_ECHO_REQUEST and Hdr.Icmp_Code = 0 then
          Hdr.Icmp_Type := Net.Headers.ICMP_ECHO_REPLY;
@@ -59,7 +61,7 @@ package body Net.Protos.Icmp is
          Ip.Ip_Src := Ifnet.Ip;
          Net.Protos.IPv4.Make_Ident (Ip);
          --  Net.Protos.Arp.Update (Ifnet, Ip.Ip_Dst, Ether.Ether_Shost);
-         Net.Protos.IPv4.Send_Raw (Ifnet, Ip.Ip_Dst, Packet);
+         Net.Protos.IPv4.Send_Raw (Ifnet, Ip.Ip_Dst, Packet, Status);
       else
          Net.Buffers.Release (Packet);
       end if;

@@ -40,10 +40,12 @@ package Net.Protos.IPv4 is
    --  it is queued and sent when the ARP resolution is successful.
    procedure Send_Raw (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                        Target_Ip : in Ip_Addr;
-                       Packet    : in out Net.Buffers.Buffer_Type);
+                       Packet    : in out Net.Buffers.Buffer_Type;
+                       Status    : out Error_Code);
 
    procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                    Target_Ip : in Ip_Addr;
-                   Packet    : in out Net.Buffers.Buffer_Type);
+                   Packet    : in out Net.Buffers.Buffer_Type;
+                   Status    : out Error_Code);
 
 end Net.Protos.IPv4;

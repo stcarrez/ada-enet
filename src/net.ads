@@ -42,6 +42,13 @@ package Net is
    --  Ethernet address representation.
    type Ether_Addr is array (1 .. 6) of Uint8;
 
+   --  The error code returned by some opeartions.
+   type Error_Code is (EOK,         --  No error.
+                       ENOBUFS,     --  No buffer for the operation.
+                       ENETUNREACH, --  Network unreachable.
+                       EINPROGRESS  --  Operation is in progress.
+                      );
+
    use type Interfaces.Unsigned_8;
    use type Interfaces.Unsigned_16;
    use type Interfaces.Unsigned_32;

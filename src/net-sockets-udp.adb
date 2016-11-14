@@ -26,18 +26,19 @@ package body Net.Sockets.Udp is
                    Ifnet    : access Net.Interfaces.Ifnet_Type'Class;
                    Addr     : in Sockaddr_In) is
    begin
-      if Endpoint.Next = null then
+      if Endpoint.Ifnet = null then
          Endpoint.Next := List;
          List := Endpoint;
+         Endpoint.Ifnet  := Ifnet;
       end if;
-      Endpoint.Ifnet  := Ifnet;
       Endpoint.Listen.Port := Net.Headers.To_Network (Addr.Port);
       Endpoint.Listen.Addr := Ifnet.Ip;
    end Bind;
 
    procedure Send (Endpoint : in out Socket;
                    To       : in Sockaddr_In;
-                   Packet   : in out Net.Buffers.Buffer_Type)
+                   Packet   : in out Net.Buffers.Buffer_Type;
+                   Status   : out Error_Code)
    is
       Ip  : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr : constant Net.Headers.UDP_Header_Access := Packet.UDP;
@@ -49,7 +50,7 @@ package body Net.Sockets.Udp is
       Hdr.Uh_Sum   := 0;
       Hdr.Uh_Ulen  := Net.Headers.To_Network (Len - 20 - 14);
       Net.Protos.IPv4.Make_Header (Ip, Endpoint.Listen.Addr, To.Addr, Net.Protos.IPv4.P_UDP, Len - 14);
-      Net.Protos.IPv4.Send_Raw (Endpoint.Ifnet.all, To.Addr, Packet);
+      Net.Protos.IPv4.Send_Raw (Endpoint.Ifnet.all, To.Addr, Packet, Status);
    end Send;
 
    --  ------------------------------

@@ -28,7 +28,8 @@ package Net.Sockets.Udp is
    --  Send the UDP packet to the destination IP and port.
    procedure Send (Endpoint : in out Socket;
                    To       : in Sockaddr_In;
-                   Packet   : in out Net.Buffers.Buffer_Type);
+                   Packet   : in out Net.Buffers.Buffer_Type;
+                   Status   : out Error_Code);
 
    procedure Receive (Endpoint : in out Socket;
                       From     : in Sockaddr_In;

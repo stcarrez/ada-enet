@@ -114,6 +114,7 @@ package body Receiver is
    procedure Do_Ping is
       Hosts  : Ping_Info_Array := Pinger.Get_Hosts;
       Packet : Net.Buffers.Buffer_Type;
+      Status : Net.Error_Code;
    begin
       Pinger.Prepare_Send (Hosts);
       for I in Hosts'Range loop
@@ -125,7 +126,8 @@ package body Receiver is
                                        Target_Ip => Hosts (I).Ip,
                                        Packet    => Packet,
                                        Seq       => Hosts (I).Seq,
-                                       Ident     => 1234);
+                                       Ident     => 1234,
+                                       Status    => Status);
       end loop;
    end Do_Ping;
 

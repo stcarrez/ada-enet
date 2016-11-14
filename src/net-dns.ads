@@ -56,6 +56,7 @@ package Net.DNS is
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
+                      Status  : out Error_Code;
                       Timeout : in Natural := 10);
 
    overriding

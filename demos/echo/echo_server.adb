@@ -22,9 +22,10 @@ package body Echo_Server is
    procedure Receive (Endpoint : in out Echo_Server;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
+      Status : Net.Error_Code;
    begin
       Endpoint.Count := Endpoint.Count + 1;
-      Endpoint.Send (To => From, Packet => Packet);
+      Endpoint.Send (To => From, Packet => Packet, Status => Status);
    end Receive;
 
 end Echo_Server;

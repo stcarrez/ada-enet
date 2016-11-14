@@ -31,26 +31,29 @@ package body Net.Protos.IPv4 is
    --  ------------------------------
    procedure Send_Raw (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                        Target_Ip : in Ip_Addr;
-                       Packet    : in out Net.Buffers.Buffer_Type) is
+                       Packet    : in out Net.Buffers.Buffer_Type;
+                       Status    : out Error_Code) is
       Ether  : constant Net.Headers.Ether_Header_Access := Packet.Ethernet;
-      Status : Net.Protos.Arp.Arp_Status;
+      Arp_Status : Net.Protos.Arp.Arp_Status;
    begin
       Ether.Ether_Shost := Ifnet.Mac;
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
       if Ifnet.Is_Local_Network (Target_Ip) then
-         Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Status);
+         Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Arp_Status);
       else
-         Net.Protos.Arp.Resolve (Ifnet, Ifnet.Gateway, Ether.Ether_Dhost, Packet, Status);
+         Net.Protos.Arp.Resolve (Ifnet, Ifnet.Gateway, Ether.Ether_Dhost, Packet, Arp_Status);
       end if;
-      case Status is
+      case Arp_Status is
          when Net.Protos.Arp.ARP_FOUND =>
             Ifnet.Send (Packet);
+            Status := EOK;
 
          when Net.Protos.Arp.ARP_PENDING | Net.Protos.Arp.ARP_NEEDED =>
-            null;
+            Status := EINPROGRESS;
 
          when Net.Protos.Arp.ARP_UNREACHABLE | Net.Protos.Arp.ARP_QUEUE_FULL =>
             Net.Buffers.Release (Packet);
+            Status := ENETUNREACH;
 
       end case;
    end Send_Raw;
@@ -87,7 +90,8 @@ package body Net.Protos.IPv4 is
 
    procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                    Target_Ip : in Ip_Addr;
-                   Packet    : in out Net.Buffers.Buffer_Type) is
+                   Packet    : in out Net.Buffers.Buffer_Type;
+                   Status    : out Error_Code) is
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
    begin
       Make_Header (Ip, Ifnet.Ip, Target_Ip, P_UDP, Uint16 (Packet.Get_Length));
@@ -103,7 +107,7 @@ package body Net.Protos.IPv4 is
       --  Ip.Ip_Len := Net.Headers.To_Network (Packet.Get_Length);
       --  if Ifnet.Is_Local_Address (Target_Ip) then
 
-      Send_Raw (Ifnet, Target_Ip, Packet);
+      Send_Raw (Ifnet, Target_Ip, Packet, Status);
    end Send;
 
 end Net.Protos.IPv4;

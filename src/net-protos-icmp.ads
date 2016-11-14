@@ -26,7 +26,8 @@ package Net.Protos.Icmp is
                            Target_Ip : in Ip_Addr;
                            Packet    : in out Net.Buffers.Buffer_Type;
                            Seq       : in Net.Uint16;
-                           Ident     : in Net.Uint16);
+                           Ident     : in Net.Uint16;
+                           Status    : out Error_Code);
 
    --  Receive and handle an ICMP packet.
    procedure Receive (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;

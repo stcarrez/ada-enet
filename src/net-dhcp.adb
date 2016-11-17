@@ -76,12 +76,12 @@ package body Net.DHCP is
       Packet.Put_Uint8 (99);
 
       --  Option 53: DHCP message type
-      Packet.Put_Uint8 (53);
+      Packet.Put_Uint8 (OPT_MESSAGE_TYPE);
       Packet.Put_Uint8 (1);
       Packet.Put_Uint8 (Kind); --  Discover
 
       --  Option 50: Requested IP Address
-      Packet.Put_Uint8 (50);
+      Packet.Put_Uint8 (OPT_REQUESTED_IP);
       Packet.Put_Uint8 (4);
       Packet.Put_Ip (Request.Ip);
 
@@ -93,26 +93,26 @@ package body Net.DHCP is
       end if;
 
       --  Option 55: Parameter request List
-      Packet.Put_Uint8 (55);
+      Packet.Put_Uint8 (OPT_PARAMETER_LIST);
       Packet.Put_Uint8 (10);
-      Packet.Put_Uint8 (1);
-      Packet.Put_Uint8 (3);
-      Packet.Put_Uint8 (6);
-      Packet.Put_Uint8 (12);
-      Packet.Put_Uint8 (15);
-      Packet.Put_Uint8 (28);
-      Packet.Put_Uint8 (42);
-      Packet.Put_Uint8 (51);
-      Packet.Put_Uint8 (58);
-      Packet.Put_Uint8 (59);
+      Packet.Put_Uint8 (OPT_SUBNETMASK);
+      Packet.Put_Uint8 (OPT_ROUTER);
+      Packet.Put_Uint8 (OPT_DOMAIN_NAME_SERVER);
+      Packet.Put_Uint8 (OPT_HOST_NAME);
+      Packet.Put_Uint8 (OPT_DOMAIN_NAME);
+      Packet.Put_Uint8 (OPT_BROADCAST_ADDR);
+      Packet.Put_Uint8 (OPT_NTP_SERVER);
+      Packet.Put_Uint8 (OPT_LEASE_TIME);
+      Packet.Put_Uint8 (OPT_RENEW_TIME);
+      Packet.Put_Uint8 (OPT_REBIND_TIME);
 
       --  Option 60: Vendor class identifier.
-      Packet.Put_Uint8 (60);
+      Packet.Put_Uint8 (OPT_VENDOR_CLASS);
       Packet.Put_Uint8 (DEF_VENDOR_CLASS'Length);
       Packet.Put_String (DEF_VENDOR_CLASS);
 
       --  Option 61: Client identifier;
-      Packet.Put_Uint8 (61);
+      Packet.Put_Uint8 (OPT_CLIENT_IDENTIFIER);
       Packet.Put_Uint8 (7);
       Packet.Put_Uint8 (1);  --  Hardware type: Ethernet
       for V of Mac loop
@@ -120,7 +120,7 @@ package body Net.DHCP is
       end loop;
 
       --  Option 255: End
-      Packet.Put_Uint8 (255);
+      Packet.Put_Uint8 (OPT_END);
    end Fill_Options;
 
    --  ------------------------------

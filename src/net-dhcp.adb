@@ -34,6 +34,25 @@ package body Net.DHCP is
    DHCP_NACK     : constant Net.Uint8 := 6;
    DHCP_RELEASE  : constant Net.Uint8 := 7;
 
+   OPT_SUBNETMASK         : constant Net.Uint8 := 1;
+   OPT_ROUTER             : constant Net.Uint8 := 3;
+   OPT_DOMAIN_NAME_SERVER : constant Net.Uint8 := 6;
+   OPT_HOST_NAME          : constant Net.Uint8 := 12;
+   OPT_DOMAIN_NAME        : constant Net.Uint8 := 15;
+   OPT_MTU_SIZE           : constant Net.Uint8 := 26;
+   OPT_BROADCAST_ADDR     : constant Net.Uint8 := 28;
+   OPT_NTP_SERVER         : constant Net.Uint8 := 42;
+   OPT_WWW_SERVER         : constant Net.Uint8 := 72;
+   OPT_REQUESTED_IP       : constant NEt.Uint8 := 50;
+   OPT_LEASE_TIME         : constant Net.Uint8 := 51;
+   OPT_MESSAGE_TYPE       : constant Net.Uint8 := 53;
+   OPT_PARAMETER_LIST     : constant Net.Uint8 := 55;
+   OPT_RENEW_TIME         : constant Net.Uint8 := 58;
+   OPT_REBIND_TIME        : constant Net.Uint8 := 59;
+   OPT_VENDOR_CLASS       : constant Net.Uint8 := 60;
+   OPT_CLIENT_IDENTIFIER  : constant Net.Uint8 := 61;
+   OPT_END                : constant Net.Uint8 := 255;
+
    --  ------------------------------
    --  Get the current DHCP client state.
    --  ------------------------------

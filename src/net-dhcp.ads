@@ -54,6 +54,12 @@ package Net.DHCP is
    --  Get the current DHCP client state.
    function Get_State (Request : in Client) return State_Type;
 
+   --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
+   --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
+   --  maximum time to wait before the next call.
+   procedure Process (Request   : in out Client;
+                      Next_Call : out Ada.Real_Time.Time_Span);
+
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
    procedure Discover (Request : in out Client;
                        Ifnet   : access Net.Interfaces.Ifnet_Type'Class);
@@ -71,6 +77,7 @@ private
 
    type Client is new Net.Sockets.Udp.Socket with record
       State     : State_Type := STATE_INIT;
+      Timeout   : Ada.Real_Time.Time;
       Xid       : Net.Uint32;
       Secs      : Net.Uint16 := 0;
       Ip        : Net.Ip_Addr := (others => 0);

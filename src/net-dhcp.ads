@@ -82,6 +82,12 @@ package Net.DHCP is
 
 private
 
+   type Retry_Type is new Net.Uint8 range 0 .. 5;
+   type Backoff_Array is array (Retry_Type) of Integer;
+
+   --  Timeout table used for the DHCP backoff algorithm during for DHCP DISCOVER.
+   Backoff : constant Backoff_Array := (0, 4, 8, 16, 32, 64);
+
    type Client is new Net.Sockets.Udp.Raw_Socket with record
       State     : State_Type := STATE_INIT;
       Mac       : Net.Ether_Addr := (others => 0);
@@ -90,6 +96,7 @@ private
       Secs      : Net.Uint16 := 0;
       Ip        : Net.Ip_Addr := (others => 0);
       Server_Ip : Net.Ip_Addr := (others => 0);
+      Retry     : Retry_Type := 0;
    end record;
 
 end Net.DHCP;

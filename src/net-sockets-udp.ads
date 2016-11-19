@@ -42,7 +42,7 @@ package Net.Sockets.Udp is
    type Raw_Socket is abstract new Socket with private;
 
    --  Send a raw packet.  The packet must have the Ethernet, IP and UDP headers initialized.
-   procedure Send (Endpoint : in out Socket;
+   procedure Send (Endpoint : in out Raw_Socket;
                    Packet   : in out Net.Buffers.Buffer_Type);
 
 private

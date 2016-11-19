@@ -74,4 +74,13 @@ package body Net.Sockets.Udp is
       end loop;
    end Input;
 
+   --  ------------------------------
+   --  Send a raw packet.  The packet must have the Ethernet, IP and UDP headers initialized.
+   --  ------------------------------
+   procedure Send (Endpoint : in out Socket;
+                   Packet   : in out Net.Buffers.Buffer_Type) is
+   begin
+      Endpoint.Ifnet.Send (Packet);
+   end Send;
+
 end Net.Sockets.Udp;

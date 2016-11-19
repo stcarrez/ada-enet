@@ -62,6 +62,21 @@ package body Net.DHCP is
    end Get_State;
 
    --  ------------------------------
+   --  Initialize the DHCP request.
+   --  ------------------------------
+   procedure Initialize (Request : in out Client;
+                         Ifnet   : access Net.Interfaces.Ifnet_Type'Class) is
+      Addr   : Net.Sockets.Sockaddr_In;
+   begin
+      Addr.Port := Net.Headers.To_Network (68);
+      Request.Bind (Ifnet, Addr);
+
+      --  Generate a XID for the DHCP process.
+      Request.Xid := Ifnet.Random;
+      Request.State := STATE_INIT;
+   end Initialize;
+
+   --  ------------------------------
    --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
    --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
    --  maximum time to wait before the next call.
@@ -221,13 +236,6 @@ package body Net.DHCP is
       Len    : Net.Uint16;
       Addr   : Net.Sockets.Sockaddr_In;
    begin
-      Addr.Port := Net.Headers.To_Network (68);
-      Request.Bind (Ifnet, Addr);
-
-      --  Generate a XID for the DHCP process.
-      if Request.Xid = 0 then
-         Request.Xid := Ifnet.Random;
-      end if;
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
       Ether := Packet.Ethernet;

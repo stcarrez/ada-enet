@@ -62,6 +62,25 @@ package body Net.DHCP is
    end Get_State;
 
    --  ------------------------------
+   --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
+   --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
+   --  maximum time to wait before the next call.
+   --  ------------------------------
+   procedure Process (Request   : in out Client;
+                      Next_Call : out Ada.Real_Time.Time_Span) is
+      Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+   begin
+      case Request.State is
+         when STATE_INIT | STATE_INIT_REBOOT =>
+            Request.Discover;
+
+         when others =>
+            null;
+
+      end case;
+   end Process;
+
+   --  ------------------------------
    --  Fill the DHCP options in the request.
    --  ------------------------------
    procedure Fill_Options (Request : in Client;

@@ -49,7 +49,7 @@ package Net.DHCP is
       Mtu          : Ip_Length := 1500;
    end record;
 
-   type Client is new Net.Sockets.Udp.Socket with private;
+   type Client is new Net.Sockets.Udp.Raw_Socket with private;
 
    --  Get the current DHCP client state.
    function Get_State (Request : in Client) return State_Type;
@@ -65,8 +65,7 @@ package Net.DHCP is
                       Next_Call : out Ada.Real_Time.Time_Span);
 
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
-   procedure Discover (Request : in out Client;
-                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class);
+   procedure Discover (Request : in out Client);
 
    overriding
    procedure Receive (Request  : in out Client;
@@ -79,7 +78,7 @@ package Net.DHCP is
 
 private
 
-   type Client is new Net.Sockets.Udp.Socket with record
+   type Client is new Net.Sockets.Udp.Raw_Socket with record
       State     : State_Type := STATE_INIT;
       Timeout   : Ada.Real_Time.Time;
       Xid       : Net.Uint32;

@@ -15,7 +15,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Net.Headers;
 with Ada.Real_Time;
 with Net.Interfaces;
 with Net.Buffers;
@@ -76,10 +75,16 @@ package Net.DHCP is
                               Packet  : in out Net.Buffers.Buffer_Type;
                               Options : out Options_Type);
 
+   --  Update the UDP header for the packet and send it.
+   overriding
+   procedure Send (Request : in out Client;
+                   Packet  : in out Net.Buffers.Buffer_Type);
+
 private
 
    type Client is new Net.Sockets.Udp.Raw_Socket with record
       State     : State_Type := STATE_INIT;
+      Mac       : Net.Ether_Addr := (others => 0);
       Timeout   : Ada.Real_Time.Time;
       Xid       : Net.Uint32;
       Secs      : Net.Uint16 := 0;

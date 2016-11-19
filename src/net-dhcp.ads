@@ -27,6 +27,28 @@ package Net.DHCP is
                        STATE_BOUND, STATE_RENEWING, STATE_REBINDING,
                        STATE_REBOOTING);
 
+   --  Options extracted from the server response.
+   type Options_Type is record
+      Msg_Type     : Net.Uint8;
+      Hostname     : String (1 .. 255);
+      Hostname_Len : Natural := 0;
+      Domain       : String (1 .. 255);
+      Domain_Len   : Natural := 0;
+      Ip           : Net.Ip_Addr := (0, 0, 0, 0);
+      Broadcast    : Net.Ip_Addr := (255, 255, 255, 255);
+      Router       : Net.Ip_Addr := (0, 0, 0, 0);
+      Netmask      : Net.Ip_Addr := (255, 255, 255, 0);
+      Server       : Net.Ip_Addr := (0, 0, 0, 0);
+      Ntp          : Net.Ip_Addr := (0, 0, 0, 0);
+      Www          : Net.Ip_Addr := (0, 0, 0, 0);
+      Dns1         : Net.Ip_Addr := (0, 0, 0, 0);
+      Dns2         : Net.Ip_Addr := (0, 0, 0, 0);
+      Lease_Time   : Natural := 0;
+      Renew_Time   : Natural := 0;
+      Rebind_Time  : Natural := 0;
+      Mtu          : Ip_Length := 1500;
+   end record;
+
    type Client is new Net.Sockets.Udp.Socket with private;
 
    --  Get the current DHCP client state.
@@ -40,6 +62,10 @@ package Net.DHCP is
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type);
+
+   procedure Extract_Options (Request : in out Client;
+                              Packet  : in out Net.Buffers.Buffer_Type;
+                              Options : out Options_Type);
 
 private
 

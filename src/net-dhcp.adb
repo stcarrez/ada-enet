@@ -123,6 +123,72 @@ package body Net.DHCP is
       Packet.Put_Uint8 (OPT_END);
    end Fill_Options;
 
+   procedure Extract_Options (Request : in out Client;
+                              Packet  : in out Net.Buffers.Buffer_Type;
+                              Options : out Options_Type) is
+      Option : Net.Uint8;
+      Length : Net.Uint8;
+   begin
+      Options.Msg_Type := 0;
+      if Packet.Get_Uint8 /= 99 then
+         return;
+      end if;
+      if Packet.Get_Uint8 /= 130 then
+         return;
+      end if;
+      if Packet.Get_Uint8 /= 83 then
+         return;
+      end if;
+      if Packet.Get_Uint8 /= 99 then
+         return;
+      end if;
+      loop
+         Option := Packet.Get_Uint8;
+         Length := Packet.Get_Uint8;
+         case Option is
+            when OPT_MESSAGE_TYPE =>
+               Options.Msg_Type := Packet.Get_Uint8;
+
+            when OPT_SUBNETMASK =>
+               Options.Netmask := Packet.Get_Ip;
+
+            when OPT_ROUTER =>
+               Options.Router := Packet.Get_Ip;
+
+            when OPT_REQUESTED_IP =>
+               Options.Ip := Packet.Get_Ip;
+
+            when OPT_DOMAIN_NAME_SERVER =>
+               Options.Dns1 := Packet.Get_Ip;
+
+            when OPT_REBIND_TIME =>
+               Options.Rebind_Time := Natural (Packet.Get_Uint32);
+
+            when OPT_RENEW_TIME =>
+               Options.Renew_Time := Natural (Packet.Get_Uint32);
+
+            when OPT_LEASE_TIME =>
+               Options.Lease_Time := Natural (Packet.Get_Uint32);
+
+            when OPT_NTP_SERVER =>
+               Options.Ntp := Packet.Get_Ip;
+
+            when OPT_MTU_SIZE =>
+               Options.Mtu := Ip_Length (Packet.Get_Uint16);
+
+            when OPT_BROADCAST_ADDR =>
+               Options.Broadcast := Packet.Get_Ip;
+
+            when OPT_END =>
+               return;
+
+            when others =>
+               Packet.Skip (Net.Uint16 (Length));
+
+         end case;
+      end loop;
+   end Extract_Options;
+
    --  ------------------------------
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
    --  ------------------------------
@@ -196,7 +262,8 @@ package body Net.DHCP is
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
-      Hdr    : Net.Headers.DHCP_Header_Access := Packet.DHCP;
+      Hdr     : Net.Headers.DHCP_Header_Access := Packet.DHCP;
+      Options : Options_Type;
    begin
       if Hdr.Op /= 2 or Hdr.Htype /= 1 or Hdr.Hlen /= 6 then
          return;
@@ -207,6 +274,7 @@ package body Net.DHCP is
       if Hdr.Xid2 /= Net.Uint16 (Shift_Right (Request.Xid, 16)) then
          return;
       end if;
+      Request.Extract_Options (Packet, Options);
       Request.Ip := Hdr.Yiaddr;
    end Receive;
 

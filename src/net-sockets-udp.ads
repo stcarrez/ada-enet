@@ -39,6 +39,12 @@ package Net.Sockets.Udp is
    procedure Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                     Packet : in out Net.Buffers.Buffer_Type);
 
+   type Raw_Socket is abstract new Socket with private;
+
+   --  Send a raw packet.  The packet must have the Ethernet, IP and UDP headers initialized.
+   procedure Send (Endpoint : in out Socket;
+                   Packet   : in out Net.Buffers.Buffer_Type);
+
 private
 
    type Socket is abstract tagged limited record
@@ -46,5 +52,7 @@ private
       Listen : Sockaddr_In;
       Ifnet  : access Net.Interfaces.Ifnet_Type'Class;
    end record;
+
+   type Raw_Socket is abstract new Socket with null record;
 
 end Net.Sockets.Udp;

@@ -54,6 +54,10 @@ package Net.DHCP is
    --  Get the current DHCP client state.
    function Get_State (Request : in Client) return State_Type;
 
+   --  Initialize the DHCP request.
+   procedure Initialize (Request : in out Client;
+                         Ifnet   : access Net.Interfaces.Ifnet_Type'Class);
+
    --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
    --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
    --  maximum time to wait before the next call.

@@ -226,8 +226,7 @@ package body Net.DHCP is
    --  ------------------------------
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
    --  ------------------------------
-   procedure Discover (Request : in out Client;
-                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class) is
+   procedure Discover (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
       Ether  : Net.Headers.Ether_Header_Access;
       Ip     : Net.Headers.IP_Header_Access;
@@ -282,7 +281,7 @@ package body Net.DHCP is
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
 
       --  Broadcast the DHCP packet.
-      Ifnet.Send (Packet);
+      Request.Send (Packet);
    end Discover;
 
    overriding

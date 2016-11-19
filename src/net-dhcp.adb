@@ -17,11 +17,7 @@
 -----------------------------------------------------------------------
 with Interfaces; use Interfaces;
 with Net.Headers;
-with Ada.Real_Time;
-with Net.Interfaces;
-with Net.Buffers;
 with Net.Protos.IPv4;
-with Net.Sockets.Udp;
 package body Net.DHCP is
 
    DEF_VENDOR_CLASS : constant String := "Ada Embedded Network";
@@ -69,6 +65,7 @@ package body Net.DHCP is
       Addr   : Net.Sockets.Sockaddr_In;
    begin
       Addr.Port := Net.Headers.To_Network (68);
+      Request.Mac := Ifnet.Mac;
       Request.Bind (Ifnet, Addr);
 
       --  Generate a XID for the DHCP process.
@@ -228,18 +225,14 @@ package body Net.DHCP is
    --  ------------------------------
    procedure Discover (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
-      Ether  : Net.Headers.Ether_Header_Access;
       Ip     : Net.Headers.IP_Header_Access;
-      Udp    : Net.Headers.UDP_Header_Access;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
       Addr   : Net.Sockets.Sockaddr_In;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
-      Ether := Packet.Ethernet;
       Ip  := Packet.IP;
-      Udp := Packet.UDP;
       Hdr := Packet.DHCP;
 
       --  Fill the DHCP header.
@@ -257,12 +250,32 @@ package body Net.DHCP is
       Hdr.Giaddr := (0, 0, 0, 0);
       Hdr.Chaddr := (others => Character'Val (0));
       for I in 1 .. 6 loop
-         Hdr.Chaddr (I) := Character'Val (Ifnet.Mac (I));
+         Hdr.Chaddr (I) := Character'Val (Request.Mac (I));
       end loop;
       Hdr.Sname  := (others => Character'Val (0));
       Hdr.File   := (others => Character'Val (0));
-      Fill_Options (Request, Packet, DHCP_DISCOVER, Ifnet.Mac);
+      Fill_Options (Request, Packet, DHCP_DISCOVER, Request.Mac);
 
+      --  Get the packet length and setup the UDP header.
+      Len := Packet.Get_Data_Size;
+      Packet.Set_Length (Len);
+
+      --  Broadcast the DHCP packet.
+      Request.Send (Packet);
+   end Discover;
+
+   --  ------------------------------
+   --  Update the UDP header for the packet and send it.
+   --  ------------------------------
+   overriding
+   procedure Send (Request : in out Client;
+                   Packet  : in out Net.Buffers.Buffer_Type) is
+      Ether  : constant Net.Headers.Ether_Header_Access := Packet.Ethernet;
+      Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
+      Udp    : constant Net.Headers.UDP_Header_Access := Packet.UDP;
+      Len    : Net.Uint16;
+      Addr   : Net.Sockets.Sockaddr_In;
+   begin
       --  Get the packet length and setup the UDP header.
       Len := Packet.Get_Data_Size;
       Packet.Set_Length (Len);
@@ -276,13 +289,13 @@ package body Net.DHCP is
                                    Net.Protos.IPv4.P_UDP, Uint16 (Len - 14));
 
       --  And set the Ethernet header for the broadcast.
-      Ether.Ether_Shost := Ifnet.Mac;
+      Ether.Ether_Shost := Request.Mac;
       Ether.Ether_Dhost := (others => 16#ff#);
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
 
       --  Broadcast the DHCP packet.
-      Request.Send (Packet);
-   end Discover;
+      Net.Sockets.Udp.Raw_Socket (Request).Send (Packet);
+   end Send;
 
    overriding
    procedure Receive (Request  : in out Client;

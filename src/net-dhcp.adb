@@ -71,6 +71,7 @@ package body Net.DHCP is
       --  ------------------------------
       procedure Bind (Options : in Options_Type) is
       begin
+         State  := STATE_BOUND;
          Config := Options;
       end Bind;
 
@@ -417,7 +418,7 @@ package body Net.DHCP is
          Request.Request;
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
-         Request.State.Set_State (STATE_BOUND);
+         Request.State.Bind (Options);
 
       elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then
          Request.State.Set_State (STATE_INIT);

@@ -94,6 +94,14 @@ package body Net.DHCP is
    end Get_State;
 
    --  ------------------------------
+   --  Get the DHCP options that were configured during the bind process.
+   --  ------------------------------
+   function Get_Config (Request : in Client) return Options_Type is
+   begin
+      return Request.State.Get_Config;
+   end Get_Config;
+
+   --  ------------------------------
    --  Initialize the DHCP request.
    --  ------------------------------
    procedure Initialize (Request : in out Client;

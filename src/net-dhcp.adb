@@ -44,6 +44,7 @@ package body Net.DHCP is
    OPT_REQUESTED_IP       : constant NEt.Uint8 := 50;
    OPT_LEASE_TIME         : constant Net.Uint8 := 51;
    OPT_MESSAGE_TYPE       : constant Net.Uint8 := 53;
+   OPT_SERVER_IDENTIFIER  : constant Net.Uint8 := 54;
    OPT_PARAMETER_LIST     : constant Net.Uint8 := 55;
    OPT_RENEW_TIME         : constant Net.Uint8 := 58;
    OPT_REBIND_TIME        : constant Net.Uint8 := 59;
@@ -108,13 +109,15 @@ package body Net.DHCP is
                          Ifnet   : access Net.Interfaces.Ifnet_Type'Class) is
       Addr   : Net.Sockets.Sockaddr_In;
    begin
+      Request.Ifnet := Ifnet;
+      Request.Mac   := Ifnet.Mac;
       Addr.Port := Net.Headers.To_Network (68);
-      Request.Mac := Ifnet.Mac;
       Request.Bind (Ifnet, Addr);
 
       --  Generate a XID for the DHCP process.
       Request.Xid := Ifnet.Random;
       Request.Retry := 0;
+      Request.Configured := False;
       Request.State.Set_State (STATE_INIT);
    end Initialize;
 
@@ -135,6 +138,12 @@ package body Net.DHCP is
          when STATE_SELECTING =>
             if Request.Timeout < Now then
                Request.Discover;
+            end if;
+
+         when STATE_BOUND =>
+            if not Request.Configured then
+               Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
+               Request.Configured := True;
             end if;
 
          when others =>
@@ -245,6 +254,9 @@ package body Net.DHCP is
 
             when OPT_DOMAIN_NAME_SERVER =>
                Options.Dns1 := Packet.Get_Ip;
+
+            when OPT_SERVER_IDENTIFIER =>
+               Options.Server := Packet.Get_Ip;
 
             when OPT_REBIND_TIME =>
                Options.Rebind_Time := Natural (Packet.Get_Uint32);
@@ -377,6 +389,22 @@ package body Net.DHCP is
    end Request;
 
    --  ------------------------------
+   --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
+   --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
+   --  is entered.  It can be overriden to perform specific actions.
+   --  ------------------------------
+   procedure Bind (Request : in out Client;
+                   Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
+                   Config  : in Options_Type) is
+   begin
+      Ifnet.Ip      := Config.Ip;
+      Ifnet.Netmask := Config.Netmask;
+      Ifnet.Gateway := Config.Router;
+      Ifnet.Mtu     := Config.Mtu;
+      Ifnet.Dns     := Config.Dns1;
+   end Bind;
+
+   --  ------------------------------
    --  Update the UDP header for the packet and send it.
    --  ------------------------------
    overriding
@@ -434,6 +462,7 @@ package body Net.DHCP is
          Request.Request;
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
+         Options.Ip := Hdr.Yiaddr;
          Request.State.Bind (Options);
 
       elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then

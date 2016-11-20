@@ -105,8 +105,12 @@ private
       --  Set the new DHCP state.
       procedure Set_State (New_State : in State_Type);
 
+      --  Set the DHCP options and the DHCP state to the STATE_BOUND.
+      procedure Bind (Options : in Options_Type);
+
    private
       State   : State_Type := STATE_INIT;
+      Config  : Options_Type;
    end Machine;
 
    type Client is new Net.Sockets.Udp.Raw_Socket with record

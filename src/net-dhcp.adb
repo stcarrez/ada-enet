@@ -75,6 +75,14 @@ package body Net.DHCP is
          Config := Options;
       end Bind;
 
+      --  ------------------------------
+      --  Get the DHCP options that were configured during the bind process.
+      --  ------------------------------
+      function Get_Config return Options_Type is
+      begin
+         return Config;
+      end Get_Config;
+
    end Machine;
 
    --  ------------------------------

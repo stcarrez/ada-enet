@@ -121,6 +121,13 @@ package body Net.DHCP is
       Request.State.Set_State (STATE_INIT);
    end Initialize;
 
+   function Ellapsed (Request : in Client;
+                      Now     : in Ada.Real_Time.Time) return Net.Uint16 is
+      Dt : constant Ada.Real_Time.Time_Span := Now - Request.Start_Time;
+   begin
+      return Net.Uint16 (Ada.Real_Time.To_Duration (Dt));
+   end Ellapsed;
+
    --  ------------------------------
    --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
    --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
@@ -133,10 +140,13 @@ package body Net.DHCP is
       case Request.Get_State is
          when STATE_INIT | STATE_INIT_REBOOT =>
             Request.State.Set_State (STATE_SELECTING);
+            Request.Start_Time := Ada.Real_Time.Clock;
+            Request.Secs := 0;
             Request.Discover;
 
          when STATE_SELECTING =>
             if Request.Timeout < Now then
+               Request.Secs := Ellapsed (Request, Now);
                Request.Discover;
             end if;
 

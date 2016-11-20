@@ -74,6 +74,14 @@ package Net.DHCP is
    procedure Request (Request : in out Client) with
      Pre => Request.Get_State = STATE_REQUESTING;
 
+   --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
+   --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
+   --  is entered.  It can be overriden to perform specific actions.
+   procedure Bind (Request : in out Client;
+                   Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
+                   Config  : in Options_Type) with
+     Pre => Request.Get_State = STATE_BOUND;
+
    overriding
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
@@ -120,14 +128,16 @@ private
    end Machine;
 
    type Client is new Net.Sockets.Udp.Raw_Socket with record
-      State     : Machine;
-      Mac       : Net.Ether_Addr := (others => 0);
-      Timeout   : Ada.Real_Time.Time;
-      Xid       : Net.Uint32;
-      Secs      : Net.Uint16 := 0;
-      Ip        : Net.Ip_Addr := (others => 0);
-      Server_Ip : Net.Ip_Addr := (others => 0);
-      Retry     : Retry_Type := 0;
+      Ifnet      : access Net.Interfaces.Ifnet_Type'Class;
+      State      : Machine;
+      Mac        : Net.Ether_Addr := (others => 0);
+      Timeout    : Ada.Real_Time.Time;
+      Xid        : Net.Uint32;
+      Secs       : Net.Uint16 := 0;
+      Ip         : Net.Ip_Addr := (others => 0);
+      Server_Ip  : Net.Ip_Addr := (others => 0);
+      Retry      : Retry_Type := 0;
+      Configured : Boolean := False;
    end record;
 
 end Net.DHCP;

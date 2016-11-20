@@ -297,6 +297,48 @@ package body Net.DHCP is
       Request.Send (Packet);
    end Discover;
 
+   --  Send the DHCP request packet after we received an offer.
+   procedure Request (Request : in out Client) is
+      Packet : Net.Buffers.Buffer_Type;
+      Ip     : Net.Headers.IP_Header_Access;
+      Hdr    : Net.Headers.DHCP_Header_Access;
+      Len    : Net.Uint16;
+      Addr   : Net.Sockets.Sockaddr_In;
+   begin
+      Net.Buffers.Allocate (Packet);
+      Packet.Set_Type (Net.Buffers.DHCP_PACKET);
+      Ip  := Packet.IP;
+      Hdr := Packet.DHCP;
+
+      --  Fill the DHCP header.
+      Hdr.Op    := 1;
+      Hdr.Htype := 1;
+      Hdr.Hlen  := 6;
+      Hdr.Hops  := 0;
+      Hdr.Flags := 0;
+      Hdr.Xid1  := Net.Uint16 (Request.Xid and 16#0ffff#);
+      Hdr.Xid2  := Net.Uint16 (Shift_Right (Request.Xid, 16));
+      Hdr.Secs  := Net.Headers.To_Network (Request.Secs);
+      Hdr.Ciaddr := (0, 0, 0, 0);
+      Hdr.Yiaddr := (0, 0, 0, 0);
+      Hdr.Siaddr := (0, 0, 0, 0);
+      Hdr.Giaddr := (0, 0, 0, 0);
+      Hdr.Chaddr := (others => Character'Val (0));
+      for I in 1 .. 6 loop
+         Hdr.Chaddr (I) := Character'Val (Request.Mac (I));
+      end loop;
+      Hdr.Sname  := (others => Character'Val (0));
+      Hdr.File   := (others => Character'Val (0));
+      Fill_Options (Request, Packet, DHCP_REQUEST, Request.Mac);
+
+      --  Get the packet length and setup the UDP header.
+      Len := Packet.Get_Data_Size;
+      Packet.Set_Length (Len);
+
+      --  Broadcast the DHCP packet.
+      Request.Send (Packet);
+   end Request;
+
    --  ------------------------------
    --  Update the UDP header for the packet and send it.
    --  ------------------------------
@@ -351,14 +393,13 @@ package body Net.DHCP is
       if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then
          Request.Ip := Hdr.Yiaddr;
          Request.State.Set_State (STATE_REQUESTING);
+         Request.Request;
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
          Request.State.Set_State (STATE_BOUND);
 
       elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then
          Request.State.Set_State (STATE_INIT);
-         Request.Retry := 0;
-         Request.Discover;
 
       end if;
    end Receive;

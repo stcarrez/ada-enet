@@ -108,6 +108,9 @@ private
       --  Set the DHCP options and the DHCP state to the STATE_BOUND.
       procedure Bind (Options : in Options_Type);
 
+      --  Get the DHCP options that were configured during the bind process.
+      function Get_Config return Options_Type;
+
    private
       State   : State_Type := STATE_INIT;
       Config  : Options_Type;

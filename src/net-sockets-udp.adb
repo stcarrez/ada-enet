@@ -28,10 +28,10 @@ package body Net.Sockets.Udp is
    begin
       if Endpoint.Ifnet = null then
          Endpoint.Next := List;
-         List := Endpoint;
+         List := Endpoint.all'Unchecked_Access;
          Endpoint.Ifnet  := Ifnet;
       end if;
-      Endpoint.Listen.Port := Net.Headers.To_Network (Addr.Port);
+      Endpoint.Listen.Port := Addr.Port;
       Endpoint.Listen.Addr := Ifnet.Ip;
    end Bind;
 
@@ -72,6 +72,7 @@ package body Net.Sockets.Udp is
          end if;
          Soc := Soc.Next;
       end loop;
+      Ifnet.Rx_Stats.Ignored := Ifnet.Rx_Stats.Ignored + 1;
    end Input;
 
    --  ------------------------------

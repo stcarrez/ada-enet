@@ -58,11 +58,21 @@ package body Net.DHCP is
          return State;
       end Get_State;
 
+      --  ------------------------------
       --  Set the new DHCP state.
+      --  ------------------------------
       procedure Set_State (New_State : in State_Type) is
       begin
          State := New_State;
       end Set_State;
+
+      --  ------------------------------
+      --  Set the DHCP options and the DHCP state to the STATE_BOUND.
+      --  ------------------------------
+      procedure Bind (Options : in Options_Type) is
+      begin
+         Config := Options;
+      end Bind;
 
    end Machine;
 

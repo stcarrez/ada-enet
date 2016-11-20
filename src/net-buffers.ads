@@ -196,6 +196,11 @@ package Net.Buffers is
    function Get_Ip (Buf : in out Buffer_Type) return Net.Ip_Addr with
      Pre => not Buf.Is_Null;
 
+   --  Get a string whose length is specified by the target value.
+   procedure Get_String (Buf  : in out Buffer_Type;
+                         Into : out String) with
+     Pre => not Buf.Is_Null;
+
    --  Skip a number of bytes in the buffer, moving the buffer position <tt>Size<tt> bytes ahead.
    procedure Skip (Buf  : in out Buffer_Type;
                    Size : in Net.Uint16) with

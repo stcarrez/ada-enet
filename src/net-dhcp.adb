@@ -20,6 +20,8 @@ with Net.Headers;
 with Net.Protos.IPv4;
 package body Net.DHCP is
 
+   use type Ada.Real_Time.Time;
+
    DEF_VENDOR_CLASS : constant String := "Ada Embedded Network";
 
    DHCP_DISCOVER : constant Net.Uint8 := 1;
@@ -70,6 +72,7 @@ package body Net.DHCP is
 
       --  Generate a XID for the DHCP process.
       Request.Xid := Ifnet.Random;
+      Request.Retry := 0;
       Request.State := STATE_INIT;
    end Initialize;
 
@@ -259,6 +262,14 @@ package body Net.DHCP is
       --  Get the packet length and setup the UDP header.
       Len := Packet.Get_Data_Size;
       Packet.Set_Length (Len);
+
+      --  Compute the timeout before sending the next discover.
+      if Request.Retry = Retry_Type'Last then
+         Request.Retry := 1;
+      else
+         Request.Retry := Request.Retry + 1;
+      end if;
+      Request.Timeout := Ada.Real_Time.Clock + Ada.Real_Time.Seconds (Backoff (Request.Retry));
 
       --  Broadcast the DHCP packet.
       Request.Send (Packet);

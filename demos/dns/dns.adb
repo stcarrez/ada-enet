@@ -25,6 +25,7 @@ with Net.Buffers;
 with Net.Utils;
 with Net.Protos.Arp;
 with Net.DNS;
+with Net.DHCP;
 with Receiver;
 with Demos;
 
@@ -48,6 +49,7 @@ procedure Dns is
    use type Interfaces.Unsigned_32;
    use type Net.Ip_Addr;
    use type Ada.Real_Time.Time;
+   use type Ada.Real_Time.Time_Span;
 
    procedure Refresh;
    procedure Header;
@@ -68,6 +70,22 @@ procedure Dns is
       end if;
    end Get_Status;
 
+   procedure Refresh_DHCP (Y : Natural) is
+      use type Net.DHCP.State_Type;
+
+      State  : Net.DHCP.State_Type := Receiver.Dhcp.Get_State;
+      Config : Net.DHCP.Options_Type := Receiver.Dhcp.Get_Config;
+   begin
+      if State = Net.DHCP.STATE_BOUND then
+         Demos.Put (0, Y, "H=" & Config.Hostname (1 .. Config.Hostname_Len)
+                    & " D=" & Config.Domain (1 .. Config.Domain_Len));
+         Demos.Put (0, Y + 16, "IP:" & Net.Utils.To_String (Config.Ip));
+         Demos.Put (0, Y + 32, "GW:" & Net.Utils.To_String (Config.Router));
+      elsif State = Net.DHCP.STATE_SELECTING then
+         Demos.Put (0, Y, "Selecting");
+      end if;
+   end Refresh_DHCP;
+
    procedure Refresh is
       Y     : Natural := 90;
       Status : Net.Error_Code;
@@ -84,6 +102,7 @@ procedure Dns is
             Y := Y + 16;
          end if;
       end loop;
+      Refresh_DHCP (Y);
       Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
       STM32.Board.Display.Update_Layer (1);
 
@@ -109,21 +128,28 @@ procedure Dns is
    --  Send ping echo request deadline
    Ping_Deadline : Ada.Real_Time.Time;
 
+   Client : access Net.DHCP.Client := Receiver.Dhcp'Unchecked_Access;
 begin
    Initialize ("STM32 DNS", Receiver.Ifnet);
 
+   Client.Initialize (Receiver.Ifnet'Access);
    Ping_Deadline := Ada.Real_Time.Clock;
    loop
       declare
-         Now     : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+         Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+         Dhcp_Timeout : Ada.Real_Time.Time_Span;
       begin
          Net.Protos.Arp.Timeout (Receiver.Ifnet);
+         Receiver.Dhcp.Process (Dhcp_Timeout);
          if Ping_Deadline < Now then
-            Receiver.Dhcp.Discover (Receiver.Ifnet'Access);
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;
-         delay until Now + PING_PERIOD;
+         if Dhcp_Timeout < PING_PERIOD then
+            delay until Now + Dhcp_Timeout;
+         else
+            delay until Now + PING_PERIOD;
+         end if;
       end;
    end loop;
 end Dns;

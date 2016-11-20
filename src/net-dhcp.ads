@@ -67,6 +67,10 @@ package Net.DHCP is
    procedure Discover (Request : in out Client) with
      Pre => Request.Get_State = STATE_SELECTING;
 
+   --  Send the DHCP request packet after we received an offer.
+   procedure Request (Request : in out Client) with
+     Pre => Request.Get_State = STATE_REQUESTING;
+
    overriding
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
@@ -102,7 +106,7 @@ private
       procedure Set_State (New_State : in State_Type);
 
    private
-      State : State_Type := STATE_INIT;
+      State   : State_Type := STATE_INIT;
    end Machine;
 
    type Client is new Net.Sockets.Udp.Raw_Socket with record

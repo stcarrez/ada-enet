@@ -87,12 +87,19 @@ package body Net.DHCP is
    begin
       case Request.State is
          when STATE_INIT | STATE_INIT_REBOOT =>
+            Request.State := STATE_SELECTING;
             Request.Discover;
+
+         when STATE_SELECTING =>
+            if Request.Timeout < Now then
+               Request.Discover;
+            end if;
 
          when others =>
             null;
 
       end case;
+      Next_Call := Request.Timeout - Now;
    end Process;
 
    --  ------------------------------

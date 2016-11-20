@@ -309,6 +309,20 @@ package body Net.Buffers is
    end Get_Ip;
 
    --  ------------------------------
+   --  Get a string whose length is specified by the target value.
+   --  ------------------------------
+   procedure Get_String (Buf  : in out Buffer_Type;
+                         Into : out String) is
+      Pos : Net.Uint16 := Buf.Pos;
+   begin
+      for I in Into'Range loop
+         Into (I) := Character'Val (Buf.Packet.Data (Pos));
+         Pos := Pos + 1;
+      end loop;
+      Buf.Pos := Pos;
+   end Get_String;
+
+   --  ------------------------------
    --  Skip a number of bytes in the buffer, moving the buffer position <tt>Size<tt> bytes ahead.
    --  ------------------------------
    procedure Skip (Buf  : in out Buffer_Type;

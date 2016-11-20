@@ -53,6 +53,9 @@ package Net.DHCP is
    --  Get the current DHCP client state.
    function Get_State (Request : in Client) return State_Type;
 
+   --  Get the DHCP options that were configured during the bind process.
+   function Get_Config (Request : in Client) return Options_Type;
+
    --  Initialize the DHCP request.
    procedure Initialize (Request : in out Client;
                          Ifnet   : access Net.Interfaces.Ifnet_Type'Class);

@@ -89,8 +89,24 @@ private
    --  Timeout table used for the DHCP backoff algorithm during for DHCP DISCOVER.
    Backoff : constant Backoff_Array := (0, 4, 8, 16, 32, 64);
 
+   --  The DHCP state machine is accessed by the <tt>Process</tt> procedure to proceed to
+   --  the DHCP discovery and re-new process.  In parallel, the <tt>Receive</tt> procedure
+   --  handles the DHCP packets received by the DHCP server and it changes the state according
+   --  to the received packet.
+   protected type Machine is
+
+      --  Get the current state.
+      function Get_State return State_Type;
+
+      --  Set the new DHCP state.
+      procedure Set_State (New_State : in State_Type);
+
+   private
+      State : State_Type := STATE_INIT;
+   end Machine;
+
    type Client is new Net.Sockets.Udp.Raw_Socket with record
-      State     : State_Type := STATE_INIT;
+      State     : Machine;
       Mac       : Net.Ether_Addr := (others => 0);
       Timeout   : Ada.Real_Time.Time;
       Xid       : Net.Uint32;

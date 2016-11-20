@@ -288,9 +288,9 @@ package body Net.Buffers is
    begin
       Buf.Pos := Pos + 4;
       return Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 24)
-        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 16)
-        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos)), 8)
-        or Net.Uint32 (Buf.Packet.Data (Pos + 1));
+        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos + 1)), 16)
+        or Interfaces.Shift_Left (Net.Uint32 (Buf.Packet.Data (Pos + 2)), 8)
+        or Net.Uint32 (Buf.Packet.Data (Pos + 3));
    end Get_Uint32;
 
    --  ------------------------------

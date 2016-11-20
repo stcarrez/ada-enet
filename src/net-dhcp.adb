@@ -389,6 +389,7 @@ package body Net.DHCP is
       if Hdr.Xid2 /= Net.Uint16 (Shift_Right (Request.Xid, 16)) then
          return;
       end if;
+      Packet.Set_Type (Net.Buffers.DHCP_PACKET);
       Request.Extract_Options (Packet, Options);
       if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then
          Request.Ip := Hdr.Yiaddr;

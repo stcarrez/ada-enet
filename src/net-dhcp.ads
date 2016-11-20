@@ -64,7 +64,8 @@ package Net.DHCP is
                       Next_Call : out Ada.Real_Time.Time_Span);
 
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
-   procedure Discover (Request : in out Client);
+   procedure Discover (Request : in out Client) with
+     Pre => Request.Get_State = STATE_SELECTING;
 
    overriding
    procedure Receive (Request  : in out Client;

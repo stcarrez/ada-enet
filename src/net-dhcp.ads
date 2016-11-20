@@ -132,6 +132,7 @@ private
       State      : Machine;
       Mac        : Net.Ether_Addr := (others => 0);
       Timeout    : Ada.Real_Time.Time;
+      Start_Time : Ada.Real_Time.Time;
       Xid        : Net.Uint32;
       Secs       : Net.Uint16 := 0;
       Ip         : Net.Ip_Addr := (others => 0);

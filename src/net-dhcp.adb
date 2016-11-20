@@ -150,14 +150,16 @@ package body Net.DHCP is
 
       --  Option 55: Parameter request List
       Packet.Put_Uint8 (OPT_PARAMETER_LIST);
-      Packet.Put_Uint8 (10);
+      Packet.Put_Uint8 (12);
       Packet.Put_Uint8 (OPT_SUBNETMASK);
       Packet.Put_Uint8 (OPT_ROUTER);
       Packet.Put_Uint8 (OPT_DOMAIN_NAME_SERVER);
       Packet.Put_Uint8 (OPT_HOST_NAME);
       Packet.Put_Uint8 (OPT_DOMAIN_NAME);
+      Packet.Put_Uint8 (OPT_MTU_SIZE);
       Packet.Put_Uint8 (OPT_BROADCAST_ADDR);
       Packet.Put_Uint8 (OPT_NTP_SERVER);
+      Packet.Put_Uint8 (OPT_WWW_SERVER);
       Packet.Put_Uint8 (OPT_LEASE_TIME);
       Packet.Put_Uint8 (OPT_RENEW_TIME);
       Packet.Put_Uint8 (OPT_REBIND_TIME);
@@ -234,6 +236,14 @@ package body Net.DHCP is
 
             when OPT_BROADCAST_ADDR =>
                Options.Broadcast := Packet.Get_Ip;
+
+            when OPT_HOST_NAME =>
+               Options.Hostname_Len := Natural (Length);
+               Packet.Get_String (Options.Hostname (1 .. Options.Hostname_Len));
+
+            when OPT_DOMAIN_NAME =>
+               Options.Domain_Len := Natural (Length);
+               Packet.Get_String (Options.Domain (1 .. Options.Domain_Len));
 
             when OPT_END =>
                return;

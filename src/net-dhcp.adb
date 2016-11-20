@@ -51,12 +51,27 @@ package body Net.DHCP is
    OPT_CLIENT_IDENTIFIER  : constant Net.Uint8 := 61;
    OPT_END                : constant Net.Uint8 := 255;
 
+   protected body Machine is
+
+      function Get_State return State_Type is
+      begin
+         return State;
+      end Get_State;
+
+      --  Set the new DHCP state.
+      procedure Set_State (New_State : in State_Type) is
+      begin
+         State := New_State;
+      end Set_State;
+
+   end Machine;
+
    --  ------------------------------
    --  Get the current DHCP client state.
    --  ------------------------------
    function Get_State (Request : in Client) return State_Type is
    begin
-      return Request.State;
+      return Request.State.Get_State;
    end Get_State;
 
    --  ------------------------------
@@ -73,7 +88,7 @@ package body Net.DHCP is
       --  Generate a XID for the DHCP process.
       Request.Xid := Ifnet.Random;
       Request.Retry := 0;
-      Request.State := STATE_INIT;
+      Request.State.Set_State (STATE_INIT);
    end Initialize;
 
    --  ------------------------------
@@ -85,9 +100,9 @@ package body Net.DHCP is
                       Next_Call : out Ada.Real_Time.Time_Span) is
       Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
-      case Request.State is
+      case Request.Get_State is
          when STATE_INIT | STATE_INIT_REBOOT =>
-            Request.State := STATE_SELECTING;
+            Request.State.Set_State (STATE_SELECTING);
             Request.Discover;
 
          when STATE_SELECTING =>
@@ -321,6 +336,7 @@ package body Net.DHCP is
                       Packet   : in out Net.Buffers.Buffer_Type) is
       Hdr     : Net.Headers.DHCP_Header_Access := Packet.DHCP;
       Options : Options_Type;
+      State   : constant State_Type := Request.Get_State;
    begin
       if Hdr.Op /= 2 or Hdr.Htype /= 1 or Hdr.Hlen /= 6 then
          return;
@@ -332,7 +348,19 @@ package body Net.DHCP is
          return;
       end if;
       Request.Extract_Options (Packet, Options);
-      Request.Ip := Hdr.Yiaddr;
+      if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then
+         Request.Ip := Hdr.Yiaddr;
+         Request.State.Set_State (STATE_REQUESTING);
+
+      elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
+         Request.State.Set_State (STATE_BOUND);
+
+      elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then
+         Request.State.Set_State (STATE_INIT);
+         Request.Retry := 0;
+         Request.Discover;
+
+      end if;
    end Receive;
 
 end Net.DHCP;

@@ -227,8 +227,10 @@ package body Net.DHCP is
       Packet.Put_Uint8 (OPT_END);
    end Fill_Options;
 
-   procedure Extract_Options (Request : in out Client;
-                              Packet  : in out Net.Buffers.Buffer_Type;
+   --  ------------------------------
+   --  Extract the DHCP options from the DHCP packet.
+   --  ------------------------------
+   procedure Extract_Options (Packet  : in out Net.Buffers.Buffer_Type;
                               Options : out Options_Type) is
       Option : Net.Uint8;
       Length : Net.Uint8;
@@ -447,6 +449,11 @@ package body Net.DHCP is
       Net.Sockets.Udp.Raw_Socket (Request).Send (Packet);
    end Send;
 
+   --  ------------------------------
+   --  Receive the DHCP offer/ack/nak from the DHCP server and update the DHCP state machine.
+   --  It only updates the DHCP state machine (the DHCP request are only sent by
+   --  <tt>Process</tt>).
+   --  ------------------------------
    overriding
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
@@ -465,7 +472,7 @@ package body Net.DHCP is
          return;
       end if;
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
-      Request.Extract_Options (Packet, Options);
+      Extract_Options (Packet, Options);
       if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then
          Request.Ip := Hdr.Yiaddr;
          Request.State.Set_State (STATE_REQUESTING);

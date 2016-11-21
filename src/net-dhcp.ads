@@ -177,17 +177,20 @@ private
    end Machine;
 
    type Client is new Net.Sockets.Udp.Raw_Socket with record
-      Ifnet      : access Net.Interfaces.Ifnet_Type'Class;
-      State      : Machine;
-      Mac        : Net.Ether_Addr := (others => 0);
-      Timeout    : Ada.Real_Time.Time;
-      Start_Time : Ada.Real_Time.Time;
-      Xid        : Net.Uint32;
-      Secs       : Net.Uint16 := 0;
-      Ip         : Net.Ip_Addr := (others => 0);
-      Server_Ip  : Net.Ip_Addr := (others => 0);
-      Retry      : Retry_Type := 0;
-      Configured : Boolean := False;
+      Ifnet       : access Net.Interfaces.Ifnet_Type'Class;
+      State       : Machine;
+      Mac         : Net.Ether_Addr := (others => 0);
+      Timeout     : Ada.Real_Time.Time;
+      Start_Time  : Ada.Real_Time.Time;
+      Renew_Time  : Ada.Real_Time.Time;
+      Rebind_Time : Ada.Real_Time.Time;
+      Expire_Time : Ada.Real_Time.Time;
+      Xid         : Net.Uint32;
+      Secs        : Net.Uint16 := 0;
+      Ip          : Net.Ip_Addr := (others => 0);
+      Server_Ip   : Net.Ip_Addr := (others => 0);
+      Retry       : Retry_Type := 0;
+      Configured  : Boolean := False;
    end record;
 
 end Net.DHCP;

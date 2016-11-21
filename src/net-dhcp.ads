@@ -19,6 +19,52 @@ with Ada.Real_Time;
 with Net.Interfaces;
 with Net.Buffers;
 with Net.Sockets.Udp;
+
+--  == DHCP Client ==
+--  The DHCP client can be used to configure the IPv4 network stack by using
+--  the DHCP protocol (RFC 2131).  The DHCP client uses a UDP socket on port 68
+--  to send and receive DHCP messages.  The DHCP client state is maintained by
+--  two procedures which are called asynchronously: the <tt>Process</tt>
+--  and <tt>Receive</tt> procedures.  The <tt>Process</tt> procedure is responsible
+--  for sending requests to the DHCP server and to manage the timeouts used for
+--  the retransmissions, renewal and lease expiration.  On its hand, the <tt>Receive</tt>
+--  procedure is called by the UDP socket layer when a DHCP packet is received.
+--  These two procedures are typically called from different tasks.
+--
+--  === Initialization ===
+--  To use the client, one will have to declare a global aliased DHCP client instance:
+--
+--    C : aliased Net.DHCP.Client;
+--
+--  The DHCP client instance must then be initialized after the network interface
+--  is initialized.
+--
+--    C.Initialize (Ifnet'Access);
+--
+--  The initialization only binds the UDP socket to the port 68 and prepares the DHCP
+--  state machine.  At this stage, no DHCP packet is sent yet but the UDP socket is now
+--  able to receive them.
+--
+--  === Processing ===
+--  The <tt>Process</tt> procedure must be called either by a main task or by a dedicated
+--  task to send the DHCP requests and maintain the DHCP state machine.  Each time this
+--  procedure is called, it looks whether some DHCP processing must be done and it computes
+--  a delay that indicates the maximum time to wait before the next call.  It is safe
+--  to call the <tt>Process</tt> procedure more often than required.  The operation will
+--  take care of:
+--
+--  In the <tt>STATE_INIT</tt> state, it records the begining of the DHCP discovering state,
+--  switches to the <tt>STATE_SELECTING</tt> and sends the first DHCP discover packet.
+--
+--  When the DHCP state machine is in the <tt>STATE_SELECTING</tt> state, it continues to
+--  send the DHCP discover packet taking into account the backoff timeout .
+--
+--  In the <tt>STATE_REQUESTING</tt> state, it sends the DHCP request packet to the server.
+--
+--  In the <tt>STATE_BOUND</tt> state, it configures the interface if it is not yet configured
+--  and it then waits for the DHCP lease renewal.  If the DHCP lease must be renewed, it
+--  switches to the <tt>STATE_RENEWING</tt> state.
+--
 package Net.DHCP is
 
    --  The <tt>State_Type</tt> defines the DHCP client finite state machine.

@@ -153,7 +153,19 @@ package body Net.DHCP is
          when STATE_BOUND =>
             if not Request.Configured then
                Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
-               Request.Configured := True;
+            end if;
+            if Request.Renew_Time < Now then
+               Request.State.Set_State (STATE_RENEWING);
+            end if;
+
+         when STATE_RENEWING =>
+            if Request.Rebind_Time < Now then
+               Request.State.Set_State (STATE_REBINDING);
+            end if;
+
+         when STATE_REBINDING =>
+            if Request.Expire_Time < Now then
+               Request.State.Set_State (STATE_INIT);
             end if;
 
          when others =>
@@ -408,12 +420,18 @@ package body Net.DHCP is
    procedure Bind (Request : in out Client;
                    Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
                    Config  : in Options_Type) is
+      Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
+      Request.Expire_Time := Now + Ada.Real_Time.Seconds (Natural (Config.Lease_Time));
+      Request.Renew_Time  := Now + Ada.Real_Time.Seconds (Natural (Config.Renew_Time));
+      Request.Rebind_Time := Now + Ada.Real_Time.Seconds (Natural (Config.Rebind_Time));
       Ifnet.Ip      := Config.Ip;
       Ifnet.Netmask := Config.Netmask;
       Ifnet.Gateway := Config.Router;
       Ifnet.Mtu     := Config.Mtu;
       Ifnet.Dns     := Config.Dns1;
+      Request.Configured := True;
+      Request.Timeout    := Request.Renew_Time;
    end Bind;
 
    --  ------------------------------
@@ -458,7 +476,7 @@ package body Net.DHCP is
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
-      Hdr     : Net.Headers.DHCP_Header_Access := Packet.DHCP;
+      Hdr     : constant Net.Headers.DHCP_Header_Access := Packet.DHCP;
       Options : Options_Type;
       State   : constant State_Type := Request.Get_State;
    begin

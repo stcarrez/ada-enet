@@ -128,13 +128,16 @@ package Net.DHCP is
                    Config  : in Options_Type) with
      Pre => Request.Get_State = STATE_BOUND;
 
+   --  Receive the DHCP offer/ack/nak from the DHCP server and update the DHCP state machine.
+   --  It only updates the DHCP state machine (the DHCP request are only sent by
+   --  <tt>Process</tt>).
    overriding
    procedure Receive (Request  : in out Client;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type);
 
-   procedure Extract_Options (Request : in out Client;
-                              Packet  : in out Net.Buffers.Buffer_Type;
+   --  Extract the DHCP options from the DHCP packet.
+   procedure Extract_Options (Packet  : in out Net.Buffers.Buffer_Type;
                               Options : out Options_Type);
 
    --  Update the UDP header for the packet and send it.

@@ -323,14 +323,11 @@ package body Net.DHCP is
    --  ------------------------------
    procedure Discover (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
-      Ip     : Net.Headers.IP_Header_Access;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
-      Addr   : Net.Sockets.Sockaddr_In;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
-      Ip  := Packet.IP;
       Hdr := Packet.DHCP;
 
       --  Fill the DHCP header.
@@ -373,14 +370,11 @@ package body Net.DHCP is
    --  Send the DHCP request packet after we received an offer.
    procedure Request (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
-      Ip     : Net.Headers.IP_Header_Access;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
-      Addr   : Net.Sockets.Sockaddr_In;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
-      Ip  := Packet.IP;
       Hdr := Packet.DHCP;
 
       --  Fill the DHCP header.
@@ -422,9 +416,9 @@ package body Net.DHCP is
                    Config  : in Options_Type) is
       Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
-      Request.Expire_Time := Now + Ada.Real_Time.Seconds (Natural (Config.Lease_Time));
-      Request.Renew_Time  := Now + Ada.Real_Time.Seconds (Natural (Config.Renew_Time));
-      Request.Rebind_Time := Now + Ada.Real_Time.Seconds (Natural (Config.Rebind_Time));
+      Request.Expire_Time := Now + Ada.Real_Time.Seconds (Config.Lease_Time);
+      Request.Renew_Time  := Now + Ada.Real_Time.Seconds (Config.Renew_Time);
+      Request.Rebind_Time := Now + Ada.Real_Time.Seconds (Config.Rebind_Time);
       Ifnet.Ip      := Config.Ip;
       Ifnet.Netmask := Config.Netmask;
       Ifnet.Gateway := Config.Router;
@@ -444,7 +438,6 @@ package body Net.DHCP is
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
       Udp    : constant Net.Headers.UDP_Header_Access := Packet.UDP;
       Len    : Net.Uint16;
-      Addr   : Net.Sockets.Sockaddr_In;
    begin
       --  Get the packet length and setup the UDP header.
       Len := Packet.Get_Data_Size;

@@ -31,13 +31,37 @@ with Net.Sockets.Udp;
 --  procedure is called by the UDP socket layer when a DHCP packet is received.
 --  These two procedures are typically called from different tasks.
 --
+--  To make the implementation simple and ready to use, the DHCP client uses a pre-defined
+--  configuration that should meet most requirements.  The DHCP client asks for the following
+--  DHCP options:
+--
+--  * Option 1: Subnetmask
+--  * Option 3: Router
+--  * Option 6: Domain name server
+--  * Option 12: Hostname
+--  * Option 15: Domain name
+--  * Option 26: Interface MTU size
+--  * Option 28: Brodcast address
+--  * Option 42: NTP server
+--  * Option 72: WWW server
+--  * Option 51: Lease time
+--  * Option 58: Renew time
+--  * Option 59: Rebind time
+--
+--  It sends the following options to help the server identify the client:
+--
+--  * Option 60: Vendor class identifier, the string "Ada Embedded Network" is sent.
+--  * Option 61: Client identifier, the Ethernet address is used as identifier.
+--
 --  === Initialization ===
---  To use the client, one will have to declare a global aliased DHCP client instance:
+--  To use the client, one will have to declare a global aliased DHCP client instance
+--  (the aliased is necessary as the UDP socket layer needs to get an access to it):
 --
 --    C : aliased Net.DHCP.Client;
 --
 --  The DHCP client instance must then be initialized after the network interface
---  is initialized.
+--  is initialized.  The <tt>Initialize</tt> procedure needs an access to the interface
+--  instance.
 --
 --    C.Initialize (Ifnet'Access);
 --
@@ -51,19 +75,27 @@ with Net.Sockets.Udp;
 --  procedure is called, it looks whether some DHCP processing must be done and it computes
 --  a delay that indicates the maximum time to wait before the next call.  It is safe
 --  to call the <tt>Process</tt> procedure more often than required.  The operation will
---  take care of:
+--  perform different tasks depending on the DHCP state:
 --
 --  In the <tt>STATE_INIT</tt> state, it records the begining of the DHCP discovering state,
 --  switches to the <tt>STATE_SELECTING</tt> and sends the first DHCP discover packet.
 --
 --  When the DHCP state machine is in the <tt>STATE_SELECTING</tt> state, it continues to
---  send the DHCP discover packet taking into account the backoff timeout .
+--  send the DHCP discover packet taking into account the backoff timeout.
 --
 --  In the <tt>STATE_REQUESTING</tt> state, it sends the DHCP request packet to the server.
 --
 --  In the <tt>STATE_BOUND</tt> state, it configures the interface if it is not yet configured
 --  and it then waits for the DHCP lease renewal.  If the DHCP lease must be renewed, it
 --  switches to the <tt>STATE_RENEWING</tt> state.
+--
+--  === Interface Configuration ===
+--  Once in the <tt>STATE_BOUND</tt>, the interface configuration is done by the <tt>Process</tt>
+--  procedure that calls the <tt>Bind</tt> procedure with the DHCP received options.
+--  This procedure configures the interface IP, netmask, gateway, MTU and DNS.  It is possible
+--  to override this procedure in an application to be notified and extract other information
+--  from the received DHCP options.  In that case, it is still important to call the overriden
+--  procedure so that the interface and network stack is correctly configured.
 --
 package Net.DHCP is
 

@@ -41,7 +41,7 @@ package body Net.DHCP is
    OPT_BROADCAST_ADDR     : constant Net.Uint8 := 28;
    OPT_NTP_SERVER         : constant Net.Uint8 := 42;
    OPT_WWW_SERVER         : constant Net.Uint8 := 72;
-   OPT_REQUESTED_IP       : constant NEt.Uint8 := 50;
+   OPT_REQUESTED_IP       : constant Net.Uint8 := 50;
    OPT_LEASE_TIME         : constant Net.Uint8 := 51;
    OPT_MESSAGE_TYPE       : constant Net.Uint8 := 53;
    OPT_SERVER_IDENTIFIER  : constant Net.Uint8 := 54;

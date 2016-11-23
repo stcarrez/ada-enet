@@ -482,6 +482,11 @@ package body Net.DHCP is
       if Hdr.Xid2 /= Net.Uint16 (Shift_Right (Request.Xid, 16)) then
          return;
       end if;
+      for I in 1 .. 6 loop
+         if Character'Pos (Hdr.Chaddr (I)) /= Request.Mac (I) then
+            return;
+         end if;
+      end loop;
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
       Extract_Options (Packet, Options);
       if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then

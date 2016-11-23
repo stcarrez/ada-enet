@@ -150,6 +150,11 @@ package body Net.DHCP is
                Request.Discover;
             end if;
 
+         when STATE_REQUESTING =>
+            if Request.Timeout < Now then
+               Request.Request;
+            end if;
+
          when STATE_BOUND =>
             if not Request.Configured then
                Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);

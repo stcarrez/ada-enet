@@ -89,6 +89,8 @@ with Net.Sockets.Udp;
 --  and it then waits for the DHCP lease renewal.  If the DHCP lease must be renewed, it
 --  switches to the <tt>STATE_RENEWING</tt> state.
 --
+--  [images/ada-net-dhcp.png]
+--
 --  === Interface Configuration ===
 --  Once in the <tt>STATE_BOUND</tt>, the interface configuration is done by the <tt>Process</tt>
 --  procedure that calls the <tt>Bind</tt> procedure with the DHCP received options.

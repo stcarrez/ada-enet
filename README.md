@@ -9,6 +9,13 @@ to provide IPv4 network access to your project.  This library is used
 by the EtherScope project to read network packets and analyze the traffic
 (See https://github.com/stcarrez/etherscope).
 
+* IPv4 ([RFC 791](https://tools.ietf.org/html/rfc791))
+* ICMP ([RFC 792](https://tools.ietf.org/html/rfc792))
+* UDP ([RFC 768](https://tools.ietf.org/html/rfc768))
+* ARP ([RFC 826](https://tools.ietf.org/html/rfc826))
+* DNS ([RFC 1035](https://tools.ietf.org/html/rfc1035))
+* DHCPv4 ([RFC 2131](https://tools.ietf.org/html/rfc2131))
+
 Before build the library you will need:
 
 * Ada_Drivers_Library
@@ -103,4 +110,5 @@ And to flash the dns image, you can use:
 ## Documentation
 
 - https://github.com/stcarrez/ada-enet/wiki
+- [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)
 - [Using the Ada Embedded Network STM32 Ethernet Driver](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/09/29/Using-the-Ada-Embedded-Network-STM32-Ethernet-Driver)

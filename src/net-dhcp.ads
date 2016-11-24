@@ -91,6 +91,22 @@ with Net.Sockets.Udp;
 --
 --  [images/ada-net-dhcp.png]
 --
+--  The DHCP client does not use any task to give you the freedom on how you want to integrate
+--  the DHCP client in your application.  The <tt>Process</tt> procedure may be integrated in
+--  a loop similar to the loop below:
+--
+--    declare
+--       Dhcp_Timeout : Ada.Real_Time.Time_Span;
+--    begin
+--       loop
+--          C.Process (Dhcp_Timeout);
+--          delay until Ada.Real_Time.Clock + Dhcp_Timeout;
+--       end loop;
+--    end;
+--
+--  This loop may be part of a dedicated task for the DHCP client but it may also be part
+--  of another task that could also handle other network house keeping (such as ARP management).
+--
 --  === Interface Configuration ===
 --  Once in the <tt>STATE_BOUND</tt>, the interface configuration is done by the <tt>Process</tt>
 --  procedure that calls the <tt>Bind</tt> procedure with the DHCP received options.

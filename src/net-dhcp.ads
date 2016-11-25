@@ -119,7 +119,7 @@ package Net.DHCP is
 
    --  The <tt>State_Type</tt> defines the DHCP client finite state machine.
    type State_Type is (STATE_INIT, STATE_INIT_REBOOT, STATE_SELECTING, STATE_REQUESTING,
-                       STATE_BOUND, STATE_RENEWING, STATE_REBINDING,
+                       STATE_DAD, STATE_BOUND, STATE_RENEWING, STATE_REBINDING,
                        STATE_REBOOTING);
 
    --  Options extracted from the server response.
@@ -169,6 +169,11 @@ package Net.DHCP is
    --  Send the DHCP request packet after we received an offer.
    procedure Request (Request : in out Client) with
      Pre => Request.Get_State = STATE_REQUESTING;
+
+   --  Check for duplicate address on the network.  If we find someone else using
+   --  the IP, send a DHCPDECLINE to the server.  At the end of the DAD process,
+   --  switch to the STATE_BOUND state.
+   procedure Check_Address (Request : in out Client);
 
    --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
    --  This operation is called by the <tt>Process</tt> procedure when the BOUND state

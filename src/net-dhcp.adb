@@ -241,26 +241,30 @@ package body Net.DHCP is
          Packet.Put_Ip (Request.Server_Ip);
       end if;
 
-      --  Option 55: Parameter request List
-      Packet.Put_Uint8 (OPT_PARAMETER_LIST);
-      Packet.Put_Uint8 (12);
-      Packet.Put_Uint8 (OPT_SUBNETMASK);
-      Packet.Put_Uint8 (OPT_ROUTER);
-      Packet.Put_Uint8 (OPT_DOMAIN_NAME_SERVER);
-      Packet.Put_Uint8 (OPT_HOST_NAME);
-      Packet.Put_Uint8 (OPT_DOMAIN_NAME);
-      Packet.Put_Uint8 (OPT_MTU_SIZE);
-      Packet.Put_Uint8 (OPT_BROADCAST_ADDR);
-      Packet.Put_Uint8 (OPT_NTP_SERVER);
-      Packet.Put_Uint8 (OPT_WWW_SERVER);
-      Packet.Put_Uint8 (OPT_LEASE_TIME);
-      Packet.Put_Uint8 (OPT_RENEW_TIME);
-      Packet.Put_Uint8 (OPT_REBIND_TIME);
+      if Kind /= DHCP_DECLINE then
+         --  Option 55: Parameter request List
+         Packet.Put_Uint8 (OPT_PARAMETER_LIST);
+         Packet.Put_Uint8 (12);
+         Packet.Put_Uint8 (OPT_SUBNETMASK);
+         Packet.Put_Uint8 (OPT_ROUTER);
+         Packet.Put_Uint8 (OPT_DOMAIN_NAME_SERVER);
+         Packet.Put_Uint8 (OPT_HOST_NAME);
+         Packet.Put_Uint8 (OPT_DOMAIN_NAME);
+         Packet.Put_Uint8 (OPT_MTU_SIZE);
+         Packet.Put_Uint8 (OPT_BROADCAST_ADDR);
+         Packet.Put_Uint8 (OPT_NTP_SERVER);
+         Packet.Put_Uint8 (OPT_WWW_SERVER);
+         Packet.Put_Uint8 (OPT_LEASE_TIME);
+         Packet.Put_Uint8 (OPT_RENEW_TIME);
+         Packet.Put_Uint8 (OPT_REBIND_TIME);
+      end if;
 
-      --  Option 60: Vendor class identifier.
-      Packet.Put_Uint8 (OPT_VENDOR_CLASS);
-      Packet.Put_Uint8 (DEF_VENDOR_CLASS'Length);
-      Packet.Put_String (DEF_VENDOR_CLASS);
+      if Kind /= DHCP_DECLINE and Kind /= DHCP_RELEASE then
+         --  Option 60: Vendor class identifier.
+         Packet.Put_Uint8 (OPT_VENDOR_CLASS);
+         Packet.Put_Uint8 (DEF_VENDOR_CLASS'Length);
+         Packet.Put_String (DEF_VENDOR_CLASS);
+      end if;
 
       --  Option 61: Client identifier;
       Packet.Put_Uint8 (OPT_CLIENT_IDENTIFIER);
@@ -407,6 +411,7 @@ package body Net.DHCP is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
+      State  : State_Type := Request.State.Get_State;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
@@ -444,6 +449,48 @@ package body Net.DHCP is
       --  Broadcast the DHCP packet.
       Request.Send (Packet);
    end Request;
+
+   --  ------------------------------
+   --  Send the DHCPDECLINE message to notify the DHCP server that we refuse the IP
+   --  because the DAD discovered that the address is used.
+   --  ------------------------------
+   procedure Decline (Request : in out Client) is
+      Packet : Net.Buffers.Buffer_Type;
+      Hdr    : Net.Headers.DHCP_Header_Access;
+      Len    : Net.Uint16;
+   begin
+      Net.Buffers.Allocate (Packet);
+      Packet.Set_Type (Net.Buffers.DHCP_PACKET);
+      Hdr := Packet.DHCP;
+
+      --  Fill the DHCP header.
+      Hdr.Op    := 1;
+      Hdr.Htype := 1;
+      Hdr.Hlen  := 6;
+      Hdr.Hops  := 0;
+      Hdr.Flags := 0;
+      Hdr.Xid1  := Net.Uint16 (Request.Xid and 16#0ffff#);
+      Hdr.Xid2  := Net.Uint16 (Shift_Right (Request.Xid, 16));
+      Hdr.Secs  := 0;
+      Hdr.Ciaddr := (0, 0, 0, 0);
+      Hdr.Yiaddr := (0, 0, 0, 0);
+      Hdr.Siaddr := (0, 0, 0, 0);
+      Hdr.Giaddr := (0, 0, 0, 0);
+      Hdr.Chaddr := (others => Character'Val (0));
+      for I in 1 .. 6 loop
+         Hdr.Chaddr (I) := Character'Val (Request.Mac (I));
+      end loop;
+      Hdr.Sname  := (others => Character'Val (0));
+      Hdr.File   := (others => Character'Val (0));
+      Fill_Options (Request, Packet, DHCP_DECLINE, Request.Mac);
+
+      --  Get the packet length and setup the UDP header.
+      Len := Packet.Get_Data_Size;
+      Packet.Set_Length (Len);
+
+      --  Send the DHCP decline to the server (unicast).
+      Request.Send (Packet);
+   end Decline;
 
    --  ------------------------------
    --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.

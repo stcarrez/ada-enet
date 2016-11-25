@@ -183,6 +183,11 @@ package Net.DHCP is
                    Config  : in Options_Type) with
      Pre => Request.Get_State = STATE_BOUND;
 
+   --  Send the DHCPDECLINE message to notify the DHCP server that we refuse the IP
+   --  because the DAD discovered that the address is used.
+   procedure Decline (Request : in out Client) with
+     Pre => Request.Get_State = STATE_DAD;
+
    --  Receive the DHCP offer/ack/nak from the DHCP server and update the DHCP state machine.
    --  It only updates the DHCP state machine (the DHCP request are only sent by
    --  <tt>Process</tt>).

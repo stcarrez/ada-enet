@@ -18,6 +18,7 @@
 with Interfaces; use Interfaces;
 with Net.Headers;
 with Net.Protos.IPv4;
+with Net.Protos.ARP;
 package body Net.DHCP is
 
    use type Ada.Real_Time.Time;
@@ -155,10 +156,15 @@ package body Net.DHCP is
                Request.Request;
             end if;
 
-         when STATE_BOUND =>
-            if not Request.Configured then
+         when STATE_DAD =>
+            if Request.Timeout < Now then
+               Request.Check_Address;
+            end if;
+            if Request.Get_State = STATE_BOUND then
                Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
             end if;
+
+         when STATE_BOUND =>
             if Request.Renew_Time < Now then
                Request.State.Set_State (STATE_RENEWING);
             end if;
@@ -179,6 +185,30 @@ package body Net.DHCP is
       end case;
       Next_Call := Request.Timeout - Now;
    end Process;
+
+   --  ------------------------------
+   --  Check for duplicate address on the network.  If we find someone else using
+   --  the IP, send a DHCPDECLINE to the server.  At the end of the DAD process,
+   --  switch to the STATE_BOUND state.
+   --  ------------------------------
+   procedure Check_Address (Request : in out Client) is
+      use type Net.Protos.Arp.Arp_Status;
+
+      Null_Packet : Net.Buffers.Buffer_Type;
+      Mac         : Net.Ether_Addr;
+      Status      : Net.Protos.Arp.Arp_Status;
+   begin
+      Net.Protos.Arp.Resolve (Ifnet     => Request.Ifnet.all,
+                              Target_Ip => Request.Ip,
+                              Mac       => Mac,
+                              Packet    => Null_Packet,
+                              Status    => Status);
+      if Status = Net.Protos.Arp.ARP_FOUND then
+         Request.Decline;
+      else
+         Request.Retry := Request.Retry + 1;
+      end if;
+   end Check_Address;
 
    --  ------------------------------
    --  Fill the DHCP options in the request.
@@ -391,7 +421,11 @@ package body Net.DHCP is
       Hdr.Xid1  := Net.Uint16 (Request.Xid and 16#0ffff#);
       Hdr.Xid2  := Net.Uint16 (Shift_Right (Request.Xid, 16));
       Hdr.Secs  := Net.Headers.To_Network (Request.Secs);
-      Hdr.Ciaddr := (0, 0, 0, 0);
+      if State = STATE_RENEWING then
+         Hdr.Ciaddr := Request.Ip;
+      else
+         Hdr.Ciaddr := (0, 0, 0, 0);
+      end if;
       Hdr.Yiaddr := (0, 0, 0, 0);
       Hdr.Siaddr := (0, 0, 0, 0);
       Hdr.Giaddr := (0, 0, 0, 0);

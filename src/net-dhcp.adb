@@ -303,15 +303,14 @@ package body Net.DHCP is
       Packet.Put_Uint8 (Kind); --  Discover
 
       --  Option 50: Requested IP Address
-      if Request.Current /= STATE_SELECTING and Kind /= DHCP_RELEASE then
+      if not (Request.Current in STATE_SELECTING | STATE_RENEWING | STATE_REBINDING) then
          Packet.Put_Uint8 (OPT_REQUESTED_IP);
          Packet.Put_Uint8 (4);
          Packet.Put_Ip (Request.Ip);
       end if;
 
       --  Option 54: DHCP Server Identifier.
-      if Request.Current /= STATE_BOUND and Request.Current /= STATE_RENEWING
-        and Request.Current /= STATE_REBINDING then
+      if not (Request.Current in STATE_BOUND | STATE_RENEWING | STATE_REBINDING) then
          Packet.Put_Uint8 (54);
          Packet.Put_Uint8 (4);
          Packet.Put_Ip (Request.Server_Ip);
@@ -717,6 +716,7 @@ package body Net.DHCP is
          Request.State.Bind (Options);
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_RENEWING then
+         Options.Ip := Hdr.Yiaddr;
          Request.State.Bind (Options);
 
       elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then

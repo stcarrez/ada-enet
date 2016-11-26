@@ -190,7 +190,7 @@ package body Net.Protos.Arp is
          end if;
 
          --  Queue the packet unless the queue is full.
-         if Result = ARP_PENDING or Result = ARP_NEEDED then
+         if (Result = ARP_PENDING or Result = ARP_NEEDED) and then not Packet.Is_Null then
             if Queue_Size < QUEUE_LIMIT and Rt.Queue_Size < QUEUE_ENTRY_LIMIT then
                Queue_Size := Queue_Size + 1;
                Net.Buffers.Insert (Rt.Queue, Packet);

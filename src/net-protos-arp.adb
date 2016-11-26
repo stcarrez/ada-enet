@@ -132,6 +132,7 @@ package body Net.Protos.Arp is
                else
                   Count := Count + 1;
                   Refresh (Count) := Entries (I).Index;
+                  Entries (I).Retry := Entries (I).Retry + 1;
                   Entries (I).Expire := Now + Arp_Retry_Timeout;
                end if;
             end if;
@@ -177,7 +178,7 @@ package body Net.Protos.Arp is
             Rt.Expire  := Now + Arp_Retry_Timeout;
             Result := ARP_NEEDED;
 
-         elsif Rt.Expire < Ada.Real_Time.Clock then
+         elsif Rt.Expire < Now then
             if Rt.Retry > ARP_MAX_RETRY then
                Rt.Unreachable := True;
                Rt.Expire := Now + Arp_Unreachable_Timeout;

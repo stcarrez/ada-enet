@@ -157,6 +157,10 @@ package body Net.Protos.Arp is
                   exit;
                end if;
             end loop;
+            if Rt = null then
+               Result := ARP_QUEUE_FULL;
+               return;
+            end if;
          end if;
          if Rt.Valid and then Now < Rt.Expire then
             Mac := Rt.Ether;

@@ -146,7 +146,7 @@ package body Net.DHCP is
             --  We received a DHCPNACK.  Wait 2 seconds before starting again the discovery.
             when STATE_INIT =>
                Request.Current := New_State;
-               Request.Timeout := Now + Ada.Real_Time.Seconds (2);
+               Request.Timeout := Now + Ada.Real_Time.Seconds (Request.Pause_Delay);
 
             when STATE_REQUESTING =>
                Request.Current := New_State;

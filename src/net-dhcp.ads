@@ -196,6 +196,10 @@ package Net.DHCP is
    procedure Decline (Request : in out Client) with
      Pre => Request.Get_State = STATE_DAD;
 
+   --  Send the DHCPREQUEST in unicast to the DHCP server to renew the DHCP lease.
+   procedure Renew (Request : in out Client) with
+     Pre => Request.Get_State = STATE_RENEWING;
+
    --  Receive the DHCP offer/ack/nak from the DHCP server and update the DHCP state machine.
    --  It only updates the DHCP state machine (the DHCP request are only sent by
    --  <tt>Process</tt>).

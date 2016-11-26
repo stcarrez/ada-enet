@@ -147,16 +147,21 @@ package body Net.DHCP is
             when STATE_INIT =>
                Request.Current := New_State;
                Request.Timeout := Now + Ada.Real_Time.Seconds (Request.Pause_Delay);
+               Request.Xid     := Request.Ifnet.Random;
+               Request.Retry   := 0;
 
             when STATE_REQUESTING =>
+               --  We received the DHCPOFFER, send the DHCPREQUEST.
                Request.Current := New_State;
                Request.Request;
 
             when STATE_BOUND =>
+               --  We received the DHCPACK, configure and check that the address is not used.
                if Request.Current = STATE_REQUESTING then
                   Request.Retry := 0;
                   Request.Timeout := Now;
                   Request.Current := STATE_DAD;
+                  Client'Class (Request).Configure (Request.Ifnet.all, Request.State.Get_Config);
                end if;
 
             when others =>
@@ -236,9 +241,12 @@ package body Net.DHCP is
          Request.Decline;
       else
          Request.Retry := Request.Retry + 1;
-         if Request.Retry = 200 then
+         if Request.Retry = 3 then
             Request.State.Set_State (STATE_BOUND);
             Request.Current := STATE_BOUND;
+            Request.Timeout := Request.Renew_Time;
+         else
+            Request.Timeout := Ada.Real_Time.Clock + Ada.Real_Time.Seconds (1);
          end if;
       end if;
    end Check_Address;
@@ -534,13 +542,13 @@ package body Net.DHCP is
    end Decline;
 
    --  ------------------------------
-   --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
-   --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
-   --  is entered.  It can be overriden to perform specific actions.
+   --  Configure the IP stack and the interface after the DHCP ACK is received.
+   --  The interface is configured to use the IP address, the ARP cache is flushed
+   --  so that the duplicate address check can be made.
    --  ------------------------------
-   procedure Bind (Request : in out Client;
-                   Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
-                   Config  : in Options_Type) is
+   procedure Configure (Request : in out Client;
+                        Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
+                        Config  : in Options_Type) is
       Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
       Request.Expire_Time := Now + Ada.Real_Time.Seconds (Config.Lease_Time);
@@ -552,7 +560,19 @@ package body Net.DHCP is
       Ifnet.Mtu     := Config.Mtu;
       Ifnet.Dns     := Config.Dns1;
       Request.Configured := True;
-      Request.Timeout    := Request.Renew_Time;
+      --  Request.Timeout    := Request.Renew_Time;
+   end Configure;
+
+   --  ------------------------------
+   --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
+   --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
+   --  is entered.  It can be overriden to perform specific actions.
+   --  ------------------------------
+   procedure Bind (Request : in out Client;
+                   Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
+                   Config  : in Options_Type) is
+   begin
+      null;
    end Bind;
 
    --  ------------------------------
@@ -620,7 +640,6 @@ package body Net.DHCP is
          Request.Ip := Hdr.Yiaddr;
          Request.Server_Ip := From.Addr;
          Request.State.Set_State (STATE_REQUESTING);
-         --  Request.Request;
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
          Options.Ip := Hdr.Yiaddr;

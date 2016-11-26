@@ -245,6 +245,10 @@ package body Net.DHCP is
             end if;
             Request.Timeout := Now + Ada.Real_Time.Seconds (Backoff (Request.Retry));
 
+         when STATE_DAD =>
+            Request.Retry := Request.Retry + 1;
+            Request.Timeout := Now + Ada.Real_Time.Seconds (1);
+
          when others =>
             Request.Timeout := Now + Ada.Real_Time.Seconds (1);
 
@@ -270,15 +274,12 @@ package body Net.DHCP is
                               Status    => Status);
       if Status = Net.Protos.Arp.ARP_FOUND or Request.Retry = 5 then
          Request.Decline;
+      elsif Request.Retry = 3 then
+         Request.State.Set_State (STATE_BOUND);
+         Request.Current := STATE_BOUND;
+         Request.Timeout := Request.Renew_Time;
       else
-         Request.Retry := Request.Retry + 1;
-         if Request.Retry = 3 then
-            Request.State.Set_State (STATE_BOUND);
-            Request.Current := STATE_BOUND;
-            Request.Timeout := Request.Renew_Time;
-         else
-            Request.Timeout := Ada.Real_Time.Clock + Ada.Real_Time.Seconds (1);
-         end if;
+         Request.Next_Timeout;
       end if;
    end Check_Address;
 

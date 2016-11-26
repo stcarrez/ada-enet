@@ -213,6 +213,9 @@ private
    --  Timeout table used for the DHCP backoff algorithm during for DHCP DISCOVER.
    Backoff : constant Backoff_Array := (0, 4, 8, 16, 32, 64);
 
+   --  Wait 30 seconds before starting again a DHCP discovery process after a NAK/DECLINE.
+   DEFAULT_PAUSE_DELAY : constant Natural := 30;
+
    --  The DHCP state machine is accessed by the <tt>Process</tt> procedure to proceed to
    --  the DHCP discovery and re-new process.  In parallel, the <tt>Receive</tt> procedure
    --  handles the DHCP packets received by the DHCP server and it changes the state according
@@ -246,6 +249,7 @@ private
       Renew_Time  : Ada.Real_Time.Time;
       Rebind_Time : Ada.Real_Time.Time;
       Expire_Time : Ada.Real_Time.Time;
+      Pause_Delay : Natural := DEFAULT_PAUSE_DELAY;
       Xid         : Net.Uint32;
       Secs        : Net.Uint16 := 0;
       Ip          : Net.Ip_Addr := (others => 0);

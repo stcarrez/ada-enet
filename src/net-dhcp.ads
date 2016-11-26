@@ -175,6 +175,14 @@ package Net.DHCP is
    --  switch to the STATE_BOUND state.
    procedure Check_Address (Request : in out Client);
 
+   --  Configure the IP stack and the interface after the DHCP ACK is received.
+   --  The interface is configured to use the IP address, the ARP cache is flushed
+   --  so that the duplicate address check can be made.
+   procedure Configure (Request : in out Client;
+                        Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
+                        Config  : in Options_Type) with
+     Pre => Request.Get_State = STATE_DAD;
+
    --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
    --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
    --  is entered.  It can be overriden to perform specific actions.

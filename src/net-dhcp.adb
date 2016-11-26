@@ -201,6 +201,7 @@ package body Net.DHCP is
          when STATE_BOUND =>
             if Request.Renew_Time < Now then
                Request.State.Set_State (STATE_RENEWING);
+               Request.Renew;
             end if;
 
          when STATE_RENEWING =>
@@ -540,6 +541,51 @@ package body Net.DHCP is
       Request.Send (To, Packet, Status);
       Request.State.Set_State (STATE_INIT);
    end Decline;
+
+   --  ------------------------------
+   --  Send the DHCPREQUEST in unicast to the DHCP server to renew the DHCP lease.
+   --  ------------------------------
+   procedure Renew (Request : in out Client) is
+      Packet : Net.Buffers.Buffer_Type;
+      Hdr    : Net.Headers.DHCP_Header_Access;
+      Len    : Net.Uint16;
+      To     : Net.Sockets.Sockaddr_In;
+      Status : Error_Code;
+   begin
+      Net.Buffers.Allocate (Packet);
+      Packet.Set_Type (Net.Buffers.DHCP_PACKET);
+      Hdr := Packet.DHCP;
+
+      --  Fill the DHCP header.
+      Hdr.Op    := 1;
+      Hdr.Htype := 1;
+      Hdr.Hlen  := 6;
+      Hdr.Hops  := 0;
+      Hdr.Flags := 0;
+      Hdr.Xid1  := Net.Uint16 (Request.Xid and 16#0ffff#);
+      Hdr.Xid2  := Net.Uint16 (Shift_Right (Request.Xid, 16));
+      Hdr.Secs  := 0;
+      Hdr.Ciaddr := Request.Ip;
+      Hdr.Yiaddr := (0, 0, 0, 0);
+      Hdr.Siaddr := (0, 0, 0, 0);
+      Hdr.Giaddr := (0, 0, 0, 0);
+      Hdr.Chaddr := (others => Character'Val (0));
+      for I in 1 .. 6 loop
+         Hdr.Chaddr (I) := Character'Val (Request.Mac (I));
+      end loop;
+      Hdr.Sname  := (others => Character'Val (0));
+      Hdr.File   := (others => Character'Val (0));
+      Fill_Options (Request, Packet, DHCP_REQUEST, Request.Mac);
+
+      --  Get the packet length and setup the UDP header.
+      Len := Packet.Get_Data_Size;
+      Packet.Set_Length (Len);
+
+      --  Send the DHCP decline to the server (unicast).
+      To.Addr := Request.Server_Ip;
+      To.Port := Net.Headers.To_Network (67);
+      Request.Send (To, Packet, Status);
+   end Renew;
 
    --  ------------------------------
    --  Configure the IP stack and the interface after the DHCP ACK is received.

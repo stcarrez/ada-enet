@@ -230,6 +230,28 @@ package body Net.DHCP is
    end Process;
 
    --  ------------------------------
+   --  Compute the next timeout according to the DHCP state.
+   --  ------------------------------
+   procedure Next_Timeout (Request : in out Client) is
+      Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+   begin
+      case Request.Current is
+         when STATE_SELECTING | STATE_REQUESTING =>
+            --  Compute the timeout before sending the next discover.
+            if Request.Retry = Retry_Type'Last then
+               Request.Retry := 1;
+            else
+               Request.Retry := Request.Retry + 1;
+            end if;
+            Request.Timeout := Now + Ada.Real_Time.Seconds (Backoff (Request.Retry));
+
+         when others =>
+            Request.Timeout := Now + Ada.Real_Time.Seconds (1);
+
+      end case;
+   end Next_Timeout;
+
+   --  ------------------------------
    --  Check for duplicate address on the network.  If we find someone else using
    --  the IP, send a DHCPDECLINE to the server.  At the end of the DAD process,
    --  switch to the STATE_BOUND state.
@@ -447,16 +469,9 @@ package body Net.DHCP is
       Len := Packet.Get_Data_Size;
       Packet.Set_Length (Len);
 
-      --  Compute the timeout before sending the next discover.
-      if Request.Retry = Retry_Type'Last then
-         Request.Retry := 1;
-      else
-         Request.Retry := Request.Retry + 1;
-      end if;
-      Request.Timeout := Ada.Real_Time.Clock + Ada.Real_Time.Seconds (Backoff (Request.Retry));
-
       --  Broadcast the DHCP packet.
       Request.Send (Packet);
+      Request.Next_Timeout;
    end Discover;
 
    --  Send the DHCP request packet after we received an offer.
@@ -501,6 +516,7 @@ package body Net.DHCP is
 
       --  Broadcast the DHCP packet.
       Request.Send (Packet);
+      Request.Next_Timeout;
    end Request;
 
    --  ------------------------------
@@ -593,6 +609,7 @@ package body Net.DHCP is
       To.Addr := Request.Server_Ip;
       To.Port := Net.Headers.To_Network (67);
       Request.Send (To, Packet, Status);
+      Request.Next_Timeout;
    end Renew;
 
    --  ------------------------------

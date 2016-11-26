@@ -239,6 +239,7 @@ private
    type Client is new Net.Sockets.Udp.Raw_Socket with record
       Ifnet       : access Net.Interfaces.Ifnet_Type'Class;
       State       : Machine;
+      Current     : State_Type := STATE_INIT;
       Mac         : Net.Ether_Addr := (others => 0);
       Timeout     : Ada.Real_Time.Time;
       Start_Time  : Ada.Real_Time.Time;

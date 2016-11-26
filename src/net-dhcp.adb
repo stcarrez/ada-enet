@@ -92,7 +92,7 @@ package body Net.DHCP is
    --  ------------------------------
    function Get_State (Request : in Client) return State_Type is
    begin
-      return Request.State.Get_State;
+      return Request.Current;
    end Get_State;
 
    --  ------------------------------
@@ -120,6 +120,7 @@ package body Net.DHCP is
       Request.Retry := 0;
       Request.Configured := False;
       Request.State.Set_State (STATE_INIT);
+      Request.Current := STATE_INIT;
    end Initialize;
 
    function Ellapsed (Request : in Client;
@@ -137,12 +138,26 @@ package body Net.DHCP is
    procedure Process (Request   : in out Client;
                       Next_Call : out Ada.Real_Time.Time_Span) is
       Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+      New_State : constant State_Type := Request.State.Get_State;
    begin
-      case Request.Get_State is
+      --  If the state machine has changed, we have received something from the server.
+      if Request.Current /= New_State then
+         Request.Current := New_State;
+         case New_State is
+            when STATE_REQUESTING | STATE_DAD =>
+               Request.Retry := 0;
+
+            when others =>
+               null;
+
+         end case;
+      end if;
+      case Request.Current is
          when STATE_INIT | STATE_INIT_REBOOT =>
             Request.State.Set_State (STATE_SELECTING);
             Request.Start_Time := Ada.Real_Time.Clock;
             Request.Secs := 0;
+            Request.Current := STATE_SELECTING;
             Request.Discover;
 
          when STATE_SELECTING =>
@@ -159,9 +174,9 @@ package body Net.DHCP is
          when STATE_DAD =>
             if Request.Timeout < Now then
                Request.Check_Address;
-            end if;
-            if Request.Get_State = STATE_BOUND then
-               Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
+               if Request.Get_State = STATE_BOUND then
+                  Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
+               end if;
             end if;
 
          when STATE_BOUND =>
@@ -207,6 +222,10 @@ package body Net.DHCP is
          Request.Decline;
       else
          Request.Retry := Request.Retry + 1;
+         if Request.Retry = 2 then
+            Request.State.Set_State (STATE_BOUND);
+            Request.Current := STATE_BOUND;
+         end if;
       end if;
    end Check_Address;
 
@@ -230,12 +249,15 @@ package body Net.DHCP is
       Packet.Put_Uint8 (Kind); --  Discover
 
       --  Option 50: Requested IP Address
-      Packet.Put_Uint8 (OPT_REQUESTED_IP);
-      Packet.Put_Uint8 (4);
-      Packet.Put_Ip (Request.Ip);
+      if Request.Current /= STATE_SELECTING and Kind /= DHCP_RELEASE then
+         Packet.Put_Uint8 (OPT_REQUESTED_IP);
+         Packet.Put_Uint8 (4);
+         Packet.Put_Ip (Request.Ip);
+      end if;
 
       --  Option 54: DHCP Server Identifier.
-      if Request.Server_Ip /= (0, 0, 0, 0) then
+      if Request.Current /= STATE_BOUND and Request.Current /= STATE_RENEWING
+        and Request.Current /= STATE_REBINDING then
          Packet.Put_Uint8 (54);
          Packet.Put_Uint8 (4);
          Packet.Put_Ip (Request.Server_Ip);
@@ -411,7 +433,7 @@ package body Net.DHCP is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
-      State  : State_Type := Request.State.Get_State;
+      State  : State_Type := Request.Current;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);

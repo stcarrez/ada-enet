@@ -181,7 +181,7 @@ package Net.DHCP is
    procedure Configure (Request : in out Client;
                         Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
                         Config  : in Options_Type) with
-     Pre => Request.Get_State = STATE_DAD;
+     Pre => Request.Get_State in STATE_DAD | STATE_RENEWING | STATE_REBINDING;
 
    --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
    --  This operation is called by the <tt>Process</tt> procedure when the BOUND state

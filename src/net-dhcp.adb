@@ -162,6 +162,12 @@ package body Net.DHCP is
                   Request.Timeout := Now;
                   Request.Current := STATE_DAD;
                   Client'Class (Request).Configure (Request.Ifnet.all, Request.State.Get_Config);
+
+               elsif Request.Current = STATE_RENEWING then
+                  Client'Class (Request).Configure (Request.Ifnet.all, Request.State.Get_Config);
+                  Request.Current := STATE_BOUND;
+                  Request.Timeout := Request.Renew_Time;
+
                end if;
 
             when others =>
@@ -606,7 +612,6 @@ package body Net.DHCP is
       Ifnet.Mtu     := Config.Mtu;
       Ifnet.Dns     := Config.Dns1;
       Request.Configured := True;
-      --  Request.Timeout    := Request.Renew_Time;
    end Configure;
 
    --  ------------------------------
@@ -689,6 +694,9 @@ package body Net.DHCP is
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
          Options.Ip := Hdr.Yiaddr;
+         Request.State.Bind (Options);
+
+      elsif Options.Msg_Type = DHCP_ACK and State = STATE_RENEWING then
          Request.State.Bind (Options);
 
       elsif Options.Msg_Type = DHCP_NACK and State = STATE_REQUESTING then

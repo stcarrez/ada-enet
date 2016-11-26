@@ -219,6 +219,9 @@ package Net.DHCP is
 
 private
 
+   --  Compute the next timeout according to the DHCP state.
+   procedure Next_Timeout (Request : in out Client);
+
    type Retry_Type is new Net.Uint8 range 0 .. 5;
    type Backoff_Array is array (Retry_Type) of Integer;
 

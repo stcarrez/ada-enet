@@ -206,12 +206,14 @@ package body Net.DHCP is
 
          when STATE_BOUND =>
             if Request.Renew_Time < Now then
+               Request.Current := STATE_RENEWING;
                Request.State.Set_State (STATE_RENEWING);
                Request.Renew;
             end if;
 
          when STATE_RENEWING =>
             if Request.Rebind_Time < Now then
+               Request.Current := STATE_REBINDING;
                Request.State.Set_State (STATE_REBINDING);
             end if;
 

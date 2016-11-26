@@ -142,23 +142,37 @@ package body Net.DHCP is
    begin
       --  If the state machine has changed, we have received something from the server.
       if Request.Current /= New_State then
-         Request.Current := New_State;
          case New_State is
-            when STATE_REQUESTING | STATE_DAD =>
-               Request.Retry := 0;
+            --  We received a DHCPNACK.  Wait 2 seconds before starting again the discovery.
+            when STATE_INIT =>
+               Request.Current := New_State;
+               Request.Timeout := Now + Ada.Real_Time.Seconds (2);
+
+            when STATE_REQUESTING =>
+               Request.Current := New_State;
+               Request.Request;
+
+            when STATE_BOUND =>
+               if Request.Current = STATE_REQUESTING then
+                  Request.Retry := 0;
+                  Request.Timeout := Now;
+                  Request.Current := STATE_DAD;
+               end if;
 
             when others =>
-               null;
+               Request.Current := New_State;
 
          end case;
       end if;
       case Request.Current is
          when STATE_INIT | STATE_INIT_REBOOT =>
-            Request.State.Set_State (STATE_SELECTING);
-            Request.Start_Time := Ada.Real_Time.Clock;
-            Request.Secs := 0;
-            Request.Current := STATE_SELECTING;
-            Request.Discover;
+            if Request.Timeout < Now then
+               Request.State.Set_State (STATE_SELECTING);
+               Request.Start_Time := Ada.Real_Time.Clock;
+               Request.Secs := 0;
+               Request.Current := STATE_SELECTING;
+               Request.Discover;
+            end if;
 
          when STATE_SELECTING =>
             if Request.Timeout < Now then
@@ -172,7 +186,7 @@ package body Net.DHCP is
             end if;
 
          when STATE_DAD =>
-            if Request.Timeout < Now then
+            if Request.Timeout <= Now then
                Request.Check_Address;
                if Request.Get_State = STATE_BOUND then
                   Client'Class (Request).Bind (Request.Ifnet.all, Request.State.Get_Config);
@@ -218,11 +232,11 @@ package body Net.DHCP is
                               Mac       => Mac,
                               Packet    => Null_Packet,
                               Status    => Status);
-      if Status = Net.Protos.Arp.ARP_FOUND then
+      if Status = Net.Protos.Arp.ARP_FOUND or Request.Retry = 5 then
          Request.Decline;
       else
          Request.Retry := Request.Retry + 1;
-         if Request.Retry = 2 then
+         if Request.Retry = 200 then
             Request.State.Set_State (STATE_BOUND);
             Request.Current := STATE_BOUND;
          end if;
@@ -480,6 +494,8 @@ package body Net.DHCP is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
       Len    : Net.Uint16;
+      To     : Net.Sockets.Sockaddr_In;
+      Status : Error_Code;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
@@ -511,7 +527,10 @@ package body Net.DHCP is
       Packet.Set_Length (Len);
 
       --  Send the DHCP decline to the server (unicast).
-      Request.Send (Packet);
+      To.Addr := Request.Server_Ip;
+      To.Port := Net.Headers.To_Network (67);
+      Request.Send (To, Packet, Status);
+      Request.State.Set_State (STATE_INIT);
    end Decline;
 
    --  ------------------------------
@@ -599,8 +618,9 @@ package body Net.DHCP is
       Extract_Options (Packet, Options);
       if Options.Msg_Type = DHCP_OFFER and State = STATE_SELECTING then
          Request.Ip := Hdr.Yiaddr;
+         Request.Server_Ip := From.Addr;
          Request.State.Set_State (STATE_REQUESTING);
-         Request.Request;
+         --  Request.Request;
 
       elsif Options.Msg_Type = DHCP_ACK and State = STATE_REQUESTING then
          Options.Ip := Hdr.Yiaddr;

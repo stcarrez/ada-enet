@@ -71,6 +71,7 @@ package body Net.Sockets.Udp is
       Addr.Port := Hdr.Uh_Sport;
       while Soc /= null loop
          if Soc.Listen.Port = Hdr.Uh_Dport then
+            Packet.Set_Type (Net.Buffers.UDP_PACKET);
             Soc.Receive (Addr, Packet);
             return;
          end if;

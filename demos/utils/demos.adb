@@ -81,7 +81,9 @@ package body Demos is
       case State is
          when Net.DHCP.STATE_BOUND | Net.DHCP.STATE_DAD
             | Net.DHCP.STATE_RENEWING | Net.DHCP.STATE_REBINDING =>
-            if State /= Net.DHCP.STATE_BOUND then
+            if State = Net.DHCP.STATE_REBINDING then
+               Foreground := HAL.Bitmap.Red;
+            elsif State /= Net.DHCP.STATE_BOUND then
                Foreground := HAL.Bitmap.Blue;
             end if;
             Put (80, 30, Net.Utils.To_String (Ifnet.Ip));
@@ -90,15 +92,15 @@ package body Demos is
 
          when Net.DHCP.STATE_SELECTING =>
             Foreground := HAL.Bitmap.Blue;
-            Put (90, 30, "Selecting");
+            Put (80, 30, "Selecting");
 
          when Net.DHCP.STATE_REQUESTING =>
             Foreground := HAL.Bitmap.Blue;
-            Put (90, 30, "Requesting");
+            Put (80, 30, "Requesting");
 
          when others =>
             Foreground := HAL.Bitmap.Blue;
-            Put (90, 30, "Initializing");
+            Put (80, 30, "Initialize");
 
       end case;
       Foreground := HAL.Bitmap.White;

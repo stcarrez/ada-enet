@@ -24,7 +24,7 @@ flash-ping:		all
 flash-echo:		all
 	st-flash write echo.bin 0x8000000
 
-flash-dns:		all
+flash-dns:		dns
 	st-flash write dns.bin 0x8000000
 
 checkout:

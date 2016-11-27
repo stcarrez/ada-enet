@@ -49,7 +49,11 @@ package body Net.Sockets.Udp is
       Hdr.Uh_Sport := Endpoint.Listen.Port;
       Hdr.Uh_Sum   := 0;
       Hdr.Uh_Ulen  := Net.Headers.To_Network (Len - 20 - 14);
-      Net.Protos.IPv4.Make_Header (Ip, Endpoint.Listen.Addr, To.Addr, Net.Protos.IPv4.P_UDP, Len - 14);
+      if Endpoint.Listen.Addr = (0, 0, 0, 0) then
+         Net.Protos.IPv4.Make_Header (Ip, Endpoint.Ifnet.Ip, To.Addr, Net.Protos.IPv4.P_UDP, Len - 14);
+      else
+         Net.Protos.IPv4.Make_Header (Ip, Endpoint.Listen.Addr, To.Addr, Net.Protos.IPv4.P_UDP, Len - 14);
+      end if;
       Net.Protos.IPv4.Send_Raw (Endpoint.Ifnet.all, To.Addr, Packet, Status);
    end Send;
 

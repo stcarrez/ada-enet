@@ -641,16 +641,16 @@ package body Net.DHCP is
       Len    : Net.Uint16;
    begin
       --  Get the packet length and setup the UDP header.
-      Len := Packet.Get_Data_Size;
-      Packet.Set_Length (Len);
+      Len := Packet.Get_Data_Size (Net.Buffers.IP_PACKET);
+      Packet.Set_Length (Len + 20 + 14);
       Udp.Uh_Sport := Net.Headers.To_Network (68);
       Udp.Uh_Dport := Net.Headers.To_Network (67);
-      Udp.Uh_Ulen  := Net.Headers.To_Network (Len - 20 - 14);
+      Udp.Uh_Ulen  := Net.Headers.To_Network (Len);
       Udp.Uh_Sum   := 0;
 
       --  Set the IP header to broadcast the packet.
       Net.Protos.IPv4.Make_Header (Ip, (0, 0, 0, 0), (255, 255, 255, 255),
-                                   Net.Protos.IPv4.P_UDP, Uint16 (Len - 14));
+                                   Net.Protos.IPv4.P_UDP, Uint16 (Len + 20));
 
       --  And set the Ethernet header for the broadcast.
       Ether.Ether_Shost := Request.Mac;

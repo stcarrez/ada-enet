@@ -16,19 +16,12 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with System;
-with Net.Interfaces.STM32;
 with Net.DNS;
-with Net.DHCP;
 package Receiver is
-
-   --  The Ethernet interface driver.
-   Ifnet     : aliased Net.Interfaces.STM32.STM32_Ifnet;
 
    type Query_Array is array (1 .. 30) of aliased Net.DNS.Query;
 
    Queries : Query_Array;
-
-   Dhcp    : aliased Net.DHCP.Client;
 
    --  The task that waits for packets.
    task Controller with

@@ -35,8 +35,8 @@ package body Demos is
                                      Start      => (X, Y),
                                      Msg        => Msg,
                                      Font       => Current_Font,
-                                     Foreground => HAL.Bitmap.White,
-                                     Background => HAL.Bitmap.Black);
+                                     Foreground => Foreground,
+                                     Background => Background);
    end Put;
 
    --  ------------------------------
@@ -74,24 +74,34 @@ package body Demos is
    --  Refresh the ifnet statistics on the display.
    --  ------------------------------
    procedure Refresh_Ifnet_Stats is
+      use type Net.DHCP.State_Type;
+
       State : constant Net.DHCP.State_Type := DHCP.Get_State;
    begin
       case State is
-         when Net.DHCP.STATE_BOUND =>
+         when Net.DHCP.STATE_BOUND | Net.DHCP.STATE_DAD
+            | Net.DHCP.STATE_RENEWING | Net.DHCP.STATE_REBINDING =>
+            if State /= Net.DHCP.STATE_BOUND then
+               Foreground := HAL.Bitmap.Blue;
+            end if;
             Put (80, 30, Net.Utils.To_String (Ifnet.Ip));
             Put (80, 40, Net.Utils.To_String (Ifnet.Gateway));
             Put (80, 50, Net.Utils.To_String (Ifnet.Dns));
 
          when Net.DHCP.STATE_SELECTING =>
+            Foreground := HAL.Bitmap.Blue;
             Put (90, 30, "Selecting");
 
          when Net.DHCP.STATE_REQUESTING =>
+            Foreground := HAL.Bitmap.Blue;
             Put (90, 30, "Requesting");
 
          when others =>
+            Foreground := HAL.Bitmap.Blue;
             Put (90, 30, "Initializing");
 
       end case;
+      Foreground := HAL.Bitmap.White;
       Put (250, 30, Net.Uint64 (Ifnet.Rx_Stats.Packets));
       Put (350, 30, Ifnet.Rx_Stats.Bytes);
       Put (250, 40, Net.Uint64 (Ifnet.Tx_Stats.Packets));

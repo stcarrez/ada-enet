@@ -100,7 +100,9 @@ package body Demos is
 
          when others =>
             Foreground := HAL.Bitmap.Blue;
-            Put (80, 30, "Initialize");
+            Put (80, 30, "Initialize   ");
+            Put (80, 40, "             ");
+            Put (80, 50, "             ");
 
       end case;
       Foreground := HAL.Bitmap.White;

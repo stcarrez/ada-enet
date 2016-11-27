@@ -465,10 +465,6 @@ package body Net.DHCP is
       Hdr.File   := (others => Character'Val (0));
       Fill_Options (Request, Packet, DHCP_DISCOVER, Request.Mac);
 
-      --  Get the packet length and setup the UDP header.
-      Len := Packet.Get_Data_Size;
-      Packet.Set_Length (Len);
-
       --  Broadcast the DHCP packet.
       Request.Send (Packet);
       Request.Next_Timeout;
@@ -509,10 +505,6 @@ package body Net.DHCP is
       Hdr.Sname  := (others => Character'Val (0));
       Hdr.File   := (others => Character'Val (0));
       Fill_Options (Request, Packet, DHCP_REQUEST, Request.Mac);
-
-      --  Get the packet length and setup the UDP header.
-      Len := Packet.Get_Data_Size;
-      Packet.Set_Length (Len);
 
       --  Broadcast the DHCP packet.
       Request.Send (Packet);
@@ -555,10 +547,6 @@ package body Net.DHCP is
       Hdr.File   := (others => Character'Val (0));
       Fill_Options (Request, Packet, DHCP_DECLINE, Request.Mac);
 
-      --  Get the packet length and setup the UDP header.
-      Len := Packet.Get_Data_Size;
-      Packet.Set_Length (Len);
-
       --  Send the DHCP decline to the server (unicast).
       To.Addr := Request.Server_Ip;
       To.Port := Net.Headers.To_Network (67);
@@ -600,10 +588,6 @@ package body Net.DHCP is
       Hdr.Sname  := (others => Character'Val (0));
       Hdr.File   := (others => Character'Val (0));
       Fill_Options (Request, Packet, DHCP_REQUEST, Request.Mac);
-
-      --  Get the packet length and setup the UDP header.
-      Len := Packet.Get_Data_Size;
-      Packet.Set_Length (Len);
 
       --  Send the DHCP decline to the server (unicast).
       To.Addr := Request.Server_Ip;

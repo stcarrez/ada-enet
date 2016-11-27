@@ -47,9 +47,9 @@ package body Demos is
                   Value : in Net.Uint64) is
       Buffer : constant HAL.Bitmap.Bitmap_Buffer'Class := STM32.Board.Display.Get_Hidden_Buffer (1);
       FG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                   HAL.Bitmap.White);
+                                                                                   Foreground);
       BG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
-                                                                                   HAL.Bitmap.Black);
+                                                                                   Background);
       V      : constant String := Net.Uint64'Image (Value);
       Pos    : Bitmapped_Drawing.Point := (X + 100, Y);
       D      : Natural := 1;
@@ -73,10 +73,25 @@ package body Demos is
    --  ------------------------------
    --  Refresh the ifnet statistics on the display.
    --  ------------------------------
-   procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class) is
+   procedure Refresh_Ifnet_Stats is
+      State : constant Net.DHCP.State_Type := DHCP.Get_State;
    begin
-      Put (80, 30, Net.Utils.To_String (Ifnet.Ip));
-      Put (80, 40, Net.Utils.To_String (Ifnet.Gateway));
+      case State is
+         when Net.DHCP.STATE_BOUND =>
+            Put (80, 30, Net.Utils.To_String (Ifnet.Ip));
+            Put (80, 40, Net.Utils.To_String (Ifnet.Gateway));
+            Put (80, 50, Net.Utils.To_String (Ifnet.Dns));
+
+         when Net.DHCP.STATE_SELECTING =>
+            Put (90, 30, "Selecting");
+
+         when Net.DHCP.STATE_REQUESTING =>
+            Put (90, 30, "Requesting");
+
+         when others =>
+            Put (90, 30, "Initializing");
+
+      end case;
       Put (250, 30, Net.Uint64 (Ifnet.Rx_Stats.Packets));
       Put (350, 30, Ifnet.Rx_Stats.Bytes);
       Put (250, 40, Net.Uint64 (Ifnet.Tx_Stats.Packets));
@@ -114,6 +129,7 @@ package body Demos is
          Current_Font := BMP_Fonts.Font8x8;
          Put (5, 30, "IP");
          Put (4, 40, "Gateway");
+         Put (4, 50, "DNS");
          Put (250, 30, "Rx");
          Put (250, 40, "Tx");
          Put (302, 14, "Packets");

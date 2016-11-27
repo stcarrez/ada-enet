@@ -40,8 +40,10 @@ package body Net.Protos.IPv4 is
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
       if Ifnet.Is_Local_Network (Target_Ip) then
          Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Arp_Status);
-      else
+      elsif Ifnet.Gateway /= (0, 0, 0, 0) then
          Net.Protos.Arp.Resolve (Ifnet, Ifnet.Gateway, Ether.Ether_Dhost, Packet, Arp_Status);
+      else
+         Arp_Status := Net.Protos.Arp.ARP_UNREACHABLE;
       end if;
       case Arp_Status is
          when Net.Protos.Arp.ARP_FOUND =>

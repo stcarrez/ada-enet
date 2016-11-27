@@ -20,6 +20,7 @@ with BMP_Fonts;
 with Net;
 with Net.Buffers;
 with Net.Interfaces;
+with Net.Interfaces.STM32;
 with Net.DHCP;
 package Demos is
 
@@ -28,8 +29,11 @@ package Demos is
    --  Reserve 256 network buffers.
    NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
 
+   --  The Ethernet interface driver.
+   Ifnet     : aliased Net.Interfaces.STM32.STM32_Ifnet;
+
    --  The DHCP client used by the demos.
-   Dhcp    : aliased Net.DHCP.Client;
+   Dhcp      : aliased Net.DHCP.Client;
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
 
@@ -49,7 +53,6 @@ package Demos is
    --  Initialize the board and the interface.
    generic
       with procedure Header;
-   procedure Initialize (Title  : in String;
-                         Ifnet  : in out Net.Interfaces.Ifnet_Type'Class);
+   procedure Initialize (Title  : in String);
 
 end Demos;

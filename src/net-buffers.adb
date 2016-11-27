@@ -158,7 +158,7 @@ package body Net.Buffers is
       if Buf.Size = 0 then
          return Buf.Pos;
       else
-         return Buf.Size;
+         return Buf.Size - Buf.Pos;
       end if;
    end Get_Data_Size;
 

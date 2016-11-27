@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------
 with Interfaces;
 with BMP_Fonts;
+with HAL.Bitmap;
 with Net;
 with Net.Buffers;
 with Net.Interfaces;
@@ -36,6 +37,8 @@ package Demos is
    Dhcp      : aliased Net.DHCP.Client;
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
+   Foreground   : HAL.Bitmap.Bitmap_Color := HAL.Bitmap.White;
+   Background   : HAL.Bitmap.Bitmap_Color := HAL.Bitmap.Black;
 
    --  Write a message on the display.
    procedure Put (X   : in Natural;
@@ -48,7 +51,7 @@ package Demos is
                   Value : in Net.Uint64);
 
    --  Refresh the ifnet statistics on the display.
-   procedure Refresh_Ifnet_Stats (Ifnet : in Net.Interfaces.Ifnet_Type'Class);
+   procedure Refresh_Ifnet_Stats;
 
    --  Initialize the board and the interface.
    generic

@@ -164,8 +164,8 @@ package body Net.Buffers is
 
    procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Uint16) is
    begin
-      Buf.Size := Size;
-      Buf.Packet.Size := Size;
+      Buf.Pos  := Size + Offsets (Buf.Kind);
+      Buf.Size := 0;
    end Set_Data_Size;
 
    function Get_Length (Buf : in Buffer_Type) return Uint16 is

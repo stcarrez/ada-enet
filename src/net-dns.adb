@@ -126,7 +126,6 @@ package body Net.DNS is
       Len     : Net.Uint16;
       Cls     : Net.Uint16;
    begin
-      Packet.Set_Type (Net.Buffers.UDP_PACKET);
       Val := Packet.Get_Uint16;
       if Val /= Request.Xid then
          return;

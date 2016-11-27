@@ -18,7 +18,7 @@ ethdemo:
 	arm-eabi-gnatmake -Panet -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/stm32f746disco/ethdemo ethdemo.bin
 
-flash-ping:		all
+flash-ping:		ping
 	st-flash write ping.bin 0x8000000
 
 flash-echo:		all

@@ -22,6 +22,8 @@ with Net.Protos.Icmp;
 with Net.Protos.IPv4;
 with Net.Headers;
 with Net.Sockets.Udp;
+with Net.Interfaces;
+with Demos;
 package body Receiver is
 
    use type Net.Ip_Addr;
@@ -72,7 +74,7 @@ package body Receiver is
       Packet  : Net.Buffers.Buffer_Type;
       Ether   : Net.Headers.Ether_Header_Access;
    begin
-      while not Ifnet.Is_Ready loop
+      while not Demos.Ifnet.Is_Ready loop
          delay until Ada.Real_Time.Clock + Ada.Real_Time.Seconds (1);
       end loop;
       loop
@@ -80,12 +82,12 @@ package body Receiver is
             Net.Buffers.Allocate (Packet);
          end if;
          if not Packet.Is_Null then
-            Ifnet.Receive (Packet);
+            Demos.Ifnet.Receive (Packet);
             Ether := Packet.Ethernet;
             if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
-               ARP_Input (Ifnet, Packet);
+               ARP_Input (Demos.Ifnet, Packet);
             elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
-               IP_Input (Ifnet, Packet);
+               IP_Input (Demos.Ifnet, Packet);
             end if;
          else
             delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (100);

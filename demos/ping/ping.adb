@@ -47,6 +47,7 @@ procedure Ping is
    use type Interfaces.Unsigned_32;
    use type Net.Ip_Addr;
    use type Ada.Real_Time.Time;
+   use type Ada.Real_Time.Time_Span;
 
    procedure Refresh;
    procedure Header;
@@ -91,15 +92,21 @@ begin
    Ping_Deadline := Ada.Real_Time.Clock;
    loop
       declare
-         Now     : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+         Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+         Dhcp_Timeout : Ada.Real_Time.Time_Span;
       begin
          Net.Protos.Arp.Timeout (Demos.Ifnet);
+         Demos.Dhcp.Process (Dhcp_Timeout);
          if Ping_Deadline < Now then
             Receiver.Do_Ping;
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;
-         delay until Now + PING_PERIOD;
+         if Dhcp_Timeout < PING_PERIOD then
+            delay until Now + Dhcp_Timeout;
+         else
+            delay until Now + PING_PERIOD;
+         end if;
       end;
    end loop;
 end Ping;

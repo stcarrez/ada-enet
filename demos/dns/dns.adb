@@ -70,25 +70,6 @@ procedure Dns is
       end if;
    end Get_Status;
 
-   procedure Refresh_DHCP (Y : Natural) is
-      use type Net.DHCP.State_Type;
-
-      State  : Net.DHCP.State_Type := Demos.Dhcp.Get_State;
-      Config : Net.DHCP.Options_Type := Demos.Dhcp.Get_Config;
-   begin
-      if State = Net.DHCP.STATE_BOUND then
-         Demos.Put (0, Y, "Bound    ");
-         Demos.Put (200, Y, "H=" & Config.Hostname (1 .. Config.Hostname_Len)
-                    & " D=" & Config.Domain (1 .. Config.Domain_Len));
-         Demos.Put (0, Y + 16, "IP:" & Net.Utils.To_String (Config.Ip));
-         Demos.Put (0, Y + 32, "GW:" & Net.Utils.To_String (Config.Router));
-      elsif State = Net.DHCP.STATE_SELECTING then
-         Demos.Put (0, Y, "Selecting");
-      elsif State = Net.DHCP.STATE_RENEWING then
-         Demos.Put (0, Y, "Renew    ");
-      end if;
-   end Refresh_DHCP;
-
    procedure Refresh is
       use type Net.DHCP.State_Type;
 
@@ -107,7 +88,6 @@ procedure Dns is
             Y := Y + 16;
          end if;
       end loop;
-      Refresh_DHCP (230);
       Demos.Refresh_Ifnet_Stats;
       STM32.Board.Display.Update_Layer (1);
 

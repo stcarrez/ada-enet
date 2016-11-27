@@ -108,7 +108,7 @@ procedure Dns is
          end if;
       end loop;
       Refresh_DHCP (230);
-      Demos.Refresh_Ifnet_Stats (Demos.Ifnet);
+      Demos.Refresh_Ifnet_Stats;
       STM32.Board.Display.Update_Layer (1);
 
       if Demos.Dhcp.Get_State = Net.DHCP.STATE_BOUND then

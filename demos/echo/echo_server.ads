@@ -20,8 +20,26 @@ with Net.Sockets.Udp;
 with Net.Buffers;
 package Echo_Server is
 
+   type Message is record
+      Id      : Natural := 0;
+      Content : String (1 .. 80) := (others => ' ');
+   end record;
+   type Message_List is array (1 .. 10) of Message;
+
+   --  Logger that saves the message received by the echo UDP socket.
+   protected type Logger is
+
+      procedure Echo (Content : in Message);
+
+      function Get return Message_List;
+   private
+      Id   : Natural := 0;
+      List : Message_List;
+   end Logger;
+
    type Echo_Server is new Net.Sockets.Udp.Socket with record
-      Count : Natural := 0;
+      Count    : Natural := 0;
+      Messages : Logger;
    end record;
 
    overriding

@@ -20,12 +20,16 @@ with BMP_Fonts;
 with Net;
 with Net.Buffers;
 with Net.Interfaces;
+with Net.DHCP;
 package Demos is
 
    use type Interfaces.Unsigned_32;
 
    --  Reserve 256 network buffers.
    NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
+
+   --  The DHCP client used by the demos.
+   Dhcp    : aliased Net.DHCP.Client;
 
    Current_Font : BMP_Fonts.BMP_Font := BMP_Fonts.Font12x12;
 

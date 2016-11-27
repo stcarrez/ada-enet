@@ -73,20 +73,25 @@ procedure Dns is
    procedure Refresh_DHCP (Y : Natural) is
       use type Net.DHCP.State_Type;
 
-      State  : Net.DHCP.State_Type := Receiver.Dhcp.Get_State;
-      Config : Net.DHCP.Options_Type := Receiver.Dhcp.Get_Config;
+      State  : Net.DHCP.State_Type := Demos.Dhcp.Get_State;
+      Config : Net.DHCP.Options_Type := Demos.Dhcp.Get_Config;
    begin
       if State = Net.DHCP.STATE_BOUND then
-         Demos.Put (0, Y, "H=" & Config.Hostname (1 .. Config.Hostname_Len)
+         Demos.Put (0, Y, "Bound    ");
+         Demos.Put (200, Y, "H=" & Config.Hostname (1 .. Config.Hostname_Len)
                     & " D=" & Config.Domain (1 .. Config.Domain_Len));
          Demos.Put (0, Y + 16, "IP:" & Net.Utils.To_String (Config.Ip));
          Demos.Put (0, Y + 32, "GW:" & Net.Utils.To_String (Config.Router));
       elsif State = Net.DHCP.STATE_SELECTING then
          Demos.Put (0, Y, "Selecting");
+      elsif State = Net.DHCP.STATE_RENEWING then
+         Demos.Put (0, Y, "Renew    ");
       end if;
    end Refresh_DHCP;
 
    procedure Refresh is
+      use type Net.DHCP.State_Type;
+
       Y     : Natural := 90;
       Status : Net.Error_Code;
       pragma Unreferenced (Status);
@@ -94,25 +99,27 @@ procedure Dns is
       for I in Receiver.Queries'Range loop
          if Receiver.Queries (I).Get_Name'Length > 0 then
             Demos.Put (0, Y, Receiver.Queries (I).Get_Name);
-            Demos.Put (200, Y, Net.Utils.To_String (Receiver.Queries (I).Get_Ip));
-            Demos.Put (350, Y, Get_Status (Receiver.Queries (I)));
-            Demos.Put (400, Y, Net.Uint32'Image (Receiver.Queries (I).Get_Ttl));
+            Demos.Put (180, Y, Net.Utils.To_String (Receiver.Queries (I).Get_Ip));
+            Demos.Put (300, Y, Get_Status (Receiver.Queries (I)));
+            Demos.Put (350, Y, Net.Uint32'Image (Receiver.Queries (I).Get_Ttl));
             --  Put (250, Y, Net.Uint64 (Hosts (I).Seq));
-            --  Put (350, Y, Net.Uint64 (Hosts (I).Received));
+            --  Demos.Put (400, Y, Net.Uint64 (Receiver.Queries (I).));
             Y := Y + 16;
          end if;
       end loop;
-      Refresh_DHCP (Y);
-      Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
+      Refresh_DHCP (230);
+      Demos.Refresh_Ifnet_Stats (Demos.Ifnet);
       STM32.Board.Display.Update_Layer (1);
 
-      Receiver.Queries (1).Resolve (Receiver.Ifnet'Access, "www.google.com", Status);
-      Receiver.Queries (2).Resolve (Receiver.Ifnet'Access, "www.facebook.com", Status);
-      Receiver.Queries (3).Resolve (Receiver.Ifnet'Access, "www.apple.com", Status);
-      Receiver.Queries (4).Resolve (Receiver.Ifnet'Access, "www.adacore.com", Status);
-      Receiver.Queries (5).Resolve (Receiver.Ifnet'Access, "github.com", Status);
-      Receiver.Queries (6).Resolve (Receiver.Ifnet'Access, "www.twitter.com", Status);
-      Receiver.Queries (7).Resolve (Receiver.Ifnet'Access, "www.kalabosse.com", Status);
+      if Demos.Dhcp.Get_State = Net.DHCP.STATE_BOUND then
+         Receiver.Queries (1).Resolve (Demos.Ifnet'Access, "www.google.com", Status);
+         Receiver.Queries (2).Resolve (Demos.Ifnet'Access, "www.facebook.com", Status);
+         Receiver.Queries (3).Resolve (Demos.Ifnet'Access, "www.apple.com", Status);
+         Receiver.Queries (4).Resolve (Demos.Ifnet'Access, "www.adacore.com", Status);
+         Receiver.Queries (5).Resolve (Demos.Ifnet'Access, "github.com", Status);
+         Receiver.Queries (6).Resolve (Demos.Ifnet'Access, "www.twitter.com", Status);
+         Receiver.Queries (7).Resolve (Demos.Ifnet'Access, "www.kalabosse.com", Status);
+      end if;
    end Refresh;
 
    procedure Header is
@@ -128,19 +135,17 @@ procedure Dns is
    --  Send ping echo request deadline
    Ping_Deadline : Ada.Real_Time.Time;
 
-   Client : access Net.DHCP.Client := Receiver.Dhcp'Unchecked_Access;
 begin
-   Initialize ("STM32 DNS", Receiver.Ifnet);
+   Initialize ("STM32 DNS");
 
-   Client.Initialize (Receiver.Ifnet'Access);
    Ping_Deadline := Ada.Real_Time.Clock;
    loop
       declare
          Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
          Dhcp_Timeout : Ada.Real_Time.Time_Span;
       begin
-         Net.Protos.Arp.Timeout (Receiver.Ifnet);
-         Receiver.Dhcp.Process (Dhcp_Timeout);
+         Net.Protos.Arp.Timeout (Demos.Ifnet);
+         Demos.Dhcp.Process (Dhcp_Timeout);
          if Ping_Deadline < Now then
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;

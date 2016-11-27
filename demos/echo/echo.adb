@@ -22,6 +22,7 @@ with HAL.Bitmap;
 with Net.Buffers;
 with Net.Protos.Arp;
 with Net.Sockets.Udp;
+with Net.Headers;
 with Receiver;
 with Echo_Server;
 with Demos;
@@ -47,7 +48,7 @@ procedure Echo is
 
    procedure Refresh is
    begin
-      Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
+      Demos.Refresh_Ifnet_Stats;
       Demos.Put (250, 100, Net.Uint64 (Echo_Server.Server.Count));
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
@@ -59,13 +60,17 @@ procedure Echo is
 
    procedure Initialize is new Demos.Initialize (Header);
 
-begin
-   Initialize ("STM32 Echo", Receiver.Ifnet);
+   Dhcp_Timeout : Ada.Real_Time.Time_Span;
 
-   Echo_Server.Server.Bind (Receiver.Ifnet'Access, (Port => 7, Addr => (others => 0)));
+begin
+   Initialize ("STM32 Echo");
+
+   Echo_Server.Server.Bind (Demos.Ifnet'Access, (Port => Net.Headers.To_Network (7),
+                                                 Addr => (others => 0)));
 
    loop
-      Net.Protos.Arp.Timeout (Receiver.Ifnet);
+      Net.Protos.Arp.Timeout (Demos.Ifnet);
+      Demos.Dhcp.Process (Dhcp_Timeout);
       Refresh;
       delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (500);
    end loop;

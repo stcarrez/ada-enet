@@ -16,12 +16,8 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with System;
-with Net.Interfaces.STM32;
-with Net.Buffers;
+with Net;
 package Receiver is
-
-   --  The Ethernet interface driver.
-   Ifnet     : aliased Net.Interfaces.STM32.STM32_Ifnet;
 
    --  Maximum number of host we can ping.
    MAX_PING_HOST : constant Positive := 8;

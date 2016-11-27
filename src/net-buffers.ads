@@ -139,7 +139,8 @@ package Net.Buffers is
    --
    function Get_Data_Address (Buf : in Buffer_Type) return System.Address;
 
-   function Get_Data_Size (Buf : in Buffer_Type) return Uint16;
+   function Get_Data_Size (Buf  : in Buffer_Type;
+                           Kind : in Packet_Type) return Uint16;
 
    procedure Set_Data_Size (Buf : in out Buffer_Type; Size : in Uint16);
 

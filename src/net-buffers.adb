@@ -153,12 +153,13 @@ package body Net.Buffers is
       return Buf.Packet.Data (Buf.Packet.Data'First)'Address;
    end Get_Data_Address;
 
-   function Get_Data_Size (Buf : in Buffer_Type) return Uint16 is
+   function Get_Data_Size (Buf  : in Buffer_Type;
+                           Kind : in Packet_Type) return Uint16 is
    begin
       if Buf.Size = 0 then
-         return Buf.Pos;
+         return Buf.Pos - Offsets (Kind);
       else
-         return Buf.Size - Buf.Pos;
+         return Buf.Size - Offsets (Kind);
       end if;
    end Get_Data_Size;
 

@@ -46,7 +46,7 @@ package body Echo_Server is
                       Packet   : in out Net.Buffers.Buffer_Type) is
       use type Net.Uint16;
 
-      Size   : constant Net.Uint16 := Packet.Get_Data_Size;
+      Size   : constant Net.Uint16 := Packet.Get_Data_Size (Net.Buffers.UDP_PACKET);
       Status : Net.Error_Code;
       Len    : Natural;
       Msg    : Message;

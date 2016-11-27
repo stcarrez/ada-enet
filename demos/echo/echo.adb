@@ -47,9 +47,17 @@ procedure Echo is
    procedure Header;
 
    procedure Refresh is
+      Msg : constant Echo_Server.Message_List := Echo_Server.Server.Messages.Get;
+      Y   : Natural := 120;
    begin
       Demos.Refresh_Ifnet_Stats;
       Demos.Put (250, 100, Net.Uint64 (Echo_Server.Server.Count));
+      for M of Msg loop
+         exit when M.Id = 0;
+         Demos.Put (0, Y, Natural'Image (M.Id));
+         Demos.Put (100, Y, M.Content);
+         Y := Y + 15;
+      end loop;
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 

@@ -22,6 +22,7 @@ with Net.Protos.Icmp;
 with Net.Protos.IPv4;
 with Net.Headers;
 with Net.Interfaces;
+with Net.Sockets.Udp;
 with Demos;
 package body Receiver is
 
@@ -158,6 +159,9 @@ package body Receiver is
             Pinger.Receive (Packet);
          end if;
          Net.Protos.Icmp.Receive (Ifnet, Packet);
+
+      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_UDP then
+         Net.Sockets.Udp.Input (Ifnet, Packet);
 
          --  To find our gateway, we look at the IGMP query general packets and we assume
          --  that hosts that send IGMP membership query are gateways.

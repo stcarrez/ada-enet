@@ -61,7 +61,7 @@ procedure Ping is
          Demos.Put (350, Y, Net.Uint64 (Hosts (I).Received));
          Y := Y + 16;
       end loop;
-      Demos.Refresh_Ifnet_Stats (Receiver.Ifnet);
+      Demos.Refresh_Ifnet_Stats;
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 
@@ -81,7 +81,7 @@ procedure Ping is
    Ping_Deadline : Ada.Real_Time.Time;
 
 begin
-   Initialize ("STM32 Ping", Receiver.Ifnet);
+   Initialize ("STM32 Ping");
 
    Receiver.Add_Host ((192, 168, 1, 1));
    Receiver.Add_Host ((8, 8, 8, 8));
@@ -93,7 +93,7 @@ begin
       declare
          Now     : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
-         Net.Protos.Arp.Timeout (Receiver.Ifnet);
+         Net.Protos.Arp.Timeout (Demos.Ifnet);
          if Ping_Deadline < Now then
             Receiver.Do_Ping;
             Refresh;

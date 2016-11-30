@@ -31,14 +31,15 @@ with Demos;
 --  The <b>Echo</b> application listens to the UDP port 7 on the Ethernet network and it
 --  sends back the received packet to the sender: this is the RFC 862 Echo protocol.
 --
---  The <b>Echo</b> application uses the static IP address <b>192.168.1.2</b> and an initial
---  default gateway <b>192.168.1.254</b>.  While running, it discovers the gateway by looking
---  at the IGMP query membership packets.
+--  The <b>Echo</b> application uses the DHCP client to get and IP address and the
+--  default gateway.
 --
 --  The application has two tasks.  The main task loops to manage the refresh of the STM32
 --  display and send the ICMP echo requests each second.  The second task is responsible for
---  waiting of Ethernet packets, analyzing them to handle ARP and ICMP packets.  The receiver
---  task also looks at IGMP packets to identify the IGMP queries sent by routers.
+--  waiting of Ethernet packets, analyzing them to handle ARP, ICMP and UDP packets.
+--
+--  The application maintains in a list the last 10 messages that have been received.
+--  The list is displayed on the STM32 display by the <tt>Refresh</tt> procedure.
 procedure Echo is
 
    use type Ada.Real_Time.Time;

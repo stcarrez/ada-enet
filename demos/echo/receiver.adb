@@ -30,16 +30,8 @@ package body Receiver is
    use type Net.Uint8;
    use type Net.Uint16;
 
-   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
-                        Packet : in out Net.Buffers.Buffer_Type);
    procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                        Packet : in out Net.Buffers.Buffer_Type);
-
-   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
-                        Packet : in out Net.Buffers.Buffer_Type) is
-   begin
-      Net.Protos.Arp.Receive (Ifnet, Packet);
-   end ARP_Input;
 
    procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                        Packet : in out Net.Buffers.Buffer_Type) is
@@ -82,7 +74,7 @@ package body Receiver is
             Demos.Ifnet.Receive (Packet);
             Ether := Packet.Ethernet;
             if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
-               ARP_Input (Demos.Ifnet, Packet);
+               Net.Protos.Arp.Receive (Demos.Ifnet, Packet);
             elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
                IP_Input (Demos.Ifnet, Packet);
             end if;

@@ -50,13 +50,10 @@ package body Echo_Server is
       Status : Net.Error_Code;
       Len    : Natural;
       Msg    : Message;
-      Skip   : Net.Uint16;
    begin
       if Size > Msg.Content'Length then
-         Skip := Net.Uint16 (Len) - Msg.Content'Length;
          Len := Msg.Content'Length;
       else
-         Skip := 0;
          Len := Natural (Size);
       end if;
       Packet.Get_String (Msg.Content (1 .. Len));

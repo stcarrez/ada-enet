@@ -131,7 +131,6 @@ package body Net.Interfaces.STM32 is
    overriding
    procedure Send (Ifnet : in out STM32_Ifnet;
                    Buf   : in out Net.Buffers.Buffer_Type) is
-      use type Net.Uint32;
       use type Net.Uint64;
    begin
       Ifnet.Tx_Stats.Packets := Ifnet.Tx_Stats.Packets + 1;
@@ -142,7 +141,6 @@ package body Net.Interfaces.STM32 is
    overriding
    procedure Receive (Ifnet : in out STM32_Ifnet;
                       Buf   : in out Net.Buffers.Buffer_Type) is
-      use type Net.Uint32;
       use type Net.Uint64;
    begin
       Receive_Queue.Wait_Packet (Buf);
@@ -177,6 +175,8 @@ package body Net.Interfaces.STM32 is
       Addr : System.Address;
       List : Net.Buffers.Buffer_List;
    begin
+      Eth.Initialize_RMII;
+
       --  Allocate Rx buffers.
       Addr := SDRAM.Reserve (Amount => Size);
       Net.Buffers.Add_Region (Addr => Addr,

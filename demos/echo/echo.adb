@@ -30,16 +30,17 @@ with Demos;
 --  == Echo Application ==
 --  The <b>Echo</b> application listens to the UDP port 7 on the Ethernet network and it
 --  sends back the received packet to the sender: this is the RFC 862 Echo protocol.
+--  The application also maintains a list of the last 10 messages that have been received.
+--  The list is then displayed on the STM32 display so that we get a visual feedback of the
+--  received messages.
 --
 --  The <b>Echo</b> application uses the DHCP client to get and IP address and the
 --  default gateway.
 --
 --  The application has two tasks.  The main task loops to manage the refresh of the STM32
---  display and send the ICMP echo requests each second.  The second task is responsible for
---  waiting of Ethernet packets, analyzing them to handle ARP, ICMP and UDP packets.
---
---  The application maintains in a list the last 10 messages that have been received.
---  The list is displayed on the STM32 display by the <tt>Refresh</tt> procedure.
+--  display and also to perform some network housekeeping such as the DHCP client management
+--  and ARP table management.  The second task is responsible for waiting Ethernet packets,
+--  analyzing them to handle ARP, ICMP and UDP packets.
 procedure Echo is
 
    use type Ada.Real_Time.Time;

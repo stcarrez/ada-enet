@@ -48,14 +48,10 @@ package body Echo_Server is
 
       Size   : constant Net.Uint16 := Packet.Get_Data_Size (Net.Buffers.UDP_PACKET);
       Status : Net.Error_Code;
-      Len    : Natural;
       Msg    : Message;
+      Len    : constant Natural
+        := (if Size > Msg.Content'Length then Msg.Content'Length else Natural (Size));
    begin
-      if Size > Msg.Content'Length then
-         Len := Msg.Content'Length;
-      else
-         Len := Natural (Size);
-      end if;
       Packet.Get_String (Msg.Content (1 .. Len));
       Packet.Set_Data_Size (Size);
       Endpoint.Count := Endpoint.Count + 1;

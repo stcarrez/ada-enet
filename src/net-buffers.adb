@@ -447,6 +447,9 @@ package body Net.Buffers is
       Buf.Packet := From.Head;
       Buf.Size   := Buf.Packet.Size;
       From.Head  := From.Head.Next;
+      if From.Head = null then
+         From.Tail := null;
+      end if;
    end Peek;
 
    --  ------------------------------
@@ -530,6 +533,7 @@ package body Net.Buffers is
          List.Tail.Next := Free_List;
          Free_List   := List.Head;
          List.Head   := null;
+         List.Tail   := null;
       end Release;
 
       procedure Add_Region (Addr  : in System.Address;

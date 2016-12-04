@@ -18,7 +18,6 @@
 with Bitmapped_Drawing;
 with HAL.Bitmap;
 with STM32.Board;
-with STM32.Eth;
 with STM32.SDRAM;
 with STM32.RNG.Interrupts;
 with Net.Utils;
@@ -128,8 +127,6 @@ package body Demos is
 
       --  STMicroelectronics OUI = 00 81 E1
       Ifnet.Mac := (0, 16#81#, 16#E1#, 5, 5, 1);
-
-      STM32.Eth.Initialize_RMII;
 
       --  Setup some receive buffers and initialize the Ethernet driver.
       Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);

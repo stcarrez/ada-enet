@@ -66,12 +66,17 @@ package body Net.Sockets.Udp is
       Hdr  : constant Net.Headers.UDP_Header_Access := Packet.UDP;
       Addr : Net.Sockets.Sockaddr_In;
       Soc  : access Socket'Class := List;
+      Len  : Net.Uint16;
    begin
       Addr.Addr := Ip.Ip_Src;
       Addr.Port := Hdr.Uh_Sport;
       while Soc /= null loop
          if Soc.Listen.Port = Hdr.Uh_Dport then
+            Len := Net.Headers.To_Host (Hdr.Uh_Ulen) - 8;
             Packet.Set_Type (Net.Buffers.UDP_PACKET);
+            if Len < Packet.Get_Data_Size (Net.Buffers.UDP_PACKET) then
+               Packet.Set_Length (Len + 8 + 20 + 14);
+            end if;
             Soc.Receive (Addr, Packet);
             return;
          end if;

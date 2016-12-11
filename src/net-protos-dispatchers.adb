@@ -32,6 +32,34 @@ package body Net.Protos.Dispatchers is
    Udp_Receive     : Receive_Handler := Net.Sockets.Udp.Input'Access;
    Other_Receive   : Receive_Handler := Default_Receive'Access;
 
+   --  ------------------------------
+   --  Set a protocol handler to deal with a packet of the given protocol when it is received.
+   --  Return the previous protocol handler.
+   --  ------------------------------
+   procedure Set_Handler (Proto    : in Net.Uint8;
+                          Handler  : in Receive_Handler;
+                          Previous : out Receive_Handler) is
+   begin
+      case Proto is
+         when Net.Protos.IPv4.P_ICMP =>
+            Previous     := Icmp_Receive;
+            Icmp_Receive := Handler;
+
+         when Net.Protos.IPv4.P_IGMP =>
+            Previous     := Igmp_Receive;
+            Igmp_Receive := Handler;
+
+         when Net.Protos.IPv4.P_UDP =>
+            Previous    := Udp_Receive;
+            Udp_Receive := Handler;
+
+         when others =>
+            Previous      := Other_Receive;
+            Other_Receive := Handler;
+
+      end case;
+   end Set_Handler;
+
    procedure Default_Receive (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                               Packet : in out Net.Buffers.Buffer_Type) is
    begin

@@ -94,6 +94,8 @@ with Net.Headers;
 --    Len : Net.Uint16 := Packet.Get_Data_Length;
 package Net.Buffers is
 
+   pragma Preelaborate;
+
    --  The size of a packet buffer for memory allocation.
    NET_ALLOC_SIZE : constant Uint32;
 

@@ -17,6 +17,8 @@
 -----------------------------------------------------------------------
 package Net.Headers is
 
+   pragma Preelaborate;
+
    --  Convert integers to network byte order.
    function To_Network (Val : in Uint32) return Uint32;
    function To_Network (Val : in Uint16) return Uint16;

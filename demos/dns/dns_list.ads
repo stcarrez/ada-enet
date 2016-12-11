@@ -17,15 +17,10 @@
 -----------------------------------------------------------------------
 with System;
 with Net.DNS;
-package Receiver is
+package Dns_List is
 
    type Query_Array is array (1 .. 30) of aliased Net.DNS.Query;
 
    Queries : Query_Array;
 
-   --  The task that waits for packets.
-   task Controller with
-     Storage_Size => (16 * 1024),
-     Priority => System.Default_Priority;
-
-end Receiver;
+end Dns_List;

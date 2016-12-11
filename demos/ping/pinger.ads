@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------
---  receiver -- Ethernet Packet Receiver
+--  pinger -- Ping hosts
 --  Copyright (C) 2016 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
@@ -17,7 +17,9 @@
 -----------------------------------------------------------------------
 with System;
 with Net;
-package Receiver is
+with Net.Interfaces;
+with Net.Buffers;
+package Pinger is
 
    --  Maximum number of host we can ping.
    MAX_PING_HOST : constant Positive := 8;
@@ -42,9 +44,7 @@ package Receiver is
    --  Send the ICMP echo request to each host.
    procedure Do_Ping;
 
-   --  The task that waits for packets.
-   task Controller with
-     Storage_Size => (16 * 1024),
-     Priority => System.Default_Priority;
+   procedure Receive (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                      Packet : in out Net.Buffers.Buffer_Type);
 
-end Receiver;
+end Pinger;

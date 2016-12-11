@@ -18,6 +18,9 @@
 with Interfaces;
 package body Net.Utils is
 
+   function Hex (Value : in Uint8) return String;
+   function Image (Value : in Uint8) return String;
+
    Hex_String : constant String := "0123456789ABCDEF";
 
    function Hex (Value : in Uint8) return String is
@@ -39,7 +42,7 @@ package body Net.Utils is
    --  ------------------------------
    --  Convert the IPv4 address to a dot string representation.
    --  ------------------------------
-   function To_String (Ip : in IP_Addr) return String is
+   function To_String (Ip : in Ip_Addr) return String is
    begin
       return Image (Ip (Ip'First)) & "."
         & Image (Ip (Ip'First + 1)) & "."

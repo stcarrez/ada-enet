@@ -37,26 +37,20 @@ You can build the library with:
   arm-eabi-gnatmake -Panet_stm32f746 -p
 ```
 
+Several demo applications are provided to illustrate how you can use the different
+network features.  The demo applications use the [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)
+to get an IPv4 address and obtain the default gateway and DNS.
+
 ## Ping
 
 The ping application implements a simple ping on several hosts and displays
-the ping counters on the STM32F LCD display.  The application has a static
-IP configuration with IP address **192.168.1.2** and gateway **192.168.1.240**.
-The application will continuously ping the hosts (192.168.1.1, 192.168.1.129,
-192.168.1.240, 192.168.1.254 and 8.8.8.8).  The application will also answer
-to ping requests.  If the static configuration is not suitable for your
-network, change the lines in ping.adb:
-
-```ada
---  Static IP interface, default netmask and no gateway.
-Receiver.Ifnet.Ip := (192, 168, 1, 2);
-Receiver.Ifnet.Gateway := (192, 168, 1, 240);
-```
+the ping counters on the STM32F LCD display.  The application will also answer
+to ping requests.
 
 To build the Ping application you may run:
 
 ```shell
-  make
+  make ping
 ```
 
 And to flash the ping image, you can use:
@@ -70,11 +64,12 @@ And to flash the ping image, you can use:
 The echo application shows a simple UDP server that echos the received packet (RFC 862).
 It listens on UDP port 7, loops to wait for UDP packets, returns them and increment a
 counter of received packets which is displayed on the STM32 LCD display.
+The echo application is described in the article: [Simple UDP Echo Server on STM32F746](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/12/04/Simple-UDP-Echo-Server-on-STM32F746)
 
 To build the Echo application you may run:
 
 ```shell
-  make
+  make echo
 ```
 
 And to flash the echo image, you can use:
@@ -83,11 +78,11 @@ And to flash the echo image, you can use:
   make flash-echo
 ```
 
-And to test the echo UDP server, you may use the **echoping** command on GNU/Linux.
+And to test the echo UDP server, you may use the **socat** command on GNU/Linux.
 For example:
 
 ```shell
-  echoping -v -u 192.168.1.2
+  echo -n 'Hello! Ada is great!' | socat - UDP:192.168.1.156:7
 ```
 
 ## DNS
@@ -98,7 +93,7 @@ of hosts.
 To build the dns application you may run:
 
 ```shell
-  make
+  make dns
 ```
 
 And to flash the dns image, you can use:
@@ -112,3 +107,4 @@ And to flash the dns image, you can use:
 - https://github.com/stcarrez/ada-enet/wiki
 - [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)
 - [Using the Ada Embedded Network STM32 Ethernet Driver](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/09/29/Using-the-Ada-Embedded-Network-STM32-Ethernet-Driver)
+- [Simple UDP Echo Server on STM32F746](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/12/04/Simple-UDP-Echo-Server-on-STM32F746)

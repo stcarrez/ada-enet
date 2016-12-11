@@ -24,7 +24,10 @@ with HAL.Bitmap;
 with Net.Buffers;
 with Net.Utils;
 with Net.Protos.Arp;
+with Net.Protos.IPv4;
+with Net.Protos.Dispatchers;
 with Receiver;
+with Pinger;
 with Demos;
 
 --  == Ping Application ==
@@ -54,7 +57,7 @@ procedure Ping is
 
    procedure Refresh is
       Y     : Natural := 90;
-      Hosts : constant Receiver.Ping_Info_Array := Receiver.Get_Hosts;
+      Hosts : constant Pinger.Ping_Info_Array := Pinger.Get_Hosts;
    begin
       for I in Hosts'Range loop
          Demos.Put (0, Y, Net.Utils.To_String (Hosts (I).Ip));
@@ -81,11 +84,15 @@ procedure Ping is
    --  Send ping echo request deadline
    Ping_Deadline : Ada.Real_Time.Time;
 
+   Icmp_Handler  : Net.Protos.Receive_Handler;
 begin
    Initialize ("STM32 Ping");
 
-   Receiver.Add_Host ((192, 168, 1, 1));
-   Receiver.Add_Host ((8, 8, 8, 8));
+   Pinger.Add_Host ((192, 168, 1, 1));
+   Pinger.Add_Host ((8, 8, 8, 8));
+   Net.Protos.Dispatchers.Set_Handler (Proto    => Net.Protos.IPv4.P_ICMP,
+                                       Handler  => Pinger.Receive'Access,
+                                       Previous => Icmp_Handler);
 
    --  Change font to 8x8.
    Demos.Current_Font := BMP_Fonts.Font8x8;
@@ -98,7 +105,7 @@ begin
          Net.Protos.Arp.Timeout (Demos.Ifnet);
          Demos.Dhcp.Process (Dhcp_Timeout);
          if Ping_Deadline < Now then
-            Receiver.Do_Ping;
+            Pinger.Do_Ping;
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;

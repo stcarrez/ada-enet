@@ -20,6 +20,7 @@ with Net.Buffers;
 with Net.Protos.Arp;
 with Net.Protos.Icmp;
 with Net.Protos.IPv4;
+with Net.Protos.Dispatchers;
 with Net.Headers;
 with Net.Sockets.Udp;
 with Net.Interfaces;
@@ -29,33 +30,6 @@ package body Receiver is
    use type Net.Ip_Addr;
    use type Net.Uint8;
    use type Net.Uint16;
-
-   procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                       Packet : in out Net.Buffers.Buffer_Type);
-
-   procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                       Packet : in out Net.Buffers.Buffer_Type) is
-      Ip_Hdr : constant Net.Headers.IP_Header_Access := Packet.IP;
-   begin
-      if Ip_Hdr.Ip_P = Net.Protos.IPv4.P_ICMP then
-         Net.Protos.Icmp.Receive (Ifnet, Packet);
-
-      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_UDP then
-         Net.Sockets.Udp.Input (Ifnet, Packet);
-
-         --  To find our gateway, we look at the IGMP query general packets and we assume
-         --  that hosts that send IGMP membership query are gateways.
-         --  224.0.0.1 is the All Hosts multicast group.
-      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_IGMP and Ip_Hdr.Ip_Dst = (224, 0, 0, 1) then
-         declare
-            Group : constant Net.Headers.IGMP_Header_Access := Packet.IGMP;
-         begin
-            if Group.Igmp_Type = Net.Headers.IGMP_MEMBERSHIP_QUERY then
-               Ifnet.Gateway := Ip_Hdr.Ip_Src;
-            end if;
-         end;
-      end if;
-   end IP_Input;
 
    task body Controller is
       use type Ada.Real_Time.Time;
@@ -76,7 +50,7 @@ package body Receiver is
             if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
                Net.Protos.Arp.Receive (Demos.Ifnet, Packet);
             elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
-               IP_Input (Demos.Ifnet, Packet);
+               Net.Protos.Dispatchers.Receive (Demos.Ifnet, Packet);
             end if;
          else
             delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (100);

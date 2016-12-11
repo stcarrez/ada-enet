@@ -22,6 +22,8 @@ with Net.Buffers;
 --  allows to receive or send packets.
 package Net.Interfaces is
 
+   pragma Preelaborate;
+
    type Stats_Type is record
       Bytes    : Uint64 := 0;
       Packets  : Uint32 := 0;

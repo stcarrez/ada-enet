@@ -19,11 +19,6 @@ with System;
 with Net;
 package Receiver is
 
-   --  Maximum number of host we can ping.
-   MAX_PING_HOST : constant Positive := 8;
-
-   NO_IP : constant Net.Ip_Addr := (0, 0, 0, 0);
-
    --  The task that waits for packets.
    task Controller with
      Storage_Size => (16 * 1024),

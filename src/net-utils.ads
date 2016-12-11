@@ -15,11 +15,10 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Net.Headers;
 package Net.Utils is
 
    --  Convert the IPv4 address to a dot string representation.
-   function To_String (Ip : in IP_Addr) return String;
+   function To_String (Ip : in Ip_Addr) return String;
 
    --  Convert the Ethernet address to a string representation.
    function To_String (Mac : in Ether_Addr) return String;

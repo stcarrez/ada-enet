@@ -16,9 +16,17 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Net.Headers;
+with Net.Buffers;
+with Net.Interfaces;
 package Net.Protos is
+
+   pragma Preelaborate;
 
    ETHERTYPE_ARP : constant Uint16 := 16#0806#;
    ETHERTYPE_IP  : constant Uint16 := 16#0800#;
+
+   type Receive_Handler is access
+     not null procedure (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                         Packet : in out Net.Buffers.Buffer_Type);
 
 end Net.Protos;

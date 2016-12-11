@@ -18,12 +18,8 @@
 with Ada.Real_Time;
 with Net.Buffers;
 with Net.Protos.Arp;
-with Net.Protos.Icmp;
-with Net.Protos.IPv4;
 with Net.Protos.Dispatchers;
 with Net.Headers;
-with Net.Sockets.Udp;
-with Net.Interfaces;
 with Demos;
 package body Receiver is
 

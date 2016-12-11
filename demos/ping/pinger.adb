@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------
---  receiver -- Ethernet Packet Receiver
+--  pinger -- Ping hosts
 --  Copyright (C) 2016 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
@@ -24,16 +24,11 @@ with Net.Headers;
 with Net.Interfaces;
 with Net.Sockets.Udp;
 with Demos;
-package body Receiver is
+package body Pinger is
 
    use type Net.Ip_Addr;
    use type Net.Uint8;
    use type Net.Uint16;
-
-   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
-                        Packet : in out Net.Buffers.Buffer_Type);
-   procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                       Packet : in out Net.Buffers.Buffer_Type);
 
    --  The protected object that holds the ping database.
    protected Pinger is
@@ -111,6 +106,17 @@ package body Receiver is
       Pinger.Add_Host (Ip);
    end Add_Host;
 
+   procedure Receive (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                      Packet : in out Net.Buffers.Buffer_Type) is
+      Hdr : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
+   begin
+      if Hdr.Icmp_Type = Net.Headers.ICMP_ECHO_REPLY then
+         Pinger.Receive (Packet);
+      else
+         Net.Protos.Icmp.Receive (Ifnet, Packet);
+      end if;
+   end Receive;
+
    --  ------------------------------
    --  Send the ICMP echo request to each host.
    --  ------------------------------
@@ -134,74 +140,4 @@ package body Receiver is
       end loop;
    end Do_Ping;
 
-   procedure ARP_Input (Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
-                        Packet : in out Net.Buffers.Buffer_Type) is
-      Req : constant Net.Headers.Arp_Packet_Access := Packet.Arp;
-   begin
-      if Net.Headers.To_Host (Req.Arp.Ea_Hdr.Ar_Op) = Net.Protos.Arp.ARPOP_REQUEST then
-         Receiver.Add_Host (Req.Arp.Arp_Spa);
-      end if;
-      Net.Protos.Arp.Receive (Ifnet, Packet);
-   end ARP_Input;
-
-   procedure IP_Input (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                       Packet : in out Net.Buffers.Buffer_Type) is
-      Ip_Hdr : constant Net.Headers.IP_Header_Access := Packet.IP;
-      Hdr    : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
-   begin
-      --  Collect the IP addresses for hosts that send packets.
-      --  Ignore 0.0.0.0 due to DHCP packets.
-      if Ip_Hdr.Ip_Src /= (0, 0, 0, 0) then
-         Receiver.Add_Host (Ip_Hdr.Ip_Src);
-      end if;
-      if Ip_Hdr.Ip_P = Net.Protos.IPv4.P_ICMP then
-         if Ip_Hdr.Ip_Dst = Ifnet.Ip and Hdr.Icmp_Type = Net.Headers.ICMP_ECHO_REPLY then
-            Pinger.Receive (Packet);
-         end if;
-         Net.Protos.Icmp.Receive (Ifnet, Packet);
-
-      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_UDP then
-         Net.Sockets.Udp.Input (Ifnet, Packet);
-
-         --  To find our gateway, we look at the IGMP query general packets and we assume
-         --  that hosts that send IGMP membership query are gateways.
-         --  224.0.0.1 is the All Hosts multicast group.
-      elsif Ip_Hdr.Ip_P = Net.Protos.IPv4.P_IGMP and Ip_Hdr.Ip_Dst = (224, 0, 0, 1) then
-         declare
-            Group : constant Net.Headers.IGMP_Header_Access := Packet.IGMP;
-         begin
-            if Group.Igmp_Type = Net.Headers.IGMP_MEMBERSHIP_QUERY then
-               Ifnet.Gateway := Ip_Hdr.Ip_Src;
-            end if;
-         end;
-      end if;
-   end IP_Input;
-
-   task body Controller is
-      use type Ada.Real_Time.Time;
-
-      Packet  : Net.Buffers.Buffer_Type;
-      Ether   : Net.Headers.Ether_Header_Access;
-   begin
-      while not Demos.Ifnet.Is_Ready loop
-         delay until Ada.Real_Time.Clock + Ada.Real_Time.Seconds (1);
-      end loop;
-      loop
-         if Packet.Is_Null then
-            Net.Buffers.Allocate (Packet);
-         end if;
-         if not Packet.Is_Null then
-            Demos.Ifnet.Receive (Packet);
-            Ether := Packet.Ethernet;
-            if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
-               ARP_Input (Demos.Ifnet, Packet);
-            elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
-               IP_Input (Demos.Ifnet, Packet);
-            end if;
-         else
-            delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (100);
-         end if;
-      end loop;
-   end Controller;
-
-end Receiver;
+end Pinger;

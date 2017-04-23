@@ -21,8 +21,9 @@ package Net.Protos is
 
    pragma Preelaborate;
 
-   ETHERTYPE_ARP : constant Uint16 := 16#0806#;
-   ETHERTYPE_IP  : constant Uint16 := 16#0800#;
+   ETHERTYPE_ARP  : constant Uint16 := 16#0806#;
+   ETHERTYPE_IP   : constant Uint16 := 16#0800#;
+   ETHERTYPE_IPv6 : constant Uint16 := 16#86DD#;
 
    type Receive_Handler is access
      not null procedure (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;

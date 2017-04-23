@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-dhcp -- DHCP client
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -181,7 +181,8 @@ package Net.DHCP is
    procedure Configure (Request : in out Client;
                         Ifnet   : in out Net.Interfaces.Ifnet_Type'Class;
                         Config  : in Options_Type) with
-     Pre => Request.Get_State in STATE_DAD | STATE_RENEWING | STATE_REBINDING;
+     Pre => Request.Get_State in STATE_DAD | STATE_RENEWING | STATE_REBINDING,
+     Post => Request.Get_State in STATE_DAD | STATE_RENEWING | STATE_REBINDING;
 
    --  Bind the interface with the DHCP configuration that was recieved by the DHCP ACK.
    --  This operation is called by the <tt>Process</tt> procedure when the BOUND state
@@ -194,7 +195,8 @@ package Net.DHCP is
    --  Send the DHCPDECLINE message to notify the DHCP server that we refuse the IP
    --  because the DAD discovered that the address is used.
    procedure Decline (Request : in out Client) with
-     Pre => Request.Get_State = STATE_DAD;
+     Pre => Request.Get_State = STATE_DAD,
+     Post => Request.Get_State = STATE_INIT;
 
    --  Send the DHCPREQUEST in unicast to the DHCP server to renew the DHCP lease.
    procedure Renew (Request : in out Client) with

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-dispatchers -- Network protocol dispatchers
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Net.Headers;
-with Net.Buffers;
-with Net.Interfaces;
 with Net.Protos.IPv4;
-with Net.Protos.Arp;
 with Net.Protos.Icmp;
 with Net.Sockets.Udp;
 package body Net.Protos.Dispatchers is

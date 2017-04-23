@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  demos -- Utility package for the demos
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ package Demos is
    use type Interfaces.Unsigned_32;
 
    --  Reserve 256 network buffers.
-   NET_BUFFER_SIZE : constant Interfaces.Unsigned_32 := Net.Buffers.NET_ALLOC_SIZE * 256;
+   NET_BUFFER_SIZE : constant Net.Uint32 := Net.Buffers.NET_ALLOC_SIZE * 256;
 
    --  The Ethernet interface driver.
    Ifnet     : aliased Net.Interfaces.STM32.STM32_Ifnet;

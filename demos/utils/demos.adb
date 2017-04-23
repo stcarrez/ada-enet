@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  demos -- Utility package for the demos
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Bitmapped_Drawing;
+with Bitmap_Color_Conversion;
 with HAL.Bitmap;
 with STM32.Board;
 with STM32.SDRAM;
@@ -30,7 +31,7 @@ package body Demos is
                   Y   : in Natural;
                   Msg : in String) is
    begin
-      Bitmapped_Drawing.Draw_String (Buffer     => STM32.Board.Display.Get_Hidden_Buffer (1),
+      Bitmapped_Drawing.Draw_String (Buffer     => STM32.Board.Display.Hidden_Buffer (1).all,
                                      Start      => (X, Y),
                                      Msg        => Msg,
                                      Font       => Current_Font,
@@ -44,17 +45,17 @@ package body Demos is
    procedure Put (X     : in Natural;
                   Y     : in Natural;
                   Value : in Net.Uint64) is
-      Buffer : constant HAL.Bitmap.Bitmap_Buffer'Class := STM32.Board.Display.Get_Hidden_Buffer (1);
-      FG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
+      Buffer : constant HAL.Bitmap.Any_Bitmap_Buffer := STM32.Board.Display.Hidden_Buffer (1);
+      FG     : constant HAL.UInt32 := Bitmap_Color_Conversion.Bitmap_Color_To_Word (Buffer.Color_Mode,
                                                                                    Foreground);
-      BG     : constant Interfaces.Unsigned_32 := HAL.Bitmap.Bitmap_Color_To_Word (Buffer.Color_Mode,
+      BG     : constant HAL.UInt32 := Bitmap_Color_Conversion.Bitmap_Color_To_Word (Buffer.Color_Mode,
                                                                                    Background);
       V      : constant String := Net.Uint64'Image (Value);
-      Pos    : Bitmapped_Drawing.Point := (X + 100, Y);
+      Pos    : HAL.Bitmap.Point := (X + 100, Y);
       D      : Natural := 1;
    begin
       for I in reverse V'Range loop
-         Bitmapped_Drawing.Draw_Char (Buffer     => Buffer,
+         Bitmapped_Drawing.Draw_Char (Buffer     => Buffer.all,
                                       Start      => Pos,
                                       Char       => V (I),
                                       Font       => Current_Font,
@@ -129,7 +130,8 @@ package body Demos is
       Ifnet.Mac := (0, 16#81#, 16#E1#, 5, 5, 1);
 
       --  Setup some receive buffers and initialize the Ethernet driver.
-      Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => NET_BUFFER_SIZE), NET_BUFFER_SIZE);
+      Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => HAL.UInt32 (NET_BUFFER_SIZE)),
+                              NET_BUFFER_SIZE);
       Ifnet.Initialize;
 
       --  Initialize the DHCP client.
@@ -149,10 +151,9 @@ package body Demos is
 --           Put (326, 70, "Send");
 --           Put (402, 70, "Receive");
          Header;
-         STM32.Board.Display.Get_Hidden_Buffer (1).Draw_Horizontal_Line
+         STM32.Board.Display.Hidden_Buffer (1).Draw_Horizontal_Line
            (Color => HAL.Bitmap.Blue,
-            X     => 0,
-            Y     => 84,
+            Pt    => (X => 0, Y => 84),
             Width => 480);
          STM32.Board.Display.Update_Layer (1);
       end loop;

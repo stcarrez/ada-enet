@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  dns -- DNS Example
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,8 @@ with Receiver;
 with Dns_List;
 with Demos;
 
+pragma Unreferenced (Receiver);
+
 --  == Ping Application ==
 --  The <b>Ping</b> application listens to the Ethernet network to identify some local
 --  hosts and ping them using ICMP echo requests.
@@ -54,6 +56,7 @@ procedure Dns is
 
    procedure Refresh;
    procedure Header;
+   function Get_Status (Query : in Net.DNS.Query) return String;
 
    function Get_Status (Query : in Net.DNS.Query) return String is
       use type Net.DNS.Status_Type;

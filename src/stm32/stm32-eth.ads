@@ -203,16 +203,16 @@ package STM32.Eth is
    end record;
 
    type Rdes4_Type is record
-      Reserved_31_14  : Uint18;
+      Reserved_31_14  : UInt18;
       Pv              : Bit;
       Pft             : Bit;
-      Pmt             : Uint4;
+      Pmt             : UInt4;
       Ipv6pr          : Bit;
       Ipv4pr          : Bit;
       Ipcb            : Bit;
       Ippe            : Bit;
       Iphe            : Bit;
-      Ippt            : Uint3;
+      Ippt            : UInt3;
    end record;
 
    for Rdes4_Type use record

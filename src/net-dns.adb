@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-dns -- DNS Network utilities
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +16,14 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Interfaces; use Interfaces;
-with Net.Buffers;
+with Net.Headers;
 package body Net.DNS is
+
+   --  The IN class for the DNS response (RFC 1035, 3.2.4. CLASS values).
+   --  Other classes are not meaningly to us.
+   IN_CLASS : constant Net.Uint16 := 16#0001#;
+
+   procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type);
 
    function Get_Status (Request : in Query) return Status_Type is
    begin
@@ -46,14 +52,14 @@ package body Net.DNS is
    function Get_Ttl (Request : in Query) return Net.Uint32 is
    begin
       return Request.Ttl;
-   end Get_ttl;
+   end Get_Ttl;
 
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
                       Status  : out Error_Code;
                       Timeout : in Natural := 10) is
-      Xid  : Uint32 := Ifnet.Random;
+      Xid  : constant Uint32 := Ifnet.Random;
       Addr : Net.Sockets.Sockaddr_In;
       To   : Net.Sockets.Sockaddr_In;
       Buf  : Net.Buffers.Buffer_Type;
@@ -101,25 +107,23 @@ package body Net.DNS is
 
    procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type) is
       Cnt : Net.Uint8;
-      Val : Net.Uint16;
-      C   : Net.Uint8;
    begin
       loop
          Cnt := Packet.Get_Uint8;
          exit when Cnt = 0;
-         while Cnt > 0 loop
-            C := Packet.Get_Uint8;
-            Cnt := Cnt - 1;
-         end loop;
+         Packet.Skip (Net.Uint16 (Cnt));
       end loop;
-      Val := Packet.Get_Uint16;
-      Val := Packet.Get_Uint16;
+      --  Skip QTYPE and QCLASS in query.
+      Packet.Skip (2);
+      Packet.Skip (2);
    end Skip_Query;
 
    overriding
    procedure Receive (Request  : in out Query;
                       From     : in Net.Sockets.Sockaddr_In;
                       Packet   : in out Net.Buffers.Buffer_Type) is
+      pragma Unreferenced (From);
+
       Val     : Net.Uint16;
       Answers : Net.Uint16;
       Ttl     : Net.Uint32;
@@ -171,14 +175,14 @@ package body Net.DNS is
          Cls := Packet.Get_Uint16;
          Ttl := Packet.Get_Uint32;
          Len := Packet.Get_Uint16;
-         if Val = 1 then
+         if Val = 1 and Cls = IN_CLASS then
             Request.Ttl := Ttl;
             if Len = 4 then
                Request.Ip := Packet.Get_Ip;
                Request.Status := NOERROR;
                return;
             end if;
-          end if;
+         end if;
          Packet.Skip (Len);
       end loop;
    end Receive;

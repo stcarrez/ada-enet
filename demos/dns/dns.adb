@@ -106,10 +106,7 @@ procedure Dns is
       end if;
    end Refresh;
 
-   procedure Header is
-   begin
-      null;
-   end Header;
+   procedure Header is null;
 
    procedure Initialize is new Demos.Initialize (Header);
 

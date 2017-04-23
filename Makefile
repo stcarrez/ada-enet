@@ -30,5 +30,8 @@ flash-dns:		dns
 checkout:
 	git submodule update --init --recursive
 
+clean:
+	rm -rf obj ping.bin echo.bin dns.bin
+
 .PHONY: ping echo
 

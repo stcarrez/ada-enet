@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-interfaces-stm32 -- Ethernet driver for STM32F74x
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ package body Net.Interfaces.STM32 is
    use STM32_SVD.Ethernet;
 
    function W is new Ada.Unchecked_Conversion
-     (System.Address, UInt32);
+     (System.Address, HAL.UInt32);
 
    type Tx_Position is new Uint32 range 0 .. TX_RING_SIZE;
    type Rx_Position is new Uint32 range 0 .. RX_RING_SIZE;
@@ -157,11 +157,14 @@ package body Net.Interfaces.STM32 is
       return Receive_Queue.Is_Ready and Transmit_Queue.Is_Ready;
    end Is_Ready;
 
+   --  ------------------------------
    --  Get a 32-bit random number.
+   --  ------------------------------
    overriding
    function Random (Ifnet : in STM32_Ifnet) return Uint32 is
+      pragma Unreferenced (Ifnet);
    begin
-      return RNG.Interrupts.Random;
+      return Uint32 (RNG.Interrupts.Random);
    end Random;
 
    --  ------------------------------
@@ -178,7 +181,7 @@ package body Net.Interfaces.STM32 is
       Eth.Initialize_RMII;
 
       --  Allocate Rx buffers.
-      Addr := SDRAM.Reserve (Amount => Size);
+      Addr := SDRAM.Reserve (Amount => HAL.UInt32 (Size));
       Net.Buffers.Add_Region (Addr => Addr,
                               Size => Size);
 

@@ -41,7 +41,30 @@ package Net.DNS is
    TXT_RR   : constant RR_Type := 16;
    AAAA_RR  : constant RR_Type := 28;
 
-   type Value_Type is (V_TEXT, V_IPV4, V_IPV6);
+   type Value_Type is (V_NONE, V_TEXT, V_IPV4, V_IPV6);
+
+   --  The Response_Type record describes a response anwser that was received from the
+   --  DNS server.  The DNS server can send several response answers in the same packet.
+   --  The answer data is extracted according to the RR type and made available as String,
+   --  IPv4 and in the future IPv6.
+   type Response_Type (Kind    : Value_Type;
+                       Of_Type : RR_Type;
+                       Len     : Natural) is
+      record
+         Class    : Net.Uint16;
+         Ttl      : Net.Uint32;
+         case Kind is
+         when V_TEXT => --  CNAME_RR | TXT_RR | MX_RR | NS_RR | PTR_RR
+            Text : String (1 .. Len);
+
+         when V_IPV4 => --  A_RR
+            Ip   : Net.Ip_Addr;
+
+         when others =>
+            null;
+
+         end case;
+      end record;
 
    type Query is new Net.Sockets.Udp.Socket with private;
 
@@ -61,6 +84,17 @@ package Net.DNS is
                       Name    : in String;
                       Status  : out Error_Code;
                       Timeout : in Natural := 10);
+
+   --  Save the answer received from the DNS server.  This operation is called for each answer
+   --  found in the DNS response packet.  The Index is incremented at each answer.  For example
+   --  a DNS server can return a CNAME_RR answer followed by an A_RR: the operation is called
+   --  two times.
+   --
+   --  This operation can be overriden to implement specific actions when an answer is received.
+   procedure Answer (Request  : in out Query;
+                     Status   : in Status_Type;
+                     Response : in Response_Type;
+                     Index    : in Natural);
 
    overriding
    procedure Receive (Request  : in out Query;

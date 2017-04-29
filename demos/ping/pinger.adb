@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  pinger -- Ping hosts
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +15,8 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Ada.Real_Time;
-with Net.Buffers;
-with Net.Protos.Arp;
 with Net.Protos.Icmp;
-with Net.Protos.IPv4;
 with Net.Headers;
-with Net.Interfaces;
-with Net.Sockets.Udp;
 with Demos;
 package body Pinger is
 

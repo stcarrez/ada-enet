@@ -85,6 +85,9 @@ package body Net.DNS is
       return Request.Result.Get_TTL;
    end Get_Ttl;
 
+   --  ------------------------------
+   --  Start a DNS resolution for the given hostname.
+   --  ------------------------------
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

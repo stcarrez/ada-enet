@@ -89,7 +89,9 @@ package body Net.DNS is
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;
                       Status  : out Error_Code;
-                      Timeout : in Natural := 10) is
+                      Timeout : in Duration := 10.0) is
+      use type Ada.Real_Time.Time;
+
       Xid  : constant Uint32 := Ifnet.Random;
       Addr : Net.Sockets.Sockaddr_In;
       To   : Net.Sockets.Sockaddr_In;
@@ -103,6 +105,7 @@ package body Net.DNS is
       Addr.Port := Net.Uint16 (Shift_Right (Xid, 16));
       Request.Xid := Net.Uint16 (Xid and 16#0ffff#);
       Request.Bind (Ifnet, Addr);
+      Request.Deadline := Ada.Real_Time.Clock + Ada.Real_Time.To_Time_Span (Timeout);
       Net.Buffers.Allocate (Buf);
       Buf.Set_Type (Net.Buffers.UDP_PACKET);
       Buf.Put_Uint16 (Request.Xid);
@@ -129,8 +132,8 @@ package body Net.DNS is
          end if;
       end loop;
       Buf.Put_Uint8 (0);
-      Buf.Put_Uint16 (1);
-      Buf.Put_Uint16 (1);
+      Buf.Put_Uint16 (Net.Uint16 (A_RR));
+      Buf.Put_Uint16 (IN_CLASS);
       To.Port := Net.Headers.To_Network (53);
       To.Addr := Ifnet.Dns;
       Request.Send (To, Buf, Status);
@@ -258,11 +261,14 @@ package body Net.DNS is
                   end;
 
                when others =>
-                  null;
+                  --  Ignore this answer: we don't know its type.
+                  Packet.Skip (Len);
 
             end case;
+         else
+            --  Ignore this anwser.
+            Packet.Skip (Len);
          end if;
-         Packet.Skip (Len);
       end loop;
    end Receive;
 

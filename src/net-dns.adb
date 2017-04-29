@@ -24,6 +24,7 @@ package body Net.DNS is
    IN_CLASS : constant Net.Uint16 := 16#0001#;
 
    procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type);
+
    protected body Request is
       procedure Set_Result (Addr : in Net.Ip_Addr;
                             Time : in Net.Uint32) is
@@ -135,6 +136,26 @@ package body Net.DNS is
       Request.Send (To, Buf, Status);
    end Resolve;
 
+   --  ------------------------------
+   --  Save the answer received from the DNS server.  This operation is called for each answer
+   --  found in the DNS response packet.  The Index is incremented at each answer.  For example
+   --  a DNS server can return a CNAME_RR answer followed by an A_RR: the operation is called
+   --  two times.
+   --
+   --  This operation can be overriden to implement specific actions when an answer is received.
+   --  ------------------------------
+   procedure Answer (Request  : in out Query;
+                     Status   : in Status_Type;
+                     Response : in Response_Type;
+                     Index    : in Natural) is
+   begin
+      if Status /= NOERROR then
+         Request.Result.Set_Status (Status);
+      elsif Response.Of_Type = A_RR then
+         Request.Result.Set_Result (Response.Ip, Response.Ttl);
+      end if;
+   end Answer;
+
    procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type) is
       Cnt : Net.Uint8;
    begin
@@ -159,6 +180,7 @@ package body Net.DNS is
       Ttl     : Net.Uint32;
       Len     : Net.Uint16;
       Cls     : Net.Uint16;
+      Status  : Status_Type;
    begin
       Val := Packet.Get_Uint16;
       if Val /= Request.Xid then
@@ -171,30 +193,35 @@ package body Net.DNS is
       if (Val and 16#0F#) /= 0 then
          case Val and 16#0F# is
             when 1 =>
-               Request.Result.Set_Status (FORMERR);
+               Status := FORMERR;
 
             when 2 =>
-               Request.Result.Set_Status (SERVFAIL);
+               Status := SERVFAIL;
 
             when 3 =>
-               Request.Result.Set_Status (NXDOMAIN);
+               Status := NXDOMAIN;
 
             when 4 =>
-               Request.Result.Set_Status (NOTIMP);
+               Status := NOTIMP;
 
             when  5 =>
-               Request.Result.Set_Status (REFUSED);
+               Status := REFUSED;
 
             when others =>
-               Request.Result.Set_Status (OTHERERROR);
+               Status := OTHERERROR;
 
          end case;
+         Query'Class (Request).Answer (Status, Response_Type '(Kind => V_NONE, Len => 0,
+                                                               Class => 0,
+                                                               Of_Type => 0, Ttl => 0), 0);
          return;
       end if;
       Val := Packet.Get_Uint16;
       Answers := Packet.Get_Uint16;
-      if Val /= 1 then
-         Request.Result.Set_Status (SERVFAIL);
+      if Val /= 1 or else Answers = 0 then
+         Query'Class (Request).Answer (SERVFAIL, Response_Type '(Kind => V_NONE, Len => 0,
+                                                                 Class => 0,
+                                                                 Of_Type => 0, Ttl => 0), 0);
          return;
       end if;
       Packet.Skip (4);
@@ -205,11 +232,35 @@ package body Net.DNS is
          Cls := Packet.Get_Uint16;
          Ttl := Packet.Get_Uint32;
          Len := Packet.Get_Uint16;
-         if Val = 1 and Cls = IN_CLASS then
-            if Len = 4 then
-               Request.Result.Set_Result (Packet.Get_Ip, Ttl);
-               return;
-            end if;
+         if Cls = IN_CLASS and Len < Net.Uint16 (DNS_VALUE_MAX_LENGTH) then
+            case RR_Type (Val) is
+               when A_RR =>
+                  declare
+                     Response : constant Response_Type
+                       := Response_Type '(Kind    => V_IPV4, Len => Natural (Len),
+                                          Of_Type => RR_Type (Val), Ttl => Ttl,
+                                          Class   => Cls, Ip => Packet.Get_Ip);
+                  begin
+                     Query'Class (Request).Answer (NOERROR, Response, Natural (I));
+                  end;
+
+               when CNAME_RR | TXT_RR | MX_RR | NS_RR | PTR_RR =>
+                  declare
+                     Response : Response_Type
+                       := Response_Type '(Kind    => V_TEXT, Len => Natural (Len),
+                                          Of_Type => RR_Type (Val), Ttl => Ttl,
+                                          Class   => Cls, others => <>);
+                  begin
+                     for J in Response.Text'Range loop
+                        Response.Text (J) := Character'Val (Packet.Get_Uint8);
+                     end loop;
+                     Query'Class (Request).Answer (NOERROR, Response, Natural (I));
+                  end;
+
+               when others =>
+                  null;
+
+            end case;
          end if;
          Packet.Skip (Len);
       end loop;

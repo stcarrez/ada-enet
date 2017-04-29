@@ -46,6 +46,7 @@ with Net.Sockets.Udp;
 --  Once the <tt>Get_Status</tt> operation returns the <tt>NOERROR</tt> value, the IPv4 address
 --  can be obtained by using the <tt>Get_Ip</tt> function.
 --
+--    IP : Net.Ip_Addr := Client.Get_Ip;
 package Net.DNS is
 
    --  Maximum length allowed for a hostname resolution.
@@ -111,6 +112,7 @@ package Net.DNS is
    --  Get the TTL associated with the response.
    function Get_Ttl (Request : in Query) return Net.Uint32;
 
+   --  Start a DNS resolution for the given hostname.
    procedure Resolve (Request : access Query;
                       Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
                       Name    : in String;

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  ping -- Ping hosts application
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,6 +29,8 @@ with Net.Protos.Dispatchers;
 with Receiver;
 with Pinger;
 with Demos;
+
+pragma Unreferenced (Receiver);
 
 --  == Ping Application ==
 --  The <b>Ping</b> application listens to the Ethernet network to identify some local
@@ -101,6 +103,7 @@ begin
       declare
          Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
          Dhcp_Timeout : Ada.Real_Time.Time_Span;
+         Dt           : Ada.Real_Time.Time_Span;
       begin
          Net.Protos.Arp.Timeout (Demos.Ifnet);
          Demos.Dhcp.Process (Dhcp_Timeout);
@@ -109,11 +112,11 @@ begin
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;
-         if Dhcp_Timeout < PING_PERIOD then
-            delay until Now + Dhcp_Timeout;
-         else
-            delay until Now + PING_PERIOD;
+         Dt := Ping_Deadline - Now;
+         if Dt > Dhcp_Timeout then
+            Dt := Dhcp_Timeout;
          end if;
+         delay until Now - Dt;
       end;
    end loop;
 end Ping;

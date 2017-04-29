@@ -17,7 +17,6 @@
 -----------------------------------------------------------------------
 with Bitmapped_Drawing;
 with Bitmap_Color_Conversion;
-with HAL.Bitmap;
 with STM32.Board;
 with STM32.SDRAM;
 with STM32.RNG.Interrupts;
@@ -76,7 +75,7 @@ package body Demos is
    procedure Refresh_Ifnet_Stats is
       use type Net.DHCP.State_Type;
 
-      State : constant Net.DHCP.State_Type := DHCP.Get_State;
+      State : constant Net.DHCP.State_Type := Dhcp.Get_State;
    begin
       case State is
          when Net.DHCP.STATE_BOUND | Net.DHCP.STATE_DAD
@@ -135,7 +134,7 @@ package body Demos is
       Ifnet.Initialize;
 
       --  Initialize the DHCP client.
-      DHCP.Initialize (Ifnet'Access);
+      Dhcp.Initialize (Ifnet'Access);
       for I in 1 .. 2 loop
          Current_Font := BMP_Fonts.Font16x24;
          Put (0, 0, Title);

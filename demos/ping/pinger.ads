@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  pinger -- Ping hosts
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with System;
 with Net;
 with Net.Interfaces;
 with Net.Buffers;

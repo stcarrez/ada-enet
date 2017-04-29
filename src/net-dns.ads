@@ -21,7 +21,9 @@ with Net.Buffers;
 with Net.Sockets.Udp;
 package Net.DNS is
 
-   DNS_NAME_MAX_LENGTH : constant Positive := 255;
+   DNS_NAME_MAX_LENGTH  : constant Positive := 255;
+
+   DNS_VALUE_MAX_LENGTH : constant Positive := 512;
 
    type Status_Type is (NOQUERY, NOERROR, FORMERR, SERVFAIL, NXDOMAIN, NOTIMP,
                         REFUSED, YXDOMAIN, XRRSET, NOTAUTH, NOTZONE, OTHERERROR, PENDING);
@@ -38,6 +40,8 @@ package Net.DNS is
    MX_RR    : constant RR_Type := 15;
    TXT_RR   : constant RR_Type := 16;
    AAAA_RR  : constant RR_Type := 28;
+
+   type Value_Type is (V_TEXT, V_IPV4, V_IPV6);
 
    type Query is new Net.Sockets.Udp.Socket with private;
 
@@ -65,14 +69,25 @@ package Net.DNS is
 
 private
 
+   protected type Request is
+      procedure Set_Result (Addr : in Net.Ip_Addr;
+                            Time : in Net.Uint32);
+      procedure Set_Status (State : in Status_Type);
+      function Get_IP return Net.Ip_Addr;
+      function Get_Status return Status_Type;
+      function Get_TTL return Net.Uint32;
+   private
+      Status   : Status_Type := NOQUERY;
+      Ip       : Net.Ip_Addr := (others => 0);
+      Ttl      : Net.Uint32;
+   end Request;
+
    type Query is new Net.Sockets.Udp.Socket with record
       Name     : String (1 .. DNS_NAME_MAX_LENGTH);
       Name_Len : Natural := 0;
-      Status   : Status_Type := NOQUERY;
       Deadline : Ada.Real_Time.Time;
       Xid      : Net.Uint16;
-      Ip       : Net.Ip_Addr := (others => 0);
-      Ttl      : Net.Uint32;
+      Result   : Request;
    end record;
 
 end Net.DNS;

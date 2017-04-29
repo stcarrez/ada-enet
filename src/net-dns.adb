@@ -24,10 +24,40 @@ package body Net.DNS is
    IN_CLASS : constant Net.Uint16 := 16#0001#;
 
    procedure Skip_Query (Packet : in out Net.Buffers.Buffer_Type);
+   protected body Request is
+      procedure Set_Result (Addr : in Net.Ip_Addr;
+                            Time : in Net.Uint32) is
+      begin
+         Ip  := Addr;
+         Ttl := Time;
+         Status := NOERROR;
+      end Set_Result;
+
+      procedure Set_Status (State : in Status_Type) is
+      begin
+         Status := State;
+      end Set_Status;
+
+      function Get_IP return Net.Ip_Addr is
+      begin
+         return Ip;
+      end Get_IP;
+
+      function Get_Status return Status_Type is
+      begin
+         return Status;
+      end Get_Status;
+
+      function Get_TTL return Net.Uint32 is
+      begin
+         return Ttl;
+      end Get_TTL;
+
+   end Request;
 
    function Get_Status (Request : in Query) return Status_Type is
    begin
-      return Request.Status;
+      return Request.Result.Get_Status;
    end Get_Status;
 
    --  ------------------------------
@@ -43,7 +73,7 @@ package body Net.DNS is
    --  ------------------------------
    function Get_Ip (Request : in Query) return Net.Ip_Addr is
    begin
-      return Request.Ip;
+      return Request.Result.Get_IP;
    end Get_Ip;
 
    --  ------------------------------
@@ -51,7 +81,7 @@ package body Net.DNS is
    --  ------------------------------
    function Get_Ttl (Request : in Query) return Net.Uint32 is
    begin
-      return Request.Ttl;
+      return Request.Result.Get_TTL;
    end Get_Ttl;
 
    procedure Resolve (Request : access Query;
@@ -68,7 +98,7 @@ package body Net.DNS is
    begin
       Request.Name_Len := Name'Length;
       Request.Name (1 .. Name'Length) := Name;
-      Request.Status := PENDING;
+      Request.Result.Set_Status (PENDING);
       Addr.Port := Net.Uint16 (Shift_Right (Xid, 16));
       Request.Xid := Net.Uint16 (Xid and 16#0ffff#);
       Request.Bind (Ifnet, Addr);
@@ -141,22 +171,22 @@ package body Net.DNS is
       if (Val and 16#0F#) /= 0 then
          case Val and 16#0F# is
             when 1 =>
-               Request.Status := FORMERR;
+               Request.Result.Set_Status (FORMERR);
 
             when 2 =>
-               Request.Status := SERVFAIL;
+               Request.Result.Set_Status (SERVFAIL);
 
             when 3 =>
-               Request.Status := NXDOMAIN;
+               Request.Result.Set_Status (NXDOMAIN);
 
             when 4 =>
-               Request.Status := NOTIMP;
+               Request.Result.Set_Status (NOTIMP);
 
             when  5 =>
-               Request.Status := REFUSED;
+               Request.Result.Set_Status (REFUSED);
 
             when others =>
-               Request.Status := OTHERERROR;
+               Request.Result.Set_Status (OTHERERROR);
 
          end case;
          return;
@@ -164,7 +194,7 @@ package body Net.DNS is
       Val := Packet.Get_Uint16;
       Answers := Packet.Get_Uint16;
       if Val /= 1 then
-         Request.Status := SERVFAIL;
+         Request.Result.Set_Status (SERVFAIL);
          return;
       end if;
       Packet.Skip (4);
@@ -176,10 +206,8 @@ package body Net.DNS is
          Ttl := Packet.Get_Uint32;
          Len := Packet.Get_Uint16;
          if Val = 1 and Cls = IN_CLASS then
-            Request.Ttl := Ttl;
             if Len = 4 then
-               Request.Ip := Packet.Get_Ip;
-               Request.Status := NOERROR;
+               Request.Result.Set_Result (Packet.Get_Ip, Ttl);
                return;
             end if;
          end if;

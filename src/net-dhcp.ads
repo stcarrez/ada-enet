@@ -202,6 +202,12 @@ package Net.DHCP is
    procedure Renew (Request : in out Client) with
      Pre => Request.Get_State = STATE_RENEWING;
 
+   --  Fill the DHCP options in the request.
+   procedure Fill_Options (Request : in Client;
+                           Packet  : in out Net.Buffers.Buffer_Type;
+                           Kind    : in Net.Uint8;
+                           Mac     : in Net.Ether_Addr);
+
    --  Receive the DHCP offer/ack/nak from the DHCP server and update the DHCP state machine.
    --  It only updates the DHCP state machine (the DHCP request are only sent by
    --  <tt>Process</tt>).

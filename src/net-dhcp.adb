@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-dhcp -- DHCP client
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 with Interfaces; use Interfaces;
 with Net.Headers;
 with Net.Protos.IPv4;
-with Net.Protos.ARP;
+with Net.Protos.Arp;
 package body Net.DHCP is
 
    use type Ada.Real_Time.Time;
@@ -52,6 +52,9 @@ package body Net.DHCP is
    OPT_VENDOR_CLASS       : constant Net.Uint8 := 60;
    OPT_CLIENT_IDENTIFIER  : constant Net.Uint8 := 61;
    OPT_END                : constant Net.Uint8 := 255;
+
+   function Ellapsed (Request : in Client;
+                      Now     : in Ada.Real_Time.Time) return Net.Uint16;
 
    protected body Machine is
 
@@ -438,7 +441,6 @@ package body Net.DHCP is
    procedure Discover (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
-      Len    : Net.Uint16;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
@@ -470,12 +472,13 @@ package body Net.DHCP is
       Request.Next_Timeout;
    end Discover;
 
+   --  ------------------------------
    --  Send the DHCP request packet after we received an offer.
+   --  ------------------------------
    procedure Request (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
-      Len    : Net.Uint16;
-      State  : State_Type := Request.Current;
+      State  : constant State_Type := Request.Current;
    begin
       Net.Buffers.Allocate (Packet);
       Packet.Set_Type (Net.Buffers.DHCP_PACKET);
@@ -518,7 +521,6 @@ package body Net.DHCP is
    procedure Decline (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
-      Len    : Net.Uint16;
       To     : Net.Sockets.Sockaddr_In;
       Status : Error_Code;
    begin
@@ -560,7 +562,6 @@ package body Net.DHCP is
    procedure Renew (Request : in out Client) is
       Packet : Net.Buffers.Buffer_Type;
       Hdr    : Net.Headers.DHCP_Header_Access;
-      Len    : Net.Uint16;
       To     : Net.Sockets.Sockaddr_In;
       Status : Error_Code;
    begin

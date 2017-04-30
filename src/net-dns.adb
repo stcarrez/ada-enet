@@ -154,6 +154,7 @@ package body Net.DNS is
                      Status   : in Status_Type;
                      Response : in Response_Type;
                      Index    : in Natural) is
+      pragma Unreferenced (Index);
    begin
       if Status /= NOERROR then
          Request.Result.Set_Status (Status);

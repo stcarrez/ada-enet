@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Ada.Real_Time;
+with Interfaces; use Interfaces;
 with Net.Interfaces;
 with Net.Buffers;
 with Net.Sockets.Udp;
@@ -48,8 +49,11 @@ package Net.NTP is
    --  Get the NTP client status.
    function Get_Status (Request : in Client) return Status_Type;
 
-   --  Get the NTP time;
+   --  Get the NTP time.
    function Get_Time (Request : in out Client) return NTP_Timestamp;
+
+   --  Get the delta time between the NTP server and us.
+   function Get_Delta (Request : in out Client) return Integer_64;
 
    --  Initialize the NTP client to use the given NTP server.
    procedure Initialize (Request : access Client;
@@ -73,13 +77,17 @@ private
       --  Get the NTP status.
       function Get_Status return Status_Type;
 
+      --  Get the delta time between the NTP server and us.
+      function Get_Delta return Integer_64;
+
       --  Get the current NTP timestamp with the corresponding monitonic time.
       procedure Get_Timestamp (Time : out NTP_Timestamp;
                                Now  : out Ada.Real_Time.Time);
 
-      --  Extract the timestamp
+      --  Extract the timestamp from the NTP server response and update the reference time.
       procedure Extract_Timestamp (Buf : in out Net.Buffers.Buffer_Type);
 
+      --  Insert in the packet the timestamp references for the NTP client packet.
       procedure Put_Timestamp (Buf : in out Net.Buffers.Buffer_Type);
 
    private
@@ -87,9 +95,9 @@ private
       Ref_Time      : NTP_Timestamp;
       Orig_Time     : NTP_Timestamp;
       Rec_Time      : NTP_Timestamp;
-      Transmit_Time : NTP_Timestamp;
       Offset_Time   : NTP_Timestamp;
       Offset_Ref    : Ada.Real_Time.Time;
+      Delta_Time    : Integer_64;
    end Machine;
 
    type Client is new Net.Sockets.Udp.Socket with record

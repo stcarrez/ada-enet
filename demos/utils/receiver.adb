@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  receiver -- Ethernet Packet Receiver
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,26 +27,51 @@ package body Receiver is
    use type Net.Uint8;
    use type Net.Uint16;
 
+   ONE_US : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
+
    task body Controller is
       use type Ada.Real_Time.Time;
+      use type Ada.Real_Time.Time_Span;
+      use type Net.Uint64;
 
       Packet  : Net.Buffers.Buffer_Type;
       Ether   : Net.Headers.Ether_Header_Access;
+      Now     : Ada.Real_Time.Time;
+      Dt      : Us_Time;
+      Total   : Net.Uint64 := 0;
+      Count   : Net.Uint64 := 0;
    begin
       while not Demos.Ifnet.Is_Ready loop
-         delay until Ada.Real_Time.Clock + Ada.Real_Time.Seconds (1);
+         delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (10);
       end loop;
+      Min_Receive_Time := Us_Time'Last;
+      Max_Receive_Time := Us_Time'First;
       loop
          if Packet.Is_Null then
             Net.Buffers.Allocate (Packet);
          end if;
          if not Packet.Is_Null then
             Demos.Ifnet.Receive (Packet);
+            Now := Ada.Real_Time.Clock;
             Ether := Packet.Ethernet;
             if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
                Net.Protos.Arp.Receive (Demos.Ifnet, Packet);
             elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
                Net.Protos.Dispatchers.Receive (Demos.Ifnet, Packet);
+            end if;
+
+            --  Compute the time taken to process the packet in microseconds.
+            Dt := Us_Time ((Ada.Real_Time.Clock - Now) / ONE_US);
+
+            --  Compute average, min and max values.
+            Count := Count + 1;
+            Total := Total + Net.Uint64 (Dt);
+            Avg_Receive_Time := Us_Time (Total / Count);
+            if Dt < Min_Receive_Time then
+               Min_Receive_Time := Dt;
+            end if;
+            if Dt > Max_Receive_Time then
+               Max_Receive_Time := Dt;
             end if;
          else
             delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (100);

@@ -15,7 +15,7 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Interfaces;  use Interfaces;
+--  with Interfaces;  use Interfaces;
 with Net.Headers;
 
 package body Net.NTP is
@@ -29,7 +29,7 @@ package body Net.NTP is
    end Get_Status;
 
    --  ------------------------------
-   --  Get the NTP time;
+   --  Get the NTP time.
    --  ------------------------------
    function Get_Time (Request : in out Client) return NTP_Timestamp is
       Result : NTP_Timestamp;
@@ -38,6 +38,14 @@ package body Net.NTP is
       Request.State.Get_Timestamp (Result, Clock);
       return Result;
    end Get_Time;
+
+   --  ------------------------------
+   --  Get the delta time between the NTP server and us.
+   --  ------------------------------
+   function Get_Delta (Request : in out Client) return Integer_64 is
+   begin
+      return Request.State.Get_Delta;
+   end Get_Delta;
 
    --  ------------------------------
    --  Initialize the NTP client to use the given NTP server.
@@ -138,6 +146,25 @@ package body Net.NTP is
 
    use type Ada.Real_Time.Time;
    use type Ada.Real_Time.Time_Span;
+   function To_Unsigned_64 (T : in NTP_Timestamp) return Unsigned_64;
+   function "-" (Left, Right : in NTP_Timestamp) return Integer_64;
+
+   function To_Unsigned_64 (T : in NTP_Timestamp) return Unsigned_64 is
+   begin
+      return Unsigned_64 (T.Sub_Seconds)
+        + Shift_Left (Unsigned_64 (T.Seconds), 32);
+   end To_Unsigned_64;
+
+   function "-" (Left, Right : in NTP_Timestamp) return Integer_64 is
+      T1 : constant Unsigned_64 := To_Unsigned_64 (Left);
+      T2 : constant Unsigned_64 := To_Unsigned_64 (Right);
+   begin
+      if T1 > T2 then
+         return Integer_64 (T1 - T2);
+      else
+         return -Integer_64 (T2 - T2);
+      end if;
+   end "-";
 
    protected body Machine is
 
@@ -148,6 +175,12 @@ package body Net.NTP is
       begin
          return Status;
       end Get_Status;
+
+      --  Get the delta time between the NTP server and us.
+      function Get_Delta return Integer_64 is
+      begin
+         return Delta_Time;
+      end Get_Delta;
 
       --  ------------------------------
       --  Get the current NTP timestamp with the corresponding monitonic time.
@@ -202,7 +235,7 @@ package body Net.NTP is
          Now   : NTP_Timestamp;
          Rec   : NTP_Timestamp;
          Clock : Ada.Real_Time.Time;
-         pragma Unreferenced (OTime, RTime, Rec);
+         pragma Unreferenced (RTime);
       begin
          Get_Timestamp (Now, Clock);
          RTime.Seconds     := Buf.Get_Uint32;
@@ -216,6 +249,12 @@ package body Net.NTP is
          Rec_Time  := Now;
          Offset_Time := Orig_Time;
          Offset_Ref  := Clock;
+
+         --  (T4 - T1) - (T3 - T2)
+         Delta_Time := (Rec_Time - OTime) - (Orig_Time - Rec);
+         if Delta_Time < 0 then
+            Delta_Time := 0;
+         end if;
       end Extract_Timestamp;
 
    end Machine;

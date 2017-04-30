@@ -15,6 +15,7 @@ by the EtherScope project to read network packets and analyze the traffic
 * ARP ([RFC 826](https://tools.ietf.org/html/rfc826))
 * DNS ([RFC 1035](https://tools.ietf.org/html/rfc1035))
 * DHCPv4 ([RFC 2131](https://tools.ietf.org/html/rfc2131))
+* NTP ([RFC 5905](https://tools.ietf.org/html/rfc5905))
 
 Before build the library you will need:
 
@@ -100,6 +101,24 @@ And to flash the dns image, you can use:
 
 ```shell
   make flash-dns
+```
+
+## Time
+
+The time application uses the NTP client to retrieve the GMT date from a NTP server
+and it displays the GMT time as soon as the NTP synchronisation is obtained.
+The application will also answer to ping requests.
+
+To build the Time application you may run:
+
+```shell
+  make time
+```
+
+And to flash the time image, you can use:
+
+```shell
+  make flash-time
 ```
 
 ## Documentation

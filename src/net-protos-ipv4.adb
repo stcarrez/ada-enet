@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-Ipv4 -- IPv4 Network protocol
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,6 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Net.Headers;
 with Net.Protos.Arp;
 package body Net.Protos.IPv4 is
 
@@ -96,7 +95,7 @@ package body Net.Protos.IPv4 is
                    Status    : out Error_Code) is
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
    begin
-      Make_Header (Ip, Ifnet.Ip, Target_Ip, P_UDP, Uint16 (Packet.Get_Length));
+      Make_Header (Ip, Ifnet.Ip, Target_Ip, P_UDP, Packet.Get_Length);
       Ip.Ip_Ihl := 4;
       Ip.Ip_Tos := 0;
       Ip.Ip_Id  := 2;

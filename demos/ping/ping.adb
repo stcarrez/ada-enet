@@ -23,6 +23,7 @@ with BMP_Fonts;
 with HAL.Bitmap;
 with Net.Buffers;
 with Net.Utils;
+with Net.DHCP;
 with Net.Protos.Arp;
 with Net.Protos.IPv4;
 with Net.Protos.Dispatchers;
@@ -51,6 +52,7 @@ procedure Ping is
 
    use type Interfaces.Unsigned_32;
    use type Net.Ip_Addr;
+   use type Net.DHCP.State_Type;
    use type Ada.Real_Time.Time;
    use type Ada.Real_Time.Time_Span;
 
@@ -107,6 +109,13 @@ begin
       begin
          Net.Protos.Arp.Timeout (Demos.Ifnet);
          Demos.Dhcp.Process (Dhcp_Timeout);
+         if Demos.Dhcp.Get_State = Net.DHCP.STATE_BOUND then
+            Pinger.Add_Host (Demos.Dhcp.Get_Config.Router);
+            Pinger.Add_Host (Demos.Dhcp.Get_Config.Dns1);
+            Pinger.Add_Host (Demos.Dhcp.Get_Config.Dns2);
+            Pinger.Add_Host (Demos.Dhcp.Get_Config.Ntp);
+            Pinger.Add_Host (Demos.Dhcp.Get_Config.Www);
+         end if;
          if Ping_Deadline < Now then
             Pinger.Do_Ping;
             Refresh;

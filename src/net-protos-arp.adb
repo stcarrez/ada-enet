@@ -98,6 +98,7 @@ package body Net.Protos.Arp is
 
       procedure Drop_Queue (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
                             Rt     : in Arp_Entry_Access) is
+         pragma Unreferenced (Ifnet);
       begin
          if Rt.Queue_Size > 0 then
             Queue_Size := Queue_Size - Natural (Rt.Queue_Size);

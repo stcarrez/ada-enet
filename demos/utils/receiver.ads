@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  receiver -- Ethernet Packet Receiver
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,13 @@
 with System;
 with Net;
 package Receiver is
+
+   type Us_Time is new Natural;
+
+   --  Average, min and max time in microseconds taken to process a packet.
+   Avg_Receive_Time : Us_Time := 0 with Atomic;
+   Min_Receive_Time : Us_Time := 0 with Atomic;
+   Max_Receive_Time : Us_Time := 0 with Atomic;
 
    --  The task that waits for packets.
    task Controller with

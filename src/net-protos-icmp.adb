@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-icmp -- ICMP v4 Network protocol
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
 -----------------------------------------------------------------------
 with Net.Headers;
 with Net.Protos.IPv4;
-with Net.Protos.Arp;
 package body Net.Protos.Icmp is
 
    --  ------------------------------
@@ -49,7 +48,6 @@ package body Net.Protos.Icmp is
    --  ------------------------------
    procedure Receive (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                       Packet    : in out Net.Buffers.Buffer_Type) is
-      Ether  : constant Net.Headers.Ether_Header_Access := Packet.Ethernet;
       Ip     : constant Net.Headers.IP_Header_Access := Packet.IP;
       Hdr    : constant Net.Headers.ICMP_Header_Access := Packet.ICMP;
       Status : Error_Code;

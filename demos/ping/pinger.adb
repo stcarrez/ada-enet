@@ -69,7 +69,7 @@ package body Pinger is
 
       procedure Add_Host (Ip : in Net.Ip_Addr) is
       begin
-         if Last_Host < Hosts'Last then
+         if Last_Host < Hosts'Last and Ip /= (0, 0, 0, 0) then
             for I in 1 .. Last_Host loop
                if Hosts (I).Ip = Ip then
                   return;

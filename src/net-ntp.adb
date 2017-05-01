@@ -15,16 +15,12 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
---  with Interfaces;  use Interfaces;
 with Net.Headers;
 
 package body Net.NTP is
 
    use type Ada.Real_Time.Time;
    use type Ada.Real_Time.Time_Span;
-
-   ONE_SEC  : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
-   ONE_USEC : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
 
    --  ------------------------------
    --  Add a time span to the NTP timestamp.
@@ -97,11 +93,12 @@ package body Net.NTP is
    --  ------------------------------
    procedure Initialize (Request : access Client;
                          Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
-                         Server  : in Net.Ip_Addr) is
+                         Server  : in Net.Ip_Addr;
+                         Port    : in Net.Uint16 := Net.NTP.NTP_PORT) is
       Addr : Net.Sockets.Sockaddr_In;
    begin
       Request.Server := Server;
-      Addr.Port := Net.Headers.To_Network (NTP_PORT);
+      Addr.Port := Net.Headers.To_Network (Port);
       Addr.Addr := Ifnet.Ip;
       Request.Bind (Ifnet => Ifnet,
                     Addr  => Addr);
@@ -120,6 +117,10 @@ package body Net.NTP is
    begin
       if Now < Request.Deadline then
          Next_Call := Request.Deadline - Now;
+         return;
+      end if;
+      if Request.Get_Status = NOSERVER then
+         Next_Call := Ada.Real_Time.Seconds (1);
          return;
       end if;
       Request.Deadline := Now + Ada.Real_Time.Seconds (8);
@@ -228,11 +229,19 @@ package body Net.NTP is
       --  ------------------------------
       function Get_Reference return NTP_Reference is
          Result : NTP_Reference;
+         Secs   : Integer;
+         Usec   : Integer;
       begin
          Result.Status := Status;
          Result.Offset_Time := Offset_Time;
          Result.Offset_Ref  := Offset_Ref;
-         Result.Delta_Time  := Ada.Real_Time.Microseconds (Integer (Delta_Time));
+         if Result.Status in SYNCED | RESYNC then
+            Secs := Integer (Shift_Right (Net.Uint64 (Delta_Time), 32));
+            Usec := Integer (Shift_Left (Net.Uint64 (Delta_Time), 32) / 1_000_000);
+            Result.Delta_Time := Ada.Real_Time.Microseconds (Usec) + Ada.Real_Time.Seconds (Secs);
+         else
+            Result.Delta_Time := Ada.Real_Time.Time_Span_Last;
+         end if;
          return Result;
       end Get_Reference;
 

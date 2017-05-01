@@ -166,6 +166,7 @@ package body Net.NTP is
                       Packet   : in out Net.Buffers.Buffer_Type) is
       pragma Unreferenced (From);
 
+      Flags      : Net.Uint8;
       Stratum    : Net.Uint8;
       Interval   : Net.Uint8;
       Precision  : Net.Uint8;
@@ -174,7 +175,13 @@ package body Net.NTP is
       Ref_Id     : Net.Uint32;
       pragma Unreferenced (Stratum, Interval, Precision, Root_Delay, Dispersion, Ref_Id);
    begin
-      if Packet.Get_Length < 56 or else Packet.Get_Uint8 /= 16#24# then
+      if Packet.Get_Length < 56 then
+         return;
+      end if;
+      Flags := Packet.Get_Uint8;
+
+      --  Accept version 4 or version 3 server.
+      if Flags /= 16#24# and Flags /= 16#1c# then
          return;
       end if;
       Stratum    := Packet.Get_Uint8;
@@ -222,6 +229,7 @@ package body Net.NTP is
       procedure Set_Status (Value : in Status_Type) is
       begin
          Status := Value;
+         Offset_Ref := Ada.Real_Time.Clock;
       end Set_Status;
 
       --  ------------------------------

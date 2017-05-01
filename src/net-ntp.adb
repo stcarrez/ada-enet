@@ -224,6 +224,7 @@ package body Net.NTP is
          Get_Timestamp (Now, Clock);
          Buf.Put_Uint32 (Now.Seconds);
          Buf.Put_Uint32 (Now.Sub_Seconds);
+         Transmit_Time := Now;
       end Put_Timestamp;
 
       --  ------------------------------
@@ -242,6 +243,13 @@ package body Net.NTP is
          RTime.Sub_Seconds := Buf.Get_Uint32;
          OTime.Seconds     := Buf.Get_Uint32;
          OTime.Sub_Seconds := Buf.Get_Uint32;
+
+         --  Check for bogus packet (RFC 5905, 8.  On-Wire Protocol).
+         if OTime /= Transmit_Time then
+            return;
+         end if;
+         Transmit_Time.Seconds     := 0;
+         Transmit_Time.Sub_Seconds := 0;
          Rec.Seconds       := Buf.Get_Uint32;
          Rec.Sub_Seconds   := Buf.Get_Uint32;
          Orig_Time.Seconds := Buf.Get_Uint32;

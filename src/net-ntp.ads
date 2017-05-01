@@ -36,13 +36,32 @@ package Net.NTP is
    --  The NTP UDP port number.
    NTP_PORT : constant Net.Uint16 := 123;
 
+   --  The NTP client status.
+   type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC);
+
+   --  The NTP timestamp as defined by RFC 5905.  The NTP epoch is Jan 1st 1900 and
+   --  NTP subseconds use the full 32-bit range.  When bit 31 of the seconds is cleared,
+   --  we consider this as the second epoch which starts in 2036.
    type NTP_Timestamp is record
       Seconds     : Net.Uint32 := 0;
       Sub_Seconds : Net.Uint32 := 0;
    end record;
 
-   --  The NTP client status.
-   type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC);
+   --  The NTP reference indicates the NTP synchronisation with the NTP server.
+   --  The reference indicates the NTP time at a given point in the past when the NTP
+   --  synchronization is obtained.  When several NTP servers are used, the NTP references
+   --  should be compared and the NTP server with the lowest <tt>Delta_Time</tt> should be
+   --  used.
+   --
+   --  The current date is obtained with the following forumla:
+   --
+   --    Date := Offset_Time + (Ada.Realtime.Clock - Offset_Ref)
+   type NTP_Reference is record
+      Status        : Status_Type := NOSERVER;
+      Offset_Time   : NTP_Timestamp;
+      Offset_Ref    : Ada.Real_Time.Time;
+      Delta_Time    : Ada.Real_Time.Time_Span;
+   end record;
 
    type Client is new Net.Sockets.Udp.Socket with private;
 

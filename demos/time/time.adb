@@ -39,6 +39,9 @@ with Time_Manager;
 --  Ethernet packets, analyzing them to handle ARP, ICMP and UDP packets.
 procedure Time is
 
+   use type Net.Uint16;
+   use type Net.Uint32;
+   use type Net.Uint64;
    use type Ada.Real_Time.Time;
    use type Ada.Real_Time.Time_Span;
 
@@ -46,11 +49,13 @@ procedure Time is
    procedure Header;
    function To_Digits (Val : Net.Uint32) return String;
    function To_String (H, M, S : Net.Uint32) return String;
+   procedure Server_Status (X, Y    : in Natural;
+                            Server  : in out Net.NTP.Client;
+                            Timeout : in out Ada.Real_Time.Time_Span);
 
    Dec_String : constant String := "0123456789";
 
    function To_Digits (Val : Net.Uint32) return String is
-      use type Net.Uint32;
       Result : String (1 .. 2);
    begin
       Result (1) := Dec_String (Positive ((Val / 10) + 1));
@@ -63,42 +68,64 @@ procedure Time is
       return To_Digits (H) & ":" & To_Digits (M) & ":" & To_Digits (S);
    end To_String;
 
-   procedure Refresh (Timeout : out Ada.Real_Time.Time_Span) is
-      use type Net.Uint32;
-      use type Net.Uint64;
-      T   : Net.NTP.NTP_Timestamp;
-      H   : Net.Uint32;
-      M   : Net.Uint32;
-      S   : Net.Uint32;
-      W   : Net.Uint64;
+   procedure Server_Status (X, Y    : in Natural;
+                            Server  : in out Net.NTP.Client;
+                            Timeout : in out Ada.Real_Time.Time_Span) is
+      T    : Net.NTP.NTP_Timestamp;
+      H    : Net.Uint32;
+      M    : Net.Uint32;
+      S    : Net.Uint32;
+      W    : Net.Uint64;
+      Dt   : Net.Uint64;
+      Ref  : constant Net.NTP.NTP_Reference := Server.Get_Reference;
+      Wait : Ada.Real_Time.Time_Span;
    begin
-      Demos.Refresh_Ifnet_Stats;
-
-      T := Time_Manager.Client.Get_Time;
-      S := T.Seconds mod 86400;
-      H := S / 3600;
-      S := S mod 3600;
-      M := S / 60;
-      S := S mod 60;
-      W := Net.Uint64 (Net.Uint32'Last - T.Sub_Seconds);
-      W := Interfaces.Shift_Right (W * 1_000_000, 32);
-      Timeout := Ada.Real_Time.Microseconds (Integer (W));
       Demos.Current_Font := BMP_Fonts.Font16x24;
-      if T.Seconds < 100 then
-         Demos.Put (150, 130, "??:??:??");
+      if not (Ref.Status in Net.NTP.SYNCED | Net.NTP.RESYNC) then
+         Demos.Put (X, Y, "??:??:??");
       else
-         Demos.Put (150, 130, To_String (H, M, S));
+         T := Net.NTP.Get_Time (Ref);
+         S := T.Seconds mod 86400;
+         H := S / 3600;
+         S := S mod 3600;
+         M := S / 60;
+         S := S mod 60;
+         W := Net.Uint64 (Net.Uint32'Last - T.Sub_Seconds);
+         W := Interfaces.Shift_Right (W * 1_000_000, 32);
+         Wait := Ada.Real_Time.Microseconds (Integer (W));
+         if Timeout > Wait then
+            Timeout := Wait;
+         end if;
+         Dt := Net.Uint64 (Ref.Delta_Time / Net.NTP.ONE_USEC);
+         Demos.Put (X, Y, To_String (H, M, S));
+         Demos.Current_Font := BMP_Fonts.Font8x8;
+         Demos.Put (X + 100, Y + 4, Dt);
       end if;
       Demos.Current_Font := BMP_Fonts.Font8x8;
+   end Server_Status;
 
+   procedure Refresh (Timeout : out Ada.Real_Time.Time_Span) is
+   begin
+      Timeout := Ada.Real_Time.Seconds (1);
+      Demos.Refresh_Ifnet_Stats;
+      Server_Status (250, 130, Time_Manager.Client, Timeout);
+      Server_Status (250, 160, Time_Manager.Ubuntu_Ntp.Server, Timeout);
+      Server_Status (250, 190, Time_Manager.Bbox_Ntp.Server, Timeout);
+      Server_Status (250, 220, Time_Manager.Pool_Ntp.Server, Timeout);
       STM32.Board.Display.Update_Layer (1);
    end Refresh;
 
    procedure Header is
    begin
       Demos.Current_Font := BMP_Fonts.Font16x24;
-      Demos.Put (0, 100, "GMT Time");
+      Demos.Put (0, 130, "DHCP");
+      Demos.Put (0, 160, "ntp.ubuntu.com");
+      Demos.Put (0, 190, "ntp.bbox.fr");
+      Demos.Put (0, 220, "pool.ntp.org");
+      Demos.Put (0, 100, "Name");
+      Demos.Put (250, 100, "GMT Time");
       Demos.Current_Font := BMP_Fonts.Font8x8;
+      Demos.Put (390, 100, "Offset (us)");
    end Header;
 
    procedure Initialize is new Demos.Initialize (Header);
@@ -110,18 +137,28 @@ procedure Time is
    Ntp_Timeout   : Ada.Real_Time.Time_Span;
    Clock_Timeout : Ada.Real_Time.Time_Span;
    Wait_Timeout  : Ada.Real_Time.Time_Span;
+   Error         : Net.Error_Code;
 begin
    Initialize ("STM32 NTP Time");
 
+   Time_Manager.Ubuntu_Ntp.Port := Net.NTP.NTP_PORT + 1;
+   Time_Manager.Bbox_Ntp.Port   := Net.NTP.NTP_PORT + 2;
+   Time_Manager.Pool_Ntp.Port   := Net.NTP.NTP_PORT + 3;
    loop
       Net.Protos.Arp.Timeout (Demos.Ifnet);
       Demos.Dhcp.Process (Dhcp_Timeout);
       if Ntp_Init = False and then Demos.Dhcp.Get_State = Net.DHCP.STATE_BOUND then
          Time_Manager.Client.Initialize (Demos.Ifnet'Access, Demos.Dhcp.Get_Config.Ntp);
+         Time_Manager.Ubuntu_Ntp.Resolve (Demos.Ifnet'Access, "ntp.ubuntu.com", Error);
+         Time_Manager.Bbox_Ntp.Resolve (Demos.Ifnet'Access, "ntp.bbox.fr", Error);
+         Time_Manager.Pool_Ntp.Resolve (Demos.Ifnet'Access, "pool.ntp.org", Error);
          Ntp_Init := True;
       end if;
       if Ntp_Init then
          Time_Manager.Client.Process (Ntp_Timeout);
+         Time_Manager.Ubuntu_Ntp.Server.Process (Ntp_Timeout);
+         Time_Manager.Bbox_Ntp.Server.Process (Ntp_Timeout);
+         Time_Manager.Pool_Ntp.Server.Process (Ntp_Timeout);
       else
          Ntp_Timeout := Dhcp_Timeout;
       end if;

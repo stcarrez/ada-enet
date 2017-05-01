@@ -301,6 +301,9 @@ package body Net.NTP is
          if Delta_Time < 0 then
             Delta_Time := 0;
          end if;
+
+         --  We are synchronized now.
+         Status := SYNCED;
       end Extract_Timestamp;
 
    end Machine;

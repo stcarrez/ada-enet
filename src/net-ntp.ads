@@ -74,6 +74,9 @@ package Net.NTP is
    --  Get the delta time between the NTP server and us.
    function Get_Delta (Request : in out Client) return Integer_64;
 
+   --  Get the NTP reference information.
+   function Get_Reference (Request : in out Client) return NTP_Reference;
+
    --  Initialize the NTP client to use the given NTP server.
    procedure Initialize (Request : access Client;
                          Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
@@ -98,6 +101,9 @@ private
 
       --  Get the delta time between the NTP server and us.
       function Get_Delta return Integer_64;
+
+      --  Get the NTP reference information.
+      function Get_Reference return NTP_Reference;
 
       --  Get the current NTP timestamp with the corresponding monitonic time.
       procedure Get_Timestamp (Time : out NTP_Timestamp;

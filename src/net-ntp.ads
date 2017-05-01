@@ -83,6 +83,9 @@ package Net.NTP is
    --  The NTP UDP port number.
    NTP_PORT : constant Net.Uint16 := 123;
 
+   ONE_SEC  : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
+   ONE_USEC : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
+
    --  The NTP client status.
    type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC, TIMEOUT);
 
@@ -134,7 +137,8 @@ package Net.NTP is
    --  Initialize the NTP client to use the given NTP server.
    procedure Initialize (Request : access Client;
                          Ifnet   : access Net.Interfaces.Ifnet_Type'Class;
-                         Server  : in Net.Ip_Addr);
+                         Server  : in Net.Ip_Addr;
+                         Port    : in Net.Uint16 := NTP_PORT);
 
    --  Process the NTP client.
    --  Return in <tt>Next_Call</tt> the maximum time to wait before the next call.

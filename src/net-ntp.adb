@@ -48,6 +48,14 @@ package body Net.NTP is
    end Get_Delta;
 
    --  ------------------------------
+   --  Get the NTP reference information.
+   --  ------------------------------
+   function Get_Reference (Request : in out Client) return NTP_Reference is
+   begin
+      return Request.State.Get_Reference;
+   end Get_Reference;
+
+   --  ------------------------------
    --  Initialize the NTP client to use the given NTP server.
    --  ------------------------------
    procedure Initialize (Request : access Client;
@@ -176,11 +184,27 @@ package body Net.NTP is
          return Status;
       end Get_Status;
 
+
+      --  ------------------------------
       --  Get the delta time between the NTP server and us.
+      --  ------------------------------
       function Get_Delta return Integer_64 is
       begin
          return Delta_Time;
       end Get_Delta;
+
+      --  ------------------------------
+      --  Get the NTP reference information.
+      --  ------------------------------
+      function Get_Reference return NTP_Reference is
+         Result : NTP_Reference;
+      begin
+         Result.Status := Status;
+         Result.Offset_Time := Offset_Time;
+         Result.Offset_Ref  := Offset_Ref;
+         Result.Delta_Time  := Ada.Real_Time.Microseconds (Integer (Delta_Time));
+         return Result;
+      end Get_Reference;
 
       --  ------------------------------
       --  Get the current NTP timestamp with the corresponding monitonic time.

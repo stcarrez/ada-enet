@@ -30,16 +30,16 @@ package body Net.NTP is
       N      : Unsigned_64;
       Result : NTP_Timestamp;
       Sec    : constant Integer := Right / ONE_SEC;
+      Usec   : constant Integer := (Right - Ada.Real_Time.Seconds (Sec)) / ONE_USEC;
    begin
       Result.Seconds := Left.Seconds + Net.Uint32 (Sec);
 
       --  Convert the time_span to NTP subseconds.
       --  First convert to microseconds and then to sub-seconds by using 64-bit values.
-      N    := Shift_Left (Unsigned_64 ((Right - Ada.Real_Time.Seconds (Sec)) / ONE_USEC), 32);
-      N    := N / 1_000_000;
+      N := Shift_Left (Unsigned_64 (Usec), 32) / 1_000_000;
       if Left.Sub_Seconds > Net.Uint32'Last - Net.Uint32 (N) then
-         Result.Sub_Seconds := Left.Sub_Seconds - Net.Uint32 (N);
-         Result.Seconds := Left.Seconds + 1;
+         Result.Sub_Seconds := Net.Uint32 (N) - (Net.Uint32'Last - Left.Sub_Seconds + 1);
+         Result.Seconds := Result.Seconds + 1;
       else
          Result.Sub_Seconds := Left.Sub_Seconds + Net.Uint32 (N);
       end if;
@@ -102,6 +102,7 @@ package body Net.NTP is
       Addr.Addr := Ifnet.Ip;
       Request.Bind (Ifnet => Ifnet,
                     Addr  => Addr);
+      Request.State.Set_Status (INIT);
    end Initialize;
 
    --  ------------------------------
@@ -215,6 +216,13 @@ package body Net.NTP is
          return Status;
       end Get_Status;
 
+      --  ------------------------------
+      --  Set the status time.
+      --  ------------------------------
+      procedure Set_Status (Value : in Status_Type) is
+      begin
+         Status := Value;
+      end Set_Status;
 
       --  ------------------------------
       --  Get the delta time between the NTP server and us.
@@ -237,7 +245,7 @@ package body Net.NTP is
          Result.Offset_Ref  := Offset_Ref;
          if Result.Status in SYNCED | RESYNC then
             Secs := Integer (Shift_Right (Net.Uint64 (Delta_Time), 32));
-            Usec := Integer (Shift_Left (Net.Uint64 (Delta_Time), 32) / 1_000_000);
+            Usec := Integer (Shift_Right ((Net.Uint64 (Delta_Time) and 16#0ffffffff#) * 1_000_000, 32));
             Result.Delta_Time := Ada.Real_Time.Microseconds (Usec) + Ada.Real_Time.Seconds (Secs);
          else
             Result.Delta_Time := Ada.Real_Time.Time_Span_Last;
@@ -315,7 +323,7 @@ package body Net.NTP is
          Offset_Ref  := Clock;
 
          --  (T4 - T1) - (T3 - T2)
-         Delta_Time := (Rec_Time - OTime) - (Orig_Time - Rec);
+         Delta_Time := (Now - OTime) - (Orig_Time - Rec);
          if Delta_Time < 0 then
             Delta_Time := 0;
          end if;

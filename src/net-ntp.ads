@@ -167,6 +167,9 @@ private
       procedure Get_Timestamp (Time : out NTP_Timestamp;
                                Now  : out Ada.Real_Time.Time);
 
+      --  Set the status time.
+      procedure Set_Status (Value : in Status_Type);
+
       --  Extract the timestamp from the NTP server response and update the reference time.
       procedure Extract_Timestamp (Buf : in out Net.Buffers.Buffer_Type);
 

@@ -1,4 +1,4 @@
-with "Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
+with "Ada_Drivers_Library/boards/stm32f746_discovery";
 with "Ada_Drivers_Library/boards/common_config";
 
 library project Anet_STM32F746  is
@@ -12,9 +12,9 @@ library project Anet_STM32F746  is
 
    package Compiler is
       --  The network packets are stored in the SDRAM and the SDRAM raises a hardware
-      --  fault when we access un-aligned 32-bit words.
+      --  fault when we access un-aligned 32-bit words.  Add --gnatwn to avoid treat warnings as errors.
       for Default_Switches ("Ada")
-         use Common_Config.Compiler'Default_Switches ("Ada") & "-mno-unaligned-access";
+        use Common_Config.Compiler'Default_Switches ("Ada") & "-mno-unaligned-access";
    end Compiler;
 
 end Anet_STM32F746;

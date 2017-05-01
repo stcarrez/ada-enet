@@ -23,7 +23,13 @@ with Net.Sockets.Udp;
 
 --  == NTP Client ==
 --  The NTP client is used to retrieve the time by using the NTP protocol and keep the local
---  time synchronized with the NTP server.
+--  time synchronized with the NTP server.  The NTP client does not maintain the date but allows
+--  to retrieve the NTP reference information which together with the Ada monotonic time can
+--  be used to get the current date.
+--
+--  An NTP client is associated with a particular NTP server.  An application can use several
+--  NTP client instance to synchronize with several NTP server and then choose the best
+--  NTP reference for its date.
 --
 --  === Initialization ===
 --  The NTP client is represented by the <tt>Client</tt> tagged type.  An instance must be
@@ -31,6 +37,47 @@ with Net.Sockets.Udp;
 --
 --    Client : Net.NTP.Client;
 --
+--  The NTP client is then initialized by giving the network interface and the NTP server to use:
+--
+--    Ntp_Server : Net.Ip_Addr := ...;
+--    ...
+--    Client.Initialize (Ifnet'Access, Ntp_Server);
+--
+--  === Processing ===
+--  The NTP synchronisation is an asynchronous process that must be run continuously.
+--  The <tt>Process</tt> procedure is responsible for sending the NTP client request to the
+--  server on a regular basis.  The <tt>Receive</tt> procedure will be called by the UDP stack
+--  when the NTP server response is received.  The NTP reference is computed when a correct
+--  NTP server response is received.  The state and NTP reference for the NTP synchronization
+--  is maintained by a protected type held by the <tt>Client</tt> tagged type.
+--
+--  The <tt>Process</tt> procedure should be called to initiate the NTP request to the server
+--  and then periodically synchronize with the server.  The operation returns a delay that
+--  indicates the time to wait before the next call.  It is acceptable to call this operation
+--  more often than necessary.
+--
+--    Ntp_Timeout : Ada.Real_Time.Time_Span;
+--    ..
+--    Client.Process (Ntp_Timeout);
+--
+--  === NTP Date ===
+--  The NTP reference information is retrieved by using the <tt>Get_Reference</tt> operation
+--  which returns the NTP date together with the status and delay information between the client
+--  and the server.
+--
+--    Ref : Net.NTP.NTP_Reference := Client.Get_Reference;
+--    Now : Net.NTP.NTP_Timestamp;
+--
+--  Before using the NTP reference, it is necessary to check the status.  The <tt>SYNCED</tt>
+--  and <tt>RESYNC</tt> are the two possible states which indicate a successful synchronization.
+--  The current date and time is obtained by the <tt>Get_Time</tt> function which uses the
+--  NTP reference and the Ada monotonic time to return the current date (in NTP format).
+--
+--    if Ref.Status in Net.NTP.SYNCED | Net.NTP.RESYNC then
+--       Now := Net.NTP.Get_TIme (Ref);
+--    end if;
+--
+--  The NTP date is a GMT time whose first epoch date is January 1st 1900.
 package Net.NTP is
 
    --  The NTP UDP port number.

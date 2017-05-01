@@ -20,6 +20,43 @@ with Net.Headers;
 
 package body Net.NTP is
 
+   use type Ada.Real_Time.Time;
+   use type Ada.Real_Time.Time_Span;
+
+   ONE_SEC  : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
+   ONE_USEC : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
+
+   --  ------------------------------
+   --  Add a time span to the NTP timestamp.
+   --  ------------------------------
+   function "+" (Left  : in NTP_Timestamp;
+                 Right : in Ada.Real_Time.Time_Span) return NTP_Timestamp is
+      N      : Unsigned_64;
+      Result : NTP_Timestamp;
+      Sec    : constant Integer := Right / ONE_SEC;
+   begin
+      Result.Seconds := Left.Seconds + Net.Uint32 (Sec);
+
+      --  Convert the time_span to NTP subseconds.
+      --  First convert to microseconds and then to sub-seconds by using 64-bit values.
+      N    := Shift_Left (Unsigned_64 ((Right - Ada.Real_Time.Seconds (Sec)) / ONE_USEC), 32);
+      N    := N / 1_000_000;
+      if Left.Sub_Seconds > Net.Uint32'Last - Net.Uint32 (N) then
+         Result.Sub_Seconds := Left.Sub_Seconds - Net.Uint32 (N);
+         Result.Seconds := Left.Seconds + 1;
+      else
+         Result.Sub_Seconds := Left.Sub_Seconds + Net.Uint32 (N);
+      end if;
+      return Result;
+   end "+";
+
+   --  Get the current date from the Ada monotonic time and the NTP reference.
+   function Get_Time (Ref : in NTP_Reference) return NTP_Timestamp is
+      Now    : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+   begin
+      return Ref.Offset_Time + (Now - Ref.Offset_Ref);
+   end Get_Time;
+
    --  ------------------------------
    --  Get the NTP client status.
    --  ------------------------------
@@ -76,8 +113,6 @@ package body Net.NTP is
    --  ------------------------------
    procedure Process (Request   : in out Client;
                       Next_Call : out Ada.Real_Time.Time_Span) is
-      use type Ada.Real_Time.Time;
-
       Buf    : Net.Buffers.Buffer_Type;
       Status : Error_Code;
       To     : Net.Sockets.Sockaddr_In;
@@ -149,11 +184,6 @@ package body Net.NTP is
       Request.State.Extract_Timestamp (Packet);
    end Receive;
 
-   ONE_SEC  : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
-   ONE_USEC : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
-
-   use type Ada.Real_Time.Time;
-   use type Ada.Real_Time.Time_Span;
    function To_Unsigned_64 (T : in NTP_Timestamp) return Unsigned_64;
    function "-" (Left, Right : in NTP_Timestamp) return Integer_64;
 
@@ -211,25 +241,9 @@ package body Net.NTP is
       --  ------------------------------
       procedure Get_Timestamp (Time : out NTP_Timestamp;
                                Now  : out Ada.Real_Time.Time) is
-
-         Dt     : Ada.Real_Time.Time_Span;
-         Sec    : Integer;
-         Usec   : Integer;
-         N      : Unsigned_64;
       begin
          Now  := Ada.Real_Time.Clock;
-         Dt   := Now - Offset_Ref;
-         Sec  := Dt / ONE_SEC;
-         Time.Seconds := Offset_Time.Seconds + Net.Uint32 (Sec);
-         Usec := (Dt - Ada.Real_Time.Seconds (Sec)) / ONE_USEC;
-         N    := Shift_Left (Unsigned_64 (Usec), 32);
-         N    := N / 1_000_000;
-         if Offset_Time.Sub_Seconds > Net.Uint32'Last - Net.Uint32 (N) then
-            Time.Sub_Seconds := Offset_Time.Sub_Seconds - Net.Uint32 (N);
-            Time.Seconds := Time.Seconds + 1;
-         else
-            Time.Sub_Seconds := Offset_Time.Sub_Seconds + Net.Uint32 (N);
-         end if;
+         Time := Offset_Time + (Now - Offset_Ref);
       end Get_Timestamp;
 
       --  ------------------------------

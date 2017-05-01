@@ -263,6 +263,15 @@ package body Net.NTP is
          Buf.Put_Uint32 (Now.Seconds);
          Buf.Put_Uint32 (Now.Sub_Seconds);
          Transmit_Time := Now;
+
+         --  Update status to indicate we are resynchronizing or waiting for synchronization.
+         if Status = SYNCED then
+            Status := RESYNC;
+         elsif Status = RESYNC then
+            Status := TIMEOUT;
+         else
+            Status := WAITING;
+         end if;
       end Put_Timestamp;
 
       --  ------------------------------

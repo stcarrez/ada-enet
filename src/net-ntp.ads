@@ -63,6 +63,9 @@ package Net.NTP is
       Delta_Time    : Ada.Real_Time.Time_Span;
    end record;
 
+   --  Get the current date from the Ada monotonic time and the NTP reference.
+   function Get_Time (Ref : in NTP_Reference) return NTP_Timestamp;
+
    type Client is new Net.Sockets.Udp.Socket with private;
 
    --  Get the NTP client status.

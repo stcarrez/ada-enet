@@ -47,6 +47,10 @@ package Net.NTP is
       Sub_Seconds : Net.Uint32 := 0;
    end record;
 
+   --  Add a time span to the NTP timestamp.
+   function "+" (Left  : in NTP_Timestamp;
+                 Right : in Ada.Real_Time.Time_Span) return NTP_Timestamp;
+
    --  The NTP reference indicates the NTP synchronisation with the NTP server.
    --  The reference indicates the NTP time at a given point in the past when the NTP
    --  synchronization is obtained.  When several NTP servers are used, the NTP references

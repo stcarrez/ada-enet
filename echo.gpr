@@ -1,5 +1,5 @@
-with "Ada_Drivers_Library/boards/stm32f746_discovery.gpr";
-with "anet_stm32f746.gpr";
+with "Ada_Drivers_Library/boards/stm32f746_discovery";
+with "anet_stm32f746";
 
 project Echo is
 
@@ -15,5 +15,9 @@ project Echo is
       for Default_Switches ("Ada")
          use Anet_STM32F746.Compiler'Default_Switches ("Ada");
    end Compiler;
+
+   package Builder is
+     for Global_Configuration_Pragmas use "gnat.adc";
+   end Builder;
 
 end Echo;

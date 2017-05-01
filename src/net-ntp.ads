@@ -96,6 +96,7 @@ private
       Orig_Time     : NTP_Timestamp;
       Rec_Time      : NTP_Timestamp;
       Offset_Time   : NTP_Timestamp;
+      Transmit_Time : NTP_Timestamp;
       Offset_Ref    : Ada.Real_Time.Time;
       Delta_Time    : Integer_64;
    end Machine;

@@ -84,7 +84,7 @@ package Net.NTP is
    NTP_PORT : constant Net.Uint16 := 123;
 
    --  The NTP client status.
-   type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC);
+   type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC, TIMEOUT);
 
    --  The NTP timestamp as defined by RFC 5905.  The NTP epoch is Jan 1st 1900 and
    --  NTP subseconds use the full 32-bit range.  When bit 31 of the seconds is cleared,

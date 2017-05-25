@@ -21,7 +21,7 @@ package body Net.Buffers is
    ETHER_POS  : constant Uint16 := 0;
    IP_POS     : constant Uint16 := ETHER_POS + 14;
    UDP_POS    : constant Uint16 := IP_POS + 20;  --  Note: this is wrong due to IP options.
-   TCP_POS    : constant Uint16 := IP_POS + 24;  --  Note: this is wrong due to IP options.
+   --  TCP_POS    : constant Uint16 := IP_POS + 24;  --  Note: this is wrong due to IP options.
    IGMP_POS   : constant Uint16 := IP_POS + 24;
    ICMP_POS   : constant Uint16 := IP_POS + 20;
    DHCP_POS   : constant Uint16 := IP_POS + 20 + 8;
@@ -369,7 +369,7 @@ package body Net.Buffers is
    --  ------------------------------
    function TCP (Buf : in Buffer_Type) return Net.Headers.TCP_Header_Access is
    begin
-      return As_Tcp_Header (Buf.Packet.Data (20 + 14)'Address);
+      return As_Tcp_Header (Buf.Packet.Data (20 + 14 + 2)'Address);
    end TCP;
 
    --  ------------------------------

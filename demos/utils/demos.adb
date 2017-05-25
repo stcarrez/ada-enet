@@ -21,6 +21,7 @@ with STM32.Board;
 with STM32.SDRAM;
 with STM32.RNG.Interrupts;
 with Net.Utils;
+with Receiver;
 package body Demos is
 
    --  ------------------------------
@@ -74,8 +75,12 @@ package body Demos is
    --  ------------------------------
    procedure Refresh_Ifnet_Stats is
       use type Net.DHCP.State_Type;
+      use type Receiver.Us_Time;
 
-      State : constant Net.DHCP.State_Type := Dhcp.Get_State;
+      State    : constant Net.DHCP.State_Type := Dhcp.Get_State;
+      Min_Time : constant Receiver.Us_Time := Receiver.Min_Receive_Time;
+      Max_Time : constant Receiver.Us_Time := Receiver.Max_Receive_Time;
+      Avg_Time : constant Receiver.Us_Time := Receiver.Avg_Receive_Time;
    begin
       case State is
          when Net.DHCP.STATE_BOUND | Net.DHCP.STATE_DAD
@@ -109,6 +114,15 @@ package body Demos is
       Put (350, 30, Ifnet.Rx_Stats.Bytes);
       Put (250, 40, Net.Uint64 (Ifnet.Tx_Stats.Packets));
       Put (350, 40, Ifnet.Tx_Stats.Bytes);
+      if Min_Time < 1_000_000 and Min_Time > 0 then
+         Put (250, 50, Net.Uint64 (Min_Time));
+      end if;
+      if Avg_Time < 1_000_000 and Avg_Time > 0 then
+         Put (300, 50, Net.Uint64 (Avg_Time));
+      end if;
+      if Max_Time < 1_000_000 and Max_Time > 0 then
+         Put (350, 50, Net.Uint64 (Max_Time));
+      end if;
    end Refresh_Ifnet_Stats;
 
    --  ------------------------------
@@ -144,6 +158,7 @@ package body Demos is
          Put (4, 50, "DNS");
          Put (250, 30, "Rx");
          Put (250, 40, "Tx");
+         Put (250, 50, "Rec time");
          Put (302, 14, "Packets");
          Put (418, 14, "Bytes");
 --           Put (0, 70, "Host");

@@ -608,8 +608,16 @@ package body Net.DHCP is
       Now : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
       Request.Expire_Time := Now + Ada.Real_Time.Seconds (Config.Lease_Time);
-      Request.Renew_Time  := Now + Ada.Real_Time.Seconds (Config.Renew_Time);
-      Request.Rebind_Time := Now + Ada.Real_Time.Seconds (Config.Rebind_Time);
+      if Config.Renew_Time = 0 then
+         Request.Renew_Time := Now + Ada.Real_Time.Seconds (Config.Lease_Time / 2);
+      else
+         Request.Renew_Time  := Now + Ada.Real_Time.Seconds (Config.Renew_Time);
+      end if;
+      if Config.Rebind_Time = 0 then
+         Request.Rebind_Time := Now + Ada.Real_Time.Seconds (3 * Config.Lease_Time / 2);
+      else
+         Request.Rebind_Time := Now + Ada.Real_Time.Seconds (Config.Rebind_Time);
+      end if;
       Ifnet.Ip      := Config.Ip;
       Ifnet.Netmask := Config.Netmask;
       Ifnet.Gateway := Config.Router;

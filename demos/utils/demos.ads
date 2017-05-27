@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------
 with Interfaces;
 with BMP_Fonts;
+with STM32.Board;
 with HAL.Bitmap;
 with Net;
 with Net.Buffers;
@@ -57,5 +58,11 @@ package Demos is
    generic
       with procedure Header;
    procedure Initialize (Title  : in String);
+
+   pragma Warnings (Off);
+
+   --  Get the default font size according to the display size.
+   function Default_Font return BMP_Fonts.BMP_Font is
+     (if STM32.Board.LCD_Natural_Width > 480 then BMP_Fonts.Font12x12 else BMP_Fonts.Font8x8);
 
 end Demos;

@@ -1,5 +1,13 @@
+autom4te.cache
 obj
+lib
 *~
 *.log
 *.bin
-
+config.status
+Makefile
+anet_stm32fxxx.gpr
+ping.gpr
+dns.gpr
+time.gpr
+echo.gpr

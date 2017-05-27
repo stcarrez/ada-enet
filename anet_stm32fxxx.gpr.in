@@ -1,12 +1,12 @@
-with "Ada_Drivers_Library/boards/stm32f746_discovery";
+with "Ada_Drivers_Library/boards/@BOARD_PROJECT@";
 with "Ada_Drivers_Library/boards/common_config";
 
-library project Anet_STM32F746  is
+library project Anet_STM32FXXX  is
 
-   for Library_Dir use "lib/stm32f746disco/" & STM32F746_Discovery.RTS & "/";
-   for Library_Name use "anet_stm32f746";
-   for Object_Dir use "obj/stm32f746disco";
-   for Runtime ("Ada") use STM32F746_Discovery'Runtime("Ada");
+   for Library_Dir use "lib/@BOARD_DIR@/" & @BOARD_RUNTIME@.RTS & "/";
+   for Library_Name use "anet_@BOARD@";
+   for Object_Dir use "obj/@BOARD_DIR@";
+   for Runtime ("Ada") use @BOARD_RUNTIME@'Runtime("Ada");
 
    for Source_Dirs use ("src", "src/stm32");
 
@@ -17,4 +17,4 @@ library project Anet_STM32F746  is
         use Common_Config.Compiler'Default_Switches ("Ada") & "-mno-unaligned-access";
    end Compiler;
 
-end Anet_STM32F746;
+end Anet_STM32FXXX;

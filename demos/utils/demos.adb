@@ -17,12 +17,23 @@
 -----------------------------------------------------------------------
 with Bitmapped_Drawing;
 with Bitmap_Color_Conversion;
-with STM32.Board;
 with STM32.SDRAM;
 with STM32.RNG.Interrupts;
 with Net.Utils;
 with Receiver;
 package body Demos is
+
+   function Scale (Point : in HAL.Bitmap.Point) return HAL.Bitmap.Point;
+
+   function Scale (Point : in HAL.Bitmap.Point) return HAL.Bitmap.Point is
+      pragma Warnings (Off);
+   begin
+      if STM32.Board.LCD_Natural_Width > 480 then
+         return (Point.X * 800 / 480, Point.Y * 480 / 272);
+      else
+         return Point;
+      end if;
+   end Scale;
 
    --  ------------------------------
    --  Write a message on the display.
@@ -32,7 +43,7 @@ package body Demos is
                   Msg : in String) is
    begin
       Bitmapped_Drawing.Draw_String (Buffer     => STM32.Board.Display.Hidden_Buffer (1).all,
-                                     Start      => (X, Y),
+                                     Start      => Scale ((X, Y)),
                                      Msg        => Msg,
                                      Font       => Current_Font,
                                      Foreground => Foreground,
@@ -56,7 +67,7 @@ package body Demos is
    begin
       for I in reverse V'Range loop
          Bitmapped_Drawing.Draw_Char (Buffer     => Buffer.all,
-                                      Start      => Pos,
+                                      Start      => Scale (Pos),
                                       Char       => V (I),
                                       Font       => Current_Font,
                                       Foreground => FG,
@@ -152,7 +163,7 @@ package body Demos is
       for I in 1 .. 2 loop
          Current_Font := BMP_Fonts.Font16x24;
          Put (0, 0, Title);
-         Current_Font := BMP_Fonts.Font8x8;
+         Current_Font := Default_Font;
          Put (5, 30, "IP");
          Put (4, 40, "Gateway");
          Put (4, 50, "DNS");
@@ -167,7 +178,7 @@ package body Demos is
          Header;
          STM32.Board.Display.Hidden_Buffer (1).Draw_Horizontal_Line
            (Pt    => (X => 0, Y => 84),
-            Width => 480);
+            Width => STM32.Board.LCD_Natural_Width);
          STM32.Board.Display.Update_Layer (1);
       end loop;
    end Initialize;

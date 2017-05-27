@@ -1,5 +1,5 @@
-BOARD=stm32f769
-BOARD_DIR=stm32f769disco
+BOARD=@BOARD@
+BOARD_DIR=@BOARD_DIR@
 MODE=-XBUILD=Debug -XBUILD_RTS=Debug
 
 all:	ping echo dns time

@@ -4,7 +4,7 @@
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)](LICENSE)
 
 This library is a small network stack that implements ARP, IPv4, UDP, DNS and DHCP protocols
-on top of an Ethernet driver.  It can be compiled for a STM32F746 board
+on top of an Ethernet driver.  It can be compiled for a STM32F746 or a STM32F769 board
 to provide IPv4 network access to your project.  This library is used
 by the EtherScope project to read network packets and analyze the traffic
 (See https://github.com/stcarrez/etherscope).  The following protocols are supported:
@@ -24,6 +24,23 @@ Before build the library you will need:
 
 * The GNAT Ada compiler for ARM
   http://libre.adacore.com/
+
+The library supports at least two boards and to simplify and help in the configuration
+and build process, you must run the *configure* script to configure the GNAT project
+files according to your target board.  Run configure:
+
+## STM32F746
+
+```shell
+  configure --with-board=stm32f746
+```
+
+## STM32F769
+
+```shell
+  configure --with-board=stm32f769
+```
+
 
 The Ada_Drivers_Library is imported as part of a Git submodule.  To checkout everything, you may use
 the following commands:
@@ -124,6 +141,7 @@ And to flash the time image, you can use:
 ## Documentation
 
 - https://github.com/stcarrez/ada-enet/wiki
+- [NTP Client](https://github.com/stcarrez/ada-enet/wiki/Net_NTP)
 - [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)
 - [Using the Ada Embedded Network STM32 Ethernet Driver](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/09/29/Using-the-Ada-Embedded-Network-STM32-Ethernet-Driver)
 - [Simple UDP Echo Server on STM32F746](http://blog.vacs.fr/vacs/blogs/post.html?post=2016/12/04/Simple-UDP-Echo-Server-on-STM32F746)

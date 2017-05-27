@@ -166,8 +166,7 @@ package body Demos is
 --           Put (402, 70, "Receive");
          Header;
          STM32.Board.Display.Hidden_Buffer (1).Draw_Horizontal_Line
-           (Color => HAL.Bitmap.Blue,
-            Pt    => (X => 0, Y => 84),
+           (Pt    => (X => 0, Y => 84),
             Width => 480);
          STM32.Board.Display.Update_Layer (1);
       end loop;

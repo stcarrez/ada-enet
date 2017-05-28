@@ -26,6 +26,9 @@ package Receiver is
    Min_Receive_Time : Us_Time := 0 with Atomic;
    Max_Receive_Time : Us_Time := 0 with Atomic;
 
+   --  Start the receiver loop.
+   procedure Start;
+
    --  The task that waits for packets.
    task Controller with
      Storage_Size => (16 * 1024),

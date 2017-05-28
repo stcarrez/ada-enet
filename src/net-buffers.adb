@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-buffers -- Network buffers
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,7 +70,7 @@ package body Net.Buffers is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.DHCP_Header_Access);
 
-   protected Manager is
+   protected Manager with Priority => System.Max_Interrupt_Priority is
       procedure Allocate (Packet : out Packet_Buffer_Access);
 
       procedure Release (Packet : in out Packet_Buffer_Access);
@@ -84,8 +84,6 @@ package body Net.Buffers is
                           Count : in Natural);
 
    private
-      pragma Priority (System.Max_Interrupt_Priority);
-
       Free_List : Packet_Buffer_Access;
    end Manager;
 

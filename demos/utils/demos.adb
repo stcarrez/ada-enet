@@ -157,6 +157,7 @@ package body Demos is
       Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => HAL.UInt32 (NET_BUFFER_SIZE)),
                               NET_BUFFER_SIZE);
       Ifnet.Initialize;
+      Receiver.Start;
 
       --  Initialize the DHCP client.
       Dhcp.Initialize (Ifnet'Access);

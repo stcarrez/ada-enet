@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Ada.Real_Time;
+with Ada.Synchronous_Task_Control;
 with Net.Buffers;
 with Net.Protos.Arp;
 with Net.Protos.Dispatchers;
@@ -27,7 +28,16 @@ package body Receiver is
    use type Net.Uint8;
    use type Net.Uint16;
 
+   Ready  : Ada.Synchronous_Task_Control.Suspension_Object;
    ONE_US : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
+
+   --  ------------------------------
+   --  Start the receiver loop.
+   --  ------------------------------
+   procedure Start is
+   begin
+      Ada.Synchronous_Task_Control.Set_True (Ready);
+   end Start;
 
    task body Controller is
       use type Ada.Real_Time.Time;
@@ -41,9 +51,10 @@ package body Receiver is
       Total   : Net.Uint64 := 0;
       Count   : Net.Uint64 := 0;
    begin
-      while not Demos.Ifnet.Is_Ready loop
-         delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (10);
-      end loop;
+      --  Wait until the Ethernet driver is ready.
+      Ada.Synchronous_Task_Control.Suspend_Until_True (Ready);
+
+      --  Loop receiving packets and dispatching them.
       Min_Receive_Time := Us_Time'Last;
       Max_Receive_Time := Us_Time'First;
       loop

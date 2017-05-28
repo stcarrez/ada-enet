@@ -38,7 +38,7 @@ package body Net.Interfaces.STM32 is
    type Tx_Position is new Uint32 range 0 .. TX_RING_SIZE;
    type Rx_Position is new Uint32 range 0 .. RX_RING_SIZE;
 
-   type Tx_Ring is record
+   type Tx_Ring is limited record
       Buffer : Net.Buffers.Buffer_Type;
       Desc   : Eth.Tx_Desc_Type;
    end record;
@@ -47,7 +47,7 @@ package body Net.Interfaces.STM32 is
    type Tx_Ring_Array_Type is array (Tx_Position) of aliased Tx_Ring;
    type Tx_Ring_Array_Type_Access is access all Tx_Ring_Array_Type;
 
-   type Rx_Ring is record
+   type Rx_Ring is limited record
       Buffer : Net.Buffers.Buffer_Type;
       Desc   : Eth.Rx_Desc_Type;
    end record;

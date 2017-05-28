@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net -- Network stack
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 with Interfaces;
+with System;
 
 --  == Embedded Network Stack ==
 --  The <b>Embedded Network Stack</b> is a small IPv4 network stack intended to be
@@ -27,6 +28,10 @@ with Interfaces;
 package Net is
 
    pragma Pure;
+
+   --  The network stack interrupt priority.  It is used to configure the Ethernet driver
+   --  interrupt priority as well as the protected objects that could depend on it.
+   Network_Priority : constant System.Interrupt_Priority := System.Interrupt_Priority'First;
 
    subtype Uint8 is Interfaces.Unsigned_8;
    subtype Uint16 is Interfaces.Unsigned_16;

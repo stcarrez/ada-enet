@@ -83,7 +83,7 @@ package body Net.Interfaces.STM32 is
       end if;
    end Next_Tx;
 
-   protected Transmit_Queue is
+   protected Transmit_Queue with Priority => System.Max_Interrupt_Priority is
       entry Send (Buf : in out Net.Buffers.Buffer_Type);
 
       procedure Transmit_Interrupt;
@@ -94,8 +94,6 @@ package body Net.Interfaces.STM32 is
       function Is_Ready return Boolean;
 
    private
-      pragma Priority (System.Max_Interrupt_Priority);
-
       --  Transmit queue management.
       Tx_Space : Uint32 := 0;
       Tx_Ready : Boolean := False;

@@ -70,7 +70,7 @@ package body Net.Buffers is
      new Ada.Unchecked_Conversion (Source => System.Address,
                                    Target => Net.Headers.DHCP_Header_Access);
 
-   protected Manager with Priority => System.Max_Interrupt_Priority is
+   protected Manager with Priority => Net.Network_Priority is
       procedure Allocate (Packet : out Packet_Buffer_Access);
 
       procedure Release (Packet : in out Packet_Buffer_Access);

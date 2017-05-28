@@ -83,7 +83,7 @@ package body Net.Interfaces.STM32 is
       end if;
    end Next_Tx;
 
-   protected Transmit_Queue with Priority => System.Max_Interrupt_Priority is
+   protected Transmit_Queue with Priority => Net.Network_Priority is
       entry Send (Buf : in out Net.Buffers.Buffer_Type);
 
       procedure Transmit_Interrupt;
@@ -102,15 +102,16 @@ package body Net.Interfaces.STM32 is
       Tx_Ring  : Tx_Ring_Array_Type_Access;
    end Transmit_Queue;
 
-   protected Receive_Queue is
+   protected Receive_Queue with Interrupt_Priority => Net.Network_Priority is
 
       entry Wait_Packet (Buf : in out Net.Buffers.Buffer_Type);
 
       procedure Initialize (List : in out Net.Buffers.Buffer_List);
 
       procedure Receive_Interrupt;
-      procedure Interrupt;
-      pragma Attach_Handler (Interrupt, Ada.Interrupts.Names.ETH_Interrupt);
+      procedure Interrupt
+        with Attach_Handler => Ada.Interrupts.Names.ETH_Interrupt,
+          Unreferenced;
 
       --  Check if the receive queue is initialized.
       function Is_Ready return Boolean;

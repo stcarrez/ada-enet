@@ -1,7 +1,7 @@
 with "Ada_Drivers_Library/boards/@BOARD_PROJECT@";
 with "anet_stm32fxxx";
 
-project Dns is
+project Dns extends "Ada_Drivers_Library/examples/shared/common/common.gpr" is
 
    for Runtime ("Ada") use @BOARD_RUNTIME@'Runtime("Ada");
    for Object_Dir use "obj/@BOARD_DIR@";

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-interfaces -- Network interface
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,8 +60,5 @@ package Net.Interfaces is
    --  Check if the IP address is in the same subnet as the interface IP address.
    function Is_Local_Network (Ifnet : in Ifnet_Type;
                               Ip    : in Ip_Addr) return Boolean;
-
-   --  Get a 32-bit random number.
-   function Random (Ifnet : in Ifnet_Type) return Uint32 is abstract;
 
 end Net.Interfaces;

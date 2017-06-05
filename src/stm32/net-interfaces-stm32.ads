@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-interfaces-stm32 -- Ethernet driver for STM32F74x
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,9 +43,5 @@ package Net.Interfaces.STM32 is
 
    --  Returns true if the interface driver is ready to receive or send packets.
    function Is_Ready (Ifnet : in STM32_Ifnet) return Boolean;
-
-   --  Get a 32-bit random number.
-   overriding
-   function Random (Ifnet : in STM32_Ifnet) return Uint32;
 
 end Net.Interfaces.STM32;

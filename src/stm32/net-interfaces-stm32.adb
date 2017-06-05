@@ -23,7 +23,6 @@ with Ada.Unchecked_Conversion;
 with STM32.SDRAM;
 with STM32.Eth; use STM32;
 with STM32_SVD.Ethernet;
-with STM32.RNG.Interrupts;
 
 with HAL;
 with Cortex_M.Cache;
@@ -59,8 +58,7 @@ package body Net.Interfaces.STM32 is
    function As_Rx_Ring_Array_Type_Access is
      new Ada.Unchecked_Conversion (System.Address, Rx_Ring_Array_Type_Access);
 
-   function As_Tx_Ring_Array_Type_Access is
-     new Ada.Unchecked_Conversion (System.Address, Tx_Ring_Array_Type_Access);
+   Tx_Ring_Instance : aliased Tx_Ring_Array_Type;
 
    function Next_Tx (Value : in Tx_Position) return Tx_Position;
    function Next_Rx (Value : in Rx_Position) return Rx_Position;
@@ -157,16 +155,6 @@ package body Net.Interfaces.STM32 is
    end Is_Ready;
 
    --  ------------------------------
-   --  Get a 32-bit random number.
-   --  ------------------------------
-   overriding
-   function Random (Ifnet : in STM32_Ifnet) return Uint32 is
-      pragma Unreferenced (Ifnet);
-   begin
-      return Uint32 (RNG.Interrupts.Random);
-   end Random;
-
-   --  ------------------------------
    --  Initialize the network interface.
    --  ------------------------------
    overriding
@@ -243,12 +231,9 @@ package body Net.Interfaces.STM32 is
       end Transmit_Interrupt;
 
       procedure Initialize is
-         Addr : System.Address;
       begin
-         Addr := SDRAM.Reserve (Amount => Tx_Ring_Array_Type'Size / 8);
-         Tx_Ring := As_Tx_Ring_Array_Type_Access (Addr);
+         Tx_Ring := Tx_Ring_Instance'Access;  ---  new Tx_Ring_Array_Type;
          for I in Tx_Ring'Range loop
-            Net.Buffers.Unsafe_Reset (Tx_Ring (I).Buffer);
             Tx_Ring (I).Desc.Tdes0 := (Own => 0, Ic => 1, Ls => 1, Fs => 1,
                                        Dc  => 0, Dp => 0, Ttse => 0,
                                        Tch => 1,

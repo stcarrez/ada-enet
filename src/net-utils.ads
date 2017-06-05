@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-utils -- Network utilities
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,5 +22,8 @@ package Net.Utils is
 
    --  Convert the Ethernet address to a string representation.
    function To_String (Mac : in Ether_Addr) return String;
+
+   --  Get a 32-bit random number.
+   function Random return Uint32;
 
 end Net.Utils;

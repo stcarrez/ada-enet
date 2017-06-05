@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------
 with Interfaces; use Interfaces;
 with Net.Headers;
+with Net.Utils;
 package body Net.DNS is
 
    --  The IN class for the DNS response (RFC 1035, 3.2.4. CLASS values).
@@ -95,7 +96,7 @@ package body Net.DNS is
                       Timeout : in Duration := 10.0) is
       use type Ada.Real_Time.Time;
 
-      Xid  : constant Uint32 := Ifnet.Random;
+      Xid  : constant Uint32 := Net.Utils.Random;
       Addr : Net.Sockets.Sockaddr_In;
       To   : Net.Sockets.Sockaddr_In;
       Buf  : Net.Buffers.Buffer_Type;

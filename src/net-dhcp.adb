@@ -17,6 +17,7 @@
 -----------------------------------------------------------------------
 with Interfaces; use Interfaces;
 with Net.Headers;
+with Net.Utils;
 with Net.Protos.IPv4;
 with Net.Protos.Arp;
 package body Net.DHCP is
@@ -119,7 +120,7 @@ package body Net.DHCP is
       Request.Bind (Ifnet, Addr);
 
       --  Generate a XID for the DHCP process.
-      Request.Xid := Ifnet.Random;
+      Request.Xid := Net.Utils.Random;
       Request.Retry := 0;
       Request.Configured := False;
       Request.State.Set_State (STATE_INIT);
@@ -150,7 +151,7 @@ package body Net.DHCP is
             when STATE_INIT =>
                Request.Current := New_State;
                Request.Timeout := Now + Ada.Real_Time.Seconds (Request.Pause_Delay);
-               Request.Xid     := Request.Ifnet.Random;
+               Request.Xid     := Net.Utils.Random;
                Request.Retry   := 0;
 
             when STATE_REQUESTING =>

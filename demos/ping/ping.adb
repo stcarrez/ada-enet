@@ -103,12 +103,11 @@ begin
    Ping_Deadline := Ada.Real_Time.Clock;
    loop
       declare
-         Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
-         Dhcp_Timeout : Ada.Real_Time.Time_Span;
-         Dt           : Ada.Real_Time.Time_Span;
+         Now           : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+         Dhcp_Deadline : Ada.Real_Time.Time;
       begin
          Net.Protos.Arp.Timeout (Demos.Ifnet);
-         Demos.Dhcp.Process (Dhcp_Timeout);
+         Demos.Dhcp.Process (Dhcp_Deadline);
          if Demos.Dhcp.Get_State = Net.DHCP.STATE_BOUND then
             Pinger.Add_Host (Demos.Dhcp.Get_Config.Router);
             Pinger.Add_Host (Demos.Dhcp.Get_Config.Dns1);
@@ -121,11 +120,11 @@ begin
             Refresh;
             Ping_Deadline := Ping_Deadline + PING_PERIOD;
          end if;
-         Dt := Ping_Deadline - Now;
-         if Dt > Dhcp_Timeout then
-            Dt := Dhcp_Timeout;
+         if Ping_Deadline < Dhcp_Deadline then
+            delay until Ping_Deadline;
+         else
+            delay until Dhcp_Deadline;
          end if;
-         delay until Now - Dt;
       end;
    end loop;
 end Ping;

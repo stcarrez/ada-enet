@@ -107,25 +107,25 @@ package body Net.NTP is
 
    --  ------------------------------
    --  Process the NTP client.
-   --  Return in <tt>Next_Call</tt> the maximum time to wait before the next call.
+   --  Return in <tt>Next_Call</tt> the deadline time for the next call.
    --  ------------------------------
    procedure Process (Request   : in out Client;
-                      Next_Call : out Ada.Real_Time.Time_Span) is
+                      Next_Call : out Ada.Real_Time.Time) is
       Buf    : Net.Buffers.Buffer_Type;
       Status : Error_Code;
       To     : Net.Sockets.Sockaddr_In;
       Now    : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
    begin
       if Now < Request.Deadline then
-         Next_Call := Request.Deadline - Now;
+         Next_Call := Request.Deadline;
          return;
       end if;
       if Request.Get_Status = NOSERVER then
-         Next_Call := Ada.Real_Time.Seconds (1);
+         Next_Call := Now + Ada.Real_Time.Seconds (1);
          return;
       end if;
       Request.Deadline := Now + Ada.Real_Time.Seconds (8);
-      Next_Call := Ada.Real_Time.Seconds (8);
+      Next_Call := Request.Deadline;
       Net.Buffers.Allocate (Buf);
       Buf.Set_Type (Net.Buffers.UDP_PACKET);
 

@@ -78,8 +78,8 @@ procedure Dns is
          if Dns_List.Queries (I).Get_Name'Length > 0 then
             Demos.Put (0, Y, Dns_List.Queries (I).Get_Name);
             Demos.Put (180, Y, Net.Utils.To_String (Dns_List.Queries (I).Get_Ip));
-            Demos.Put (300, Y, Get_Status (Dns_List.Queries (I)));
-            Demos.Put (350, Y, Net.Uint32'Image (Dns_List.Queries (I).Get_Ttl));
+            Demos.Put (330, Y, Get_Status (Dns_List.Queries (I)));
+            Demos.Put (400, Y, Net.Uint32'Image (Dns_List.Queries (I).Get_Ttl));
             --  Put (250, Y, Net.Uint64 (Hosts (I).Seq));
             --  Demos.Put (400, Y, Net.Uint64 (Dns_List.Queries (I).));
             Y := Y + 16;

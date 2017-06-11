@@ -52,13 +52,13 @@ with Net.Sockets.Udp;
 --  is maintained by a protected type held by the <tt>Client</tt> tagged type.
 --
 --  The <tt>Process</tt> procedure should be called to initiate the NTP request to the server
---  and then periodically synchronize with the server.  The operation returns a delay that
---  indicates the time to wait before the next call.  It is acceptable to call this operation
+--  and then periodically synchronize with the server.  The operation returns a time in the future
+--  that indicates the deadline time for the next call.  It is acceptable to call this operation
 --  more often than necessary.
 --
---    Ntp_Timeout : Ada.Real_Time.Time_Span;
+--    Ntp_Deadline : Ada.Real_Time.Time;
 --    ..
---    Client.Process (Ntp_Timeout);
+--    Client.Process (Ntp_Deadline);
 --
 --  === NTP Date ===
 --  The NTP reference information is retrieved by using the <tt>Get_Reference</tt> operation
@@ -74,7 +74,7 @@ with Net.Sockets.Udp;
 --  NTP reference and the Ada monotonic time to return the current date (in NTP format).
 --
 --    if Ref.Status in Net.NTP.SYNCED | Net.NTP.RESYNC then
---       Now := Net.NTP.Get_TIme (Ref);
+--       Now := Net.NTP.Get_Time (Ref);
 --    end if;
 --
 --  The NTP date is a GMT time whose first epoch date is January 1st 1900.
@@ -141,9 +141,9 @@ package Net.NTP is
                          Port    : in Net.Uint16 := NTP_PORT);
 
    --  Process the NTP client.
-   --  Return in <tt>Next_Call</tt> the maximum time to wait before the next call.
+   --  Return in <tt>Next_Call</tt> the deadline time for the next call.
    procedure Process (Request   : in out Client;
-                      Next_Call : out Ada.Real_Time.Time_Span);
+                      Next_Call : out Ada.Real_Time.Time);
 
    --  Receive the NTP response from the NTP server and update the NTP state machine.
    overriding

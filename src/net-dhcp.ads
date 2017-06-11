@@ -73,9 +73,9 @@ with Net.Sockets.Udp;
 --  The <tt>Process</tt> procedure must be called either by a main task or by a dedicated
 --  task to send the DHCP requests and maintain the DHCP state machine.  Each time this
 --  procedure is called, it looks whether some DHCP processing must be done and it computes
---  a delay that indicates the maximum time to wait before the next call.  It is safe
+--  a deadline that indicates the time for the next call.  It is safe
 --  to call the <tt>Process</tt> procedure more often than required.  The operation will
---  perform different tasks depending on the DHCP state:
+--  perform different operations depending on the DHCP state:
 --
 --  In the <tt>STATE_INIT</tt> state, it records the begining of the DHCP discovering state,
 --  switches to the <tt>STATE_SELECTING</tt> and sends the first DHCP discover packet.
@@ -96,11 +96,11 @@ with Net.Sockets.Udp;
 --  a loop similar to the loop below:
 --
 --    declare
---       Dhcp_Timeout : Ada.Real_Time.Time_Span;
+--       Dhcp_Deadline : Ada.Real_Time.Time;
 --    begin
 --       loop
---          C.Process (Dhcp_Timeout);
---          delay until Ada.Real_Time.Clock + Dhcp_Timeout;
+--          C.Process (Dhcp_Deadline);
+--          delay until Dhcp_Deadline;
 --       end loop;
 --    end;
 --
@@ -158,9 +158,9 @@ package Net.DHCP is
 
    --  Process the DHCP client.  Depending on the DHCP state machine, proceed to the
    --  discover, request, renew, rebind operations.  Return in <tt>Next_Call</tt> the
-   --  maximum time to wait before the next call.
+   --  deadline time before the next call.
    procedure Process (Request   : in out Client;
-                      Next_Call : out Ada.Real_Time.Time_Span);
+                      Next_Call : out Ada.Real_Time.Time);
 
    --  Send the DHCP discover packet to initiate the DHCP discovery process.
    procedure Discover (Request : in out Client) with

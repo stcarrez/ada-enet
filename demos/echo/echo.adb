@@ -69,7 +69,7 @@ procedure Echo is
 
    procedure Initialize is new Demos.Initialize (Header);
 
-   Dhcp_Timeout : Ada.Real_Time.Time_Span;
+   Dhcp_Deadline : Ada.Real_Time.Time;
 
 begin
    Initialize ("STM32 Echo");
@@ -79,7 +79,7 @@ begin
 
    loop
       Net.Protos.Arp.Timeout (Demos.Ifnet);
-      Demos.Dhcp.Process (Dhcp_Timeout);
+      Demos.Dhcp.Process (Dhcp_Deadline);
       Refresh;
       delay until Ada.Real_Time.Clock + Ada.Real_Time.Milliseconds (500);
    end loop;

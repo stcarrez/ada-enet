@@ -32,21 +32,14 @@ with Demos;
 
 pragma Unreferenced (Receiver);
 
---  == Ping Application ==
---  The <b>Ping</b> application listens to the Ethernet network to identify some local
---  hosts and ping them using ICMP echo requests.
---
---  The <b>Ping</b> application uses the static IP address <b>192.168.1.2</b> and an initial
---  default gateway <b>192.168.1.254</b>.  While running, it discovers the gateway by looking
---  at the IGMP query membership packets.
---
---  The <b>Ping</b> application displays the lists of hosts that it currently pings with
---  the number of ICMP requests that are sent and the number of ICMP replies received.
+--  == DNS Application ==
+--  The <b>DNS</b> application resolves several domain names by using the DNS client and it
+--  displays the IPv4 address that was resolved.  It periodically resolve the names and
+--  also displays the TTL associated with the response.
 --
 --  The application has two tasks.  The main task loops to manage the refresh of the STM32
---  display and send the ICMP echo requests each second.  The second task is responsible for
---  waiting of Ethernet packets, analyzing them to handle ARP and ICMP packets.  The receiver
---  task also looks at IGMP packets to identify the IGMP queries sent by routers.
+--  display and send the DNS resolution requests regularly.  The second task is responsible for
+--  waiting of Ethernet packets, analyzing them to handle ARP and DNS response packets.
 procedure Dns is
 
    use type Interfaces.Unsigned_32;
@@ -110,32 +103,28 @@ procedure Dns is
 
    procedure Initialize is new Demos.Initialize (Header);
 
-   --  The ping period.
-   PING_PERIOD   : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Milliseconds (1000);
+   --  The display refresh period.
+   REFRESH_PERIOD   : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Milliseconds (1000);
 
-   --  Send ping echo request deadline
-   Ping_Deadline : Ada.Real_Time.Time;
+   --  Refresh display deadline.
+   Display_Deadline : Ada.Real_Time.Time;
+   Dhcp_Deadline    : Ada.Real_Time.Time;
 
 begin
    Initialize ("STM32 DNS");
 
-   Ping_Deadline := Ada.Real_Time.Clock;
+   Display_Deadline := Ada.Real_Time.Clock;
    loop
-      declare
-         Now          : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
-         Dhcp_Timeout : Ada.Real_Time.Time_Span;
-      begin
-         Net.Protos.Arp.Timeout (Demos.Ifnet);
-         Demos.Dhcp.Process (Dhcp_Timeout);
-         if Ping_Deadline < Now then
-            Refresh;
-            Ping_Deadline := Ping_Deadline + PING_PERIOD;
-         end if;
-         if Dhcp_Timeout < PING_PERIOD then
-            delay until Now + Dhcp_Timeout;
-         else
-            delay until Now + PING_PERIOD;
-         end if;
-      end;
+      Net.Protos.Arp.Timeout (Demos.Ifnet);
+      Demos.Dhcp.Process (Dhcp_Deadline);
+      if Display_Deadline < Ada.Real_Time.Clock then
+         Refresh;
+         Display_Deadline := Display_Deadline + REFRESH_PERIOD;
+      end if;
+      if Dhcp_Deadline < Display_Deadline then
+         delay until Dhcp_Deadline;
+      else
+         delay until Display_Deadline;
+      end if;
    end loop;
 end Dns;

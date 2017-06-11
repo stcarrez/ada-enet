@@ -177,6 +177,7 @@ package body Demos is
 --           Put (326, 70, "Send");
 --           Put (402, 70, "Receive");
          Header;
+         STM32.Board.Display.Hidden_Buffer (1).Set_Source (HAL.Bitmap.Blue);
          STM32.Board.Display.Hidden_Buffer (1).Draw_Horizontal_Line
            (Pt    => (X => 0, Y => 84),
             Width => STM32.Board.LCD_Natural_Width);

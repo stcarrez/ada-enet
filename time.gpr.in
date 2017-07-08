@@ -1,4 +1,4 @@
-with "Ada_Drivers_Library/boards/@BOARD_PROJECT@";
+with "Ada_Drivers_Library/boards/@BOARD_PROJECT@/@BOARD_PROJECT@";
 with "anet_stm32fxxx";
 
 project Time extends "Ada_Drivers_Library/examples/shared/common/common.gpr" is

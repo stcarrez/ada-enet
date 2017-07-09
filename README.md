@@ -22,7 +22,7 @@ Before build the library you will need:
 * Ada_Drivers_Library
   https://github.com/AdaCore/Ada_Drivers_Library.git
 
-* The GNAT Ada compiler for ARM
+* The GNAT 2017 Ada compiler for ARM
   http://libre.adacore.com/
 
 The library supports at least two boards and to simplify and help in the configuration
@@ -58,6 +58,21 @@ You can build the library with:
 Several demo applications are provided to illustrate how you can use the different
 network features.  The demo applications use the [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)
 to get an IPv4 address and obtain the default gateway and DNS.
+
+For some demo applications, you can switch to a static IP configuration by editing the file
+**demos/utils/demo.adb** and un-comment and modify the following lines:
+
+```ada
+   Ifnet.Ip := (192, 168, 1, 2);
+   Ifnet.Gateway := (192, 168, 1, 240);
+   Ifnet.Dns := (192, 168, 1, 240);
+```
+
+and disable the DHCP configuration by commenting the line:
+
+```ada
+   -- Dhcp.Initialize (Ifnet'Access);
+```
 
 ## Ping
 

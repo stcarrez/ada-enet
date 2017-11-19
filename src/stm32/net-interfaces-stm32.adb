@@ -185,8 +185,8 @@ package body Net.Interfaces.STM32 is
 
       entry Send (Buf : in out Net.Buffers.Buffer_Type) when Tx_Ready is
          Tx   : constant Tx_Ring_Access := Tx_Ring (Cur_Tx)'Access;
-         Addr : constant System.Address := Net.Buffers.Get_Data_Address (Buf);
-         Size : constant UInt13 := UInt13 (Net.Buffers.Get_Length (Buf));
+         Addr : constant System.Address := Buf.Get_Data_Address;
+         Size : constant UInt13 := UInt13 (Buf.Get_Length);
       begin
          Tx.Buffer.Transfer (Buf);
          Cortex_M.Cache.Clean_DCache (Addr, Integer (Size));
@@ -219,6 +219,7 @@ package body Net.Interfaces.STM32 is
       begin
          loop
             Tx := Tx_Ring (Dma_Tx)'Access;
+            Cortex_M.Cache.Invalidate_DCache (Tx.Desc'Address, Tx.Desc'Size / 8);
             exit when Tx.Desc.Tdes0.Own = 1;
 
             --  We can release the buffer after it is transmitted.
@@ -282,6 +283,7 @@ package body Net.Interfaces.STM32 is
       entry Wait_Packet (Buf : in out Net.Buffers.Buffer_Type) when Rx_Available is
          Rx   : constant Rx_Ring_Access := Rx_Ring (Cur_Rx)'Access;
       begin
+         Cortex_M.Cache.Invalidate_DCache (Rx.Desc'Address, Rx.Desc'Size / 8);
          Rx.Buffer.Set_Length (Net.Uint16 (Rx.Desc.Rdes0.Fl));
          Net.Buffers.Switch (Buf, Rx.Buffer);
          Rx.Desc.Rdes2 := W (Rx.Buffer.Get_Data_Address);
@@ -420,13 +422,12 @@ package body Net.Interfaces.STM32 is
             Ethernet_DMA_Periph.DMASR.RS := True;
             Receive_Queue.Receive_Interrupt;
          end if;
+         IMask := Ethernet_DMA_Periph.DMASR;
          if Ethernet_DMA_Periph.DMASR.TS then
             Ethernet_DMA_Periph.DMASR.TS := True;
             Transmit_Queue.Transmit_Interrupt;
-         end if;
-         if Ethernet_DMA_Periph.DMASR.TBUS then
+         elsif Ethernet_DMA_Periph.DMASR.TBUS then
             Ethernet_DMA_Periph.DMASR.TBUS := True;
-            Transmit_Queue.Transmit_Interrupt;
          end if;
          Ethernet_DMA_Periph.DMASR.NIS := True;
       end Interrupt;

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-buffers -- Network buffers
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2017 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -278,13 +278,6 @@ package Net.Buffers is
    procedure Add_Region (Addr : in System.Address;
                          Size : in Uint32) with
      Pre => Size mod NET_ALLOC_SIZE = 0 and Size > 0 and Addr /= System.Null_Address;
-
-   --  The STM32 Ethernet driver builds the receive ring in the SDRAM and allocates the
-   --  memory dynamically.  The memory area is not initialized and we need a way to force
-   --  its initialization by clearing the internal <tt>Size</tt> and <tt>Packet</tt> attributes.
-   --  Calling this method in another context might result in buffer leak.
-   procedure Unsafe_Reset (Buffer : in out Buffer_Type) with
-     Post => Buffer.Is_Null;
 
 private
 

@@ -479,18 +479,6 @@ package body Net.Buffers is
       Manager.Add_Region (Addr, Count);
    end Add_Region;
 
-   --  ------------------------------
-   --  The STM32 Ethernet driver builds the receive ring in the SDRAM and allocates the
-   --  memory dynamically.  The memory area is not initialized and we need a way to force
-   --  its initialization by clearing the internal <tt>Size</tt> and <tt>Packet</tt> attributes.
-   --  Calling this method in another context might result in buffer leak.
-   --  ------------------------------
-   procedure Unsafe_Reset (Buffer : in out Buffer_Type) is
-   begin
-      Buffer.Packet := null;
-      Buffer.Size   := 0;
-   end Unsafe_Reset;
-
    protected body Manager is
 
       procedure Allocate (Packet : out Packet_Buffer_Access) is

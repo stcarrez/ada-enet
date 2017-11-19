@@ -422,7 +422,6 @@ package body Net.Interfaces.STM32 is
             Ethernet_DMA_Periph.DMASR.RS := True;
             Receive_Queue.Receive_Interrupt;
          end if;
-         IMask := Ethernet_DMA_Periph.DMASR;
          if Ethernet_DMA_Periph.DMASR.TS then
             Ethernet_DMA_Periph.DMASR.TS := True;
             Transmit_Queue.Transmit_Interrupt;

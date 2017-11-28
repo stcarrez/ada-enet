@@ -46,11 +46,16 @@ package body Net.NTP is
       return Result;
    end "+";
 
+   --  ------------------------------
    --  Get the current date from the Ada monotonic time and the NTP reference.
+   --  ------------------------------
    function Get_Time (Ref : in NTP_Reference) return NTP_Timestamp is
       Now    : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
+      Result : NTP_Timestamp;
    begin
-      return Ref.Offset_Time + (Now - Ref.Offset_Ref);
+      Result := Ref.Offset_Time + (Now - Ref.Offset_Ref);
+      Result.Seconds := Result.Seconds - JAN_1970;
+      return Result;
    end Get_Time;
 
    --  ------------------------------

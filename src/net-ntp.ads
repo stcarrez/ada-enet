@@ -86,6 +86,9 @@ package Net.NTP is
    ONE_SEC  : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
    ONE_USEC : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
 
+   --  The NTP reference date: 1970 - 1900 seconds.  */
+   JAN_1970 : constant Net.Uint32 := 2208988800;
+
    --  The NTP client status.
    type Status_Type is (NOSERVER, INIT, WAITING, SYNCED, RESYNC, TIMEOUT);
 

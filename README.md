@@ -22,7 +22,7 @@ Before build the library you will need:
 * Ada_Drivers_Library
   https://github.com/AdaCore/Ada_Drivers_Library.git
 
-* The GNAT 2017 Ada compiler for ARM
+* The GNAT 2018 Ada compiler for ARM
   http://libre.adacore.com/
 
 The library supports at least two boards and to simplify and help in the configuration
@@ -49,11 +49,27 @@ the following commands:
   make checkout
 ```
 
+Before building, make sure you have the GNAT ARM 2018 Ada compiler in your search path.
+Then, you may have to run the following command to configure everything for gprbuild:
+
+```shell
+  gprconfig --target=arm-eabi
+```
+
 You can build the library with:
 
 ```shell
-  arm-eabi-gnatmake -Panet_stm32f746 -p
+  gprbuild --target=arm-eabi -Panet_stm32f746 -p
 ```
+
+Note: if gprbuild command fails with:
+
+```
+gprconfig: can't find a toolchain for the following configuration:
+gprconfig: language 'ada', target 'arm-eabi', default runtime
+```
+
+then, run again the gprconfig command and select the correct Ada ARM compiler.
 
 Several demo applications are provided to illustrate how you can use the different
 network features.  The demo applications use the [DHCP Client](https://github.com/stcarrez/ada-enet/wiki/Net_DHCP)

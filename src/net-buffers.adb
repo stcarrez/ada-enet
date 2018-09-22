@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-buffers -- Network buffers
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016, 2017, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -329,6 +329,14 @@ package body Net.Buffers is
    begin
       Buf.Pos := Buf.Pos + Size;
    end Skip;
+
+   --  ------------------------------
+   --  Get the number of bytes still available when reading the packet.
+   --  ------------------------------
+   function Available (Buf : in Buffer_Type) return Net.Uint16 is
+   begin
+      return Buf.Size - Buf.Pos;
+   end Available;
 
    --  ------------------------------
    --  Get access to the Ethernet header.

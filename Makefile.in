@@ -2,26 +2,28 @@ BOARD=@BOARD@
 BOARD_DIR=@BOARD_DIR@
 MODE=-XBUILD=Debug -XBUILD_RTS=Debug
 
+GPRBUILD=gprbuild --target=arm-eabi
+
 all:	ping echo dns time
 
 ping:
-	arm-eabi-gnatmake $(MODE) -Pping -p -cargs -mno-unaligned-access
+	$(GPRBUILD) $(MODE) -Pping -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/ping ping.bin
 
 time:
-	arm-eabi-gnatmake $(MODE) -Ptime -p -cargs -mno-unaligned-access
+	$(GPRBUILD) $(MODE) -Ptime -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/time time.bin
 
 echo:
-	arm-eabi-gnatmake $(MODE) -Pecho -p -cargs -mno-unaligned-access
+	$(GPRBUILD) $(MODE) -Pecho -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/echo echo.bin
 
 dns:
-	arm-eabi-gnatmake $(MODE) -Pdns -p -cargs -mno-unaligned-access
+	$(GPRBUILD) $(MODE) -Pdns -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/dns dns.bin
 
 ethdemo:
-	arm-eabi-gnatmake -Panet -p -cargs -mno-unaligned-access
+	$(GPRBUILD) -Panet -p -cargs -mno-unaligned-access
 	arm-eabi-objcopy -O binary obj/${BOARD_DIR}/ethdemo ethdemo.bin
 
 flash-time:		time

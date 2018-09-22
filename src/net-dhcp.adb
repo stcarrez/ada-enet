@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-dhcp -- DHCP client
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016, 2017, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,6 +34,7 @@ package body Net.DHCP is
    DHCP_NACK     : constant Net.Uint8 := 6;
    DHCP_RELEASE  : constant Net.Uint8 := 7;
 
+   OPT_PAD                : constant Net.Uint8 := 0;
    OPT_SUBNETMASK         : constant Net.Uint8 := 1;
    OPT_ROUTER             : constant Net.Uint8 := 3;
    OPT_DOMAIN_NAME_SERVER : constant Net.Uint8 := 6;
@@ -362,10 +363,16 @@ package body Net.DHCP is
    --  ------------------------------
    procedure Extract_Options (Packet  : in out Net.Buffers.Buffer_Type;
                               Options : out Options_Type) is
-      Option : Net.Uint8;
-      Length : Net.Uint8;
+      Option   : Net.Uint8;
+      Length   : Net.Uint8;
+      Msg_Type : Net.Uint8;
    begin
       Options.Msg_Type := 0;
+
+      --  We must still have data to extract.
+      if Packet.Available <= 4 then
+         return;
+      end if;
       if Packet.Get_Uint8 /= 99 then
          return;
       end if;
@@ -378,44 +385,81 @@ package body Net.DHCP is
       if Packet.Get_Uint8 /= 99 then
          return;
       end if;
-      loop
+      while Packet.Available > 0 loop
          Option := Packet.Get_Uint8;
-         Length := Packet.Get_Uint8;
-         case Option is
+         if Option = OPT_END then
+            Options.Msg_Type := Msg_Type;
+            return;
+         elsif Option /= OPT_PAD and Packet.Available > 0 then
+            Length := Packet.Get_Uint8;
+
+            --  If there is not enough data in the packet, abort.
+            exit when Packet.Available < Net.Uint16 (Length);
+            case Option is
             when OPT_MESSAGE_TYPE =>
-               Options.Msg_Type := Packet.Get_Uint8;
+               exit when Length /= 1;
+               Msg_Type := Packet.Get_Uint8;
 
             when OPT_SUBNETMASK =>
+               exit when Length /= 4;
                Options.Netmask := Packet.Get_Ip;
 
             when OPT_ROUTER =>
+               --  The length must be a multiple of 4.
+               exit when Length = 0 or (Length mod 4) /= 0;
                Options.Router := Packet.Get_Ip;
+               if Length > 4 then
+                  --  Still more IPv4 addresses, ignore them.
+                  Packet.Skip (Net.Uint16 (Length - 4));
+               end if;
 
             when OPT_REQUESTED_IP =>
+               exit when Length /= 4;
                Options.Ip := Packet.Get_Ip;
 
             when OPT_DOMAIN_NAME_SERVER =>
+               --  The length must be a multiple of 4.
+               exit when Length = 0 or (Length mod 4) /= 0;
                Options.Dns1 := Packet.Get_Ip;
+               if Length > 4 then
+                  Options.Dns2 := Packet.Get_Ip;
+                  if Length > 8 then
+                     --  Still more IPv4 addresses, ignore them.
+                     Packet.Skip (Net.Uint16 (Length - 8));
+                  end if;
+               end if;
 
             when OPT_SERVER_IDENTIFIER =>
+               exit when Length /= 4;
                Options.Server := Packet.Get_Ip;
 
             when OPT_REBIND_TIME =>
+               exit when Length /= 4;
                Options.Rebind_Time := Natural (Packet.Get_Uint32);
 
             when OPT_RENEW_TIME =>
+               exit when Length /= 4;
                Options.Renew_Time := Natural (Packet.Get_Uint32);
 
             when OPT_LEASE_TIME =>
+               exit when Length /= 4;
                Options.Lease_Time := Natural (Packet.Get_Uint32);
 
             when OPT_NTP_SERVER =>
+               --  The length must be a multiple of 4.
+               exit when Length = 0 or (Length mod 4) /= 0;
                Options.Ntp := Packet.Get_Ip;
+               if Length > 4 then
+                  --  Still more IPv4 addresses, ignore them.
+                  Packet.Skip (Net.Uint16 (Length - 4));
+               end if;
 
             when OPT_MTU_SIZE =>
+               exit when Length /= 2;
                Options.Mtu := Ip_Length (Packet.Get_Uint16);
 
             when OPT_BROADCAST_ADDR =>
+               exit when Length /= 4;
                Options.Broadcast := Packet.Get_Ip;
 
             when OPT_HOST_NAME =>
@@ -426,14 +470,14 @@ package body Net.DHCP is
                Options.Domain_Len := Natural (Length);
                Packet.Get_String (Options.Domain (1 .. Options.Domain_Len));
 
-            when OPT_END =>
-               return;
-
             when others =>
                Packet.Skip (Net.Uint16 (Length));
 
-         end case;
+            end case;
+         end if;
       end loop;
+
+      --  This DHCP packet is invalid, return with a Msg_Type cleared.
    end Extract_Options;
 
    --  ------------------------------

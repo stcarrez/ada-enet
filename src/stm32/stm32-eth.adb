@@ -50,6 +50,7 @@ package body STM32.Eth is
       use STM32.GPIO;
       use STM32.Device;
       use STM32_SVD.RCC;
+      Configuration : GPIO_Port_Configuration;
    begin
       --  Enable GPIO clocks
 
@@ -73,16 +74,22 @@ package body STM32.Eth is
       Configure_Alternate_Function (PG11, GPIO_AF_ETH_11); -- RMII_TX_EN
       Configure_Alternate_Function (PG13, GPIO_AF_ETH_11); -- RMII_TXD0
       Configure_Alternate_Function (PG14, GPIO_AF_ETH_11); -- RMII_TXD1
-      Configure_IO (PA1, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PA2, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PA7, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PC1, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PC4, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PC5, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PG2, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PG11, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PG13, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
-      Configure_IO (PG14, (Mode_AF, Push_Pull, Speed_100MHz, Floating));
+
+      Configuration := (Mode           => Mode_AF,
+                        AF             => GPIO_AF_ETH_11,
+                        AF_Speed       => Speed_100MHz,
+                        AF_Output_Type => Push_Pull,
+                        Resistors      => Floating);
+      Configure_IO (PA1, Configuration);
+      Configure_IO (PA2, Configuration);
+      Configure_IO (PA7, Configuration);
+      Configure_IO (PC1, Configuration);
+      Configure_IO (PC4, Configuration);
+      Configure_IO (PC5, Configuration);
+      Configure_IO (PG2, Configuration);
+      Configure_IO (PG11, Configuration);
+      Configure_IO (PG13, Configuration);
+      Configure_IO (PG14, Configuration);
 
       --  Enable clocks
       RCC_Periph.AHB1ENR.ETHMACEN := True;

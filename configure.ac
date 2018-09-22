@@ -33,23 +33,34 @@ AC_ARG_WITH(board,
   ])
 
 case ${anet_board} in
+  stm32f429)
+    BOARD=stm32f429
+    BOARD_DIR=stm32f429disco
+    BOARD_SUBDIR=stm32f429_discovery
+    BOARD_PROJECT=stm32f429_discovery_sfp
+    BOARD_RUNTIME=STM32F429_Discovery_sfp
+    ;;
+
   stm32f746)
     BOARD=stm32f746
     BOARD_DIR=stm32f746disco
-    BOARD_PROJECT=stm32f746_discovery
-    BOARD_RUNTIME=STM32F746_Discovery
+    BOARD_SUBDIR=stm32f746_discovery
+    BOARD_PROJECT=stm32f746_discovery_sfp
+    BOARD_RUNTIME=STM32F746_Discovery_sfp
     ;;
 
   stm32f769)
     BOARD=stm32f769
     BOARD_DIR=stm32f769disco
-    BOARD_PROJECT=stm32f769_discovery
-    BOARD_RUNTIME=STM32F769_Discovery
+    BOARD_SUBDIR=stm32f769_discovery
+    BOARD_PROJECT=stm32f769_discovery_sfp
+    BOARD_RUNTIME=STM32F769_Discovery_sfp
     ;;
 
   *)
     AC_MSG_ERROR([Boards ${anet_board} is not supported.  Please, use one of the following:
 
+stm32f429
 stm32f746
 stm32f769
 ])
@@ -59,6 +70,7 @@ esac
 AC_SUBST(BOARD)
 AC_SUBST(BOARD_DIR)
 AC_SUBST(BOARD_PROJECT)
+AC_SUBST(BOARD_SUBDIR)
 AC_SUBST(BOARD_RUNTIME)
 
 AC_OUTPUT(

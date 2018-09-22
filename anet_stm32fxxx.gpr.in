@@ -1,9 +1,8 @@
-with "Ada_Drivers_Library/boards/@BOARD_PROJECT@/@BOARD_PROJECT@";
-with "Ada_Drivers_Library/boards/config";
+with "Ada_Drivers_Library/boards/@BOARD_SUBDIR@/@BOARD_PROJECT@";
 
 library project Anet_STM32FXXX  is
 
-   for Library_Dir use "lib/@BOARD_DIR@/" & @BOARD_RUNTIME@.RTS_Profile & "/";
+   for Library_Dir use @BOARD_RUNTIME@'Library_Dir;
    for Library_Name use "anet_@BOARD@";
    for Object_Dir use "obj/@BOARD_DIR@";
    for Runtime ("Ada") use @BOARD_RUNTIME@'Runtime("Ada");
@@ -14,7 +13,7 @@ library project Anet_STM32FXXX  is
       --  The network packets are stored in the SDRAM and the SDRAM raises a hardware
       --  fault when we access un-aligned 32-bit words.  Add --gnatwn to avoid treat warnings as errors.
       for Default_Switches ("Ada")
-        use Config.Compiler'Default_Switches ("Ada") & "-mno-unaligned-access";
+        use @BOARD_RUNTIME@.Compiler'Default_Switches ("Ada") & "-mno-unaligned-access";
    end Compiler;
 
 end Anet_STM32FXXX;

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-icmp -- ICMP v4 Network protocol
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,11 +27,14 @@ package Net.Protos.Icmp is
                            Packet    : in out Net.Buffers.Buffer_Type;
                            Seq       : in Net.Uint16;
                            Ident     : in Net.Uint16;
-                           Status    : out Error_Code);
+                           Status    : out Error_Code) with
+     Pre => not Packet.Is_Null,
+     Post => Packet.Is_Null;
 
    --  Receive and handle an ICMP packet.
    procedure Receive (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
-                      Packet    : in out Net.Buffers.Buffer_Type)
-     with Pre => not Packet.Is_Null, Post => Packet.Is_Null;
+                      Packet    : in out Net.Buffers.Buffer_Type) with
+     Pre => not Packet.Is_Null,
+     Post => Packet.Is_Null;
 
 end Net.Protos.Icmp;

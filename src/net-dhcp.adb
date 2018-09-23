@@ -454,6 +454,15 @@ package body Net.DHCP is
                   Packet.Skip (Net.Uint16 (Length - 4));
                end if;
 
+            when OPT_WWW_SERVER =>
+               --  The length must be a multiple of 4.
+               exit when Length = 0 or (Length mod 4) /= 0;
+               Options.Www := Packet.Get_Ip;
+               if Length > 4 then
+                  --  Still more IPv4 addresses, ignore them.
+                  Packet.Skip (Net.Uint16 (Length - 4));
+               end if;
+
             when OPT_MTU_SIZE =>
                exit when Length /= 2;
                Options.Mtu := Ip_Length (Packet.Get_Uint16);

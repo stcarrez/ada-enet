@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-Ipv4 -- IPv4 Network protocol
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016, 2017, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,11 +42,15 @@ package Net.Protos.IPv4 is
    procedure Send_Raw (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                        Target_Ip : in Ip_Addr;
                        Packet    : in out Net.Buffers.Buffer_Type;
-                       Status    : out Error_Code);
+                       Status    : out Error_Code) with
+     Pre => not Packet.Is_Null,
+     Post => Packet.Is_Null;
 
    procedure Send (Ifnet     : in out Net.Interfaces.Ifnet_Type'Class;
                    Target_Ip : in Ip_Addr;
                    Packet    : in out Net.Buffers.Buffer_Type;
-                   Status    : out Error_Code);
+                   Status    : out Error_Code) with
+     Pre => not Packet.Is_Null,
+     Post => Packet.Is_Null;
 
 end Net.Protos.IPv4;

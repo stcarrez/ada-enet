@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-dhcp -- DHCP client
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016, 2017, 2018 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -223,7 +223,9 @@ package Net.DHCP is
    --  Update the UDP header for the packet and send it.
    overriding
    procedure Send (Request : in out Client;
-                   Packet  : in out Net.Buffers.Buffer_Type);
+                   Packet  : in out Net.Buffers.Buffer_Type) with
+     Pre => not Packet.Is_Null,
+     Post => Packet.Is_Null;
 
 private
 

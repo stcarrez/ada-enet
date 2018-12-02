@@ -584,6 +584,7 @@ PACKAGE_URL=
 ac_unique_file="Makefile.in"
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+DRIVERS_PATH
 BOARD_RUNTIME
 BOARD_SUBDIR
 BOARD_PROJECT
@@ -649,6 +650,7 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 with_board
+with_ada_drivers
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1276,6 +1278,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-board=NAME       Define the board to be used
+  --with-ada-drivers=PATH Define the path for Ada Drivers Library
 
 Report bugs to the package provider.
 _ACEOF
@@ -1863,9 +1866,6 @@ ANET_VERSION=$ANET_MAJOR_VERSION.$ANET_MINOR_VERSION.$ANET_MICRO_VERSION
 EXEC_PREFIX="$prefix"
 
 
-awa_build_root=
-awa_xmlada_name=
-awa_aws_name=
 
 # Check whether --with-board was given.
 if test "${with_board+set}" = set; then :
@@ -1875,6 +1875,19 @@ if test "${with_board+set}" = set; then :
 else
 
     anet_board=stm32f746
+
+fi
+
+
+
+# Check whether --with-ada-drivers was given.
+if test "${with_ada_drivers+set}" = set; then :
+  withval=$with_ada_drivers;
+    DRIVERS_PATH=${withval}
+
+else
+
+    DRIVERS_PATH=Ada_Drivers_Library
 
 fi
 
@@ -1913,6 +1926,7 @@ stm32f769
 " "$LINENO" 5
     ;;
 esac
+
 
 
 

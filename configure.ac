@@ -1,4 +1,4 @@
-dnl Autoconf configure script for AWA
+dnl Autoconf configure script for Ada Embedded Network
 
 AC_INIT(Makefile.in)
 
@@ -20,9 +20,6 @@ AC_SUBST(ANET_MICRO_VERSION)
 EXEC_PREFIX="$prefix"
 AC_SUBST(EXEC_PREFIX)
 
-awa_build_root=
-awa_xmlada_name=
-awa_aws_name=
 AC_ARG_WITH(board,
   AS_HELP_STRING([--with-board=NAME], [Define the board to be used]),
   [
@@ -30,6 +27,15 @@ AC_ARG_WITH(board,
   ],
   [
     anet_board=stm32f746
+  ])
+
+AC_ARG_WITH(ada-drivers,
+  AS_HELP_STRING([--with-ada-drivers=PATH], [Define the path for Ada Drivers Library]),
+  [
+    DRIVERS_PATH=${withval}
+  ],
+  [
+    DRIVERS_PATH=Ada_Drivers_Library
   ])
 
 case ${anet_board} in
@@ -72,6 +78,7 @@ AC_SUBST(BOARD_DIR)
 AC_SUBST(BOARD_PROJECT)
 AC_SUBST(BOARD_SUBDIR)
 AC_SUBST(BOARD_RUNTIME)
+AC_SUBST(DRIVERS_PATH)
 
 AC_OUTPUT(
 Makefile ping.gpr dns.gpr time.gpr echo.gpr anet_stm32fxxx.gpr

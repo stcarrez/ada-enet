@@ -1,4 +1,4 @@
-with "Ada_Drivers_Library/boards/@BOARD_SUBDIR@/@BOARD_PROJECT@";
+with "@DRIVERS_PATH@/boards/@BOARD_SUBDIR@/@BOARD_PROJECT@";
 
 library project Anet_STM32FXXX  is
 

@@ -26,7 +26,7 @@ package Net.Protos is
    ETHERTYPE_IPv6 : constant Uint16 := 16#86DD#;
 
    type Receive_Handler is access
-     not null procedure (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                         Packet : in out Net.Buffers.Buffer_Type);
+     procedure (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
+                Packet : in out Net.Buffers.Buffer_Type);
 
 end Net.Protos;

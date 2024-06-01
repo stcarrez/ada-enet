@@ -11,3 +11,7 @@ ping.gpr
 dns.gpr
 time.gpr
 echo.gpr
+/obj/
+/lib/
+/alire/
+/config/

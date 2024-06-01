@@ -24,7 +24,7 @@ package body Net.Utils is
    Hex_String : constant String := "0123456789ABCDEF";
 
    --  Get a 32-bit random number.
-   function Random return Uint32 is separate;
+   function Default_Random return Uint32 is separate;
 
    function Hex (Value : in Uint8) return String is
       use Interfaces;
@@ -65,5 +65,10 @@ package body Net.Utils is
         & Hex (Mac (Mac'First + 4)) & ":"
         & Hex (Mac (Mac'First + 5));
    end To_String;
+
+   procedure Set_Random_Function (Value : Custom_Random_Function) is
+   begin
+      Random_Function := Value;
+   end Set_Random_Function;
 
 end Net.Utils;

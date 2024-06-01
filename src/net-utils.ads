@@ -26,4 +26,18 @@ package Net.Utils is
    --  Get a 32-bit random number.
    function Random return Uint32;
 
+   type Custom_Random_Function is not null access function return Uint32;
+
+   procedure Set_Random_Function (Value : Custom_Random_Function);
+   --  Provide alternative random number generation function.
+
+private
+
+   function Default_Random return Uint32;
+
+   Random_Function : Custom_Random_Function :=
+     Default_Random'Access;
+
+   function Random return Uint32 is (Random_Function.all);
+
 end Net.Utils;

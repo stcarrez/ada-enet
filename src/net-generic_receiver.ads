@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  receiver -- Ethernet Packet Receiver
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,28 @@
 --  See the License for the specific language governing permissions and
 --  limitations under the License.
 -----------------------------------------------------------------------
-with Demos;
-with Net.Generic_Receiver;
+with System;
 with Net.Interfaces;
 
-package Receiver is new Net.Generic_Receiver
- (Ifnet => Net.Interfaces.Ifnet_Type'Class (Demos.Ifnet));
+generic
+   Ifnet : in out Net.Interfaces.Ifnet_Type'Class;
+   Storage_Size : Positive := 16 * 1024;
+   Priority : System.Priority := System.Default_Priority;
+package Net.Generic_Receiver is
+
+   type Us_Time is new Natural;
+
+   --  Average, min and max time in microseconds taken to process a packet.
+   Avg_Receive_Time : Us_Time := 0 with Atomic;
+   Min_Receive_Time : Us_Time := 0 with Atomic;
+   Max_Receive_Time : Us_Time := 0 with Atomic;
+
+   --  Start the receiver loop.
+   procedure Start;
+
+   --  The task that waits for packets.
+   task Controller with
+     Storage_Size => Storage_Size,
+     Priority => Priority;
+
+end Net.Generic_Receiver;

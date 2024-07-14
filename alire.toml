@@ -1,6 +1,6 @@
 name = "enet"
 description = "Ada Embedded Network Stack"
-version = "0.1.0-dev"
+version = "1.0.0"
 
 authors = ["Stephane Carrez"]
 maintainers = ["Stephane Carrez <Stephane.Carrez@gmail.com>", "Max Reznik <reznikmm@gmail.com>"]

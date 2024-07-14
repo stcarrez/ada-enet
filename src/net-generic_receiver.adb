@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  receiver -- Ethernet Packet Receiver
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,15 +21,17 @@ with Net.Buffers;
 with Net.Protos.Arp;
 with Net.Protos.Dispatchers;
 with Net.Headers;
-with Demos;
-package body Receiver is
 
-   use type Net.Ip_Addr;
-   use type Net.Uint8;
-   use type Net.Uint16;
+package body Net.Generic_Receiver is
 
    Ready  : Ada.Synchronous_Task_Control.Suspension_Object;
    ONE_US : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Microseconds (1);
+
+   ETHERTYPE_ARP : constant Net.Uint16 :=
+     Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP);
+
+   ETHERTYPE_IP : constant Net.Uint16 :=
+     Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
 
    --  ------------------------------
    --  Start the receiver loop.
@@ -62,13 +64,13 @@ package body Receiver is
             Net.Buffers.Allocate (Packet);
          end if;
          if not Packet.Is_Null then
-            Demos.Ifnet.Receive (Packet);
+            Ifnet.Receive (Packet);
             Now := Ada.Real_Time.Clock;
             Ether := Packet.Ethernet;
-            if Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_ARP) then
-               Net.Protos.Arp.Receive (Demos.Ifnet, Packet);
-            elsif Ether.Ether_Type = Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP) then
-               Net.Protos.Dispatchers.Receive (Demos.Ifnet, Packet);
+            if Ether.Ether_Type = ETHERTYPE_ARP then
+               Net.Protos.Arp.Receive (Ifnet, Packet);
+            elsif Ether.Ether_Type = ETHERTYPE_IP then
+               Net.Protos.Dispatchers.Receive (Ifnet, Packet);
             end if;
 
             --  Compute the time taken to process the packet in microseconds.
@@ -90,4 +92,4 @@ package body Receiver is
       end loop;
    end Controller;
 
-end Receiver;
+end Net.Generic_Receiver;

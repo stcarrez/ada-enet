@@ -14,6 +14,17 @@ project Enet is
      external ("ENET_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
    for Library_Kind use Library_Type;
 
+   Excluded_Files := ();
+
+   case Enet_Config.Default_Random is
+      when "null" =>
+         Excluded_Files := Excluded_Files & ("net-uint32_randoms.ads");
+      when others =>
+         null;
+   end case;
+
+   for Excluded_Source_Files use Excluded_Files;
+
    package Compiler is
       for Default_Switches ("Ada") use Enet_Config.Ada_Compiler_Switches
         & ("-gnaty-I",  --  Turn off: check mode in

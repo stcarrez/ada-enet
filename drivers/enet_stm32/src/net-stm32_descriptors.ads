@@ -29,18 +29,23 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with System; use System;
+with System;
 
---  SCz 2016-09-27: this is a stripped down version of stm32-eth.adb where the TX/RX
---  ring initialization is removed as well as the interrupt handler with the Wait_Packet
---  operation.  The interrupt handler conflicts with the Net.Interfaces.STM32 driver.
---  I've just re-used the MII initialization as well as the Ethernet descriptor types.
-package STM32.Eth is
-   procedure Initialize_RMII;
-   --  Initialize the driver using RMII configuration.
+with Interfaces.STM32; use Interfaces.STM32;
 
-   procedure Read_MMI (Reg : UInt5; Val : out Unsigned_16);
-   --  Read an MMI register.
+with Interfaces;
+
+--  SCz 2016-09-27: this is a stripped down version of stm32-eth.adb where
+--  the TX/RX ring initialization is removed as well as the interrupt handler
+--  with the Wait_Packet operation. The interrupt handler conflicts with the
+--  Net.Interfaces.STM32 driver. I've just re-used the MII initialization as
+--  well as the Ethernet descriptor types.
+
+package Net.STM32_Descriptors is
+
+   subtype Uint32 is Interfaces.STM32.UInt32;
+
+   type UInt8_Array is array (Positive range <>) of Interfaces.Unsigned_8;
 
    type TDES0_Type is record
       Own        : Bit;
@@ -119,12 +124,12 @@ package STM32.Eth is
    type Tx_Desc_Type is record
       Tdes0 : TDES0_Type;
       Tdes1 : TDES1_Type;
-      Tdes2 : Address;
-      Tdes3 : Address;
-      Tdes4 : UInt32;
-      Tdes5 : UInt32;
-      Tdes6 : UInt32;
-      Tdes7 : UInt32;
+      Tdes2 : System.Address;
+      Tdes3 : System.Address;
+      Tdes4 : Uint32;
+      Tdes5 : Uint32;
+      Tdes6 : Uint32;
+      Tdes7 : Uint32;
    end record;
 
    for Tx_Desc_Type use record
@@ -231,12 +236,12 @@ package STM32.Eth is
    type Rx_Desc_Type is record
       Rdes0 : Rdes0_Type;
       Rdes1 : Rdes1_Type;
-      Rdes2 : UInt32;
-      Rdes3 : UInt32;
+      Rdes2 : Uint32;
+      Rdes3 : Uint32;
       Rdes4 : Rdes4_Type;
-      Rdes5 : UInt32;
-      Rdes6 : UInt32;
-      Rdes7 : UInt32;
+      Rdes5 : Uint32;
+      Rdes6 : Uint32;
+      Rdes7 : Uint32;
    end record;
 
    for Rx_Desc_Type use record
@@ -246,4 +251,4 @@ package STM32.Eth is
       Rdes3 at 12 range 0 .. 31;
    end record;
 
-end STM32.Eth;
+end Net.STM32_Descriptors;

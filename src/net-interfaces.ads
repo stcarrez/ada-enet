@@ -42,9 +42,6 @@ package Net.Interfaces is
       Tx_Stats : Stats_Type;
    end record;
 
-   --  Initialize the network interface.
-   procedure Initialize (Ifnet : in out Ifnet_Type) is abstract;
-
    --  Send a packet to the interface.
    procedure Send (Ifnet : in out Ifnet_Type;
                    Buf   : in out Net.Buffers.Buffer_Type) is abstract

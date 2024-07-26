@@ -156,7 +156,12 @@ package body Demos is
       --  Setup some receive buffers and initialize the Ethernet driver.
       Net.Buffers.Add_Region (STM32.SDRAM.Reserve (Amount => HAL.UInt32 (NET_BUFFER_SIZE)),
                               NET_BUFFER_SIZE);
-      Ifnet.Initialize;
+
+      Ifnet.Configure
+        (Pins => Net.STM32_Interfaces.STM32F42X_Pins,
+         RMII => True);
+
+      Ifnet.Configure (Net.STM32_Interfaces.STM32F42X_Pins);
       Receiver.Start;
 
       --  Initialize the DHCP client.

@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-interfaces-stm32 -- Ethernet driver for STM32F74x
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,30 +16,42 @@
 --  limitations under the License.
 -----------------------------------------------------------------------
 
-with System;
+pragma Style_Checks (Off);
+pragma Ada_2022;
+
 with Ada.Interrupts.Names;
+with Ada.Real_Time;
 with Ada.Unchecked_Conversion;
 
-with STM32.SDRAM;
-with STM32.Eth; use STM32;
-with STM32_SVD.Ethernet;
+with Interfaces.STM32.GPIO;
+with Interfaces.STM32.RCC;
+with Interfaces.STM32.SYSCFG;
+use Interfaces.STM32;
 
-with HAL;
+with Enet_Stm32_Config;
+with Net.STM32_Descriptors;
+
 with Cortex_M.Cache;
-package body Net.Interfaces.STM32 is
+package body Net.STM32_Interfaces is
+   use Net.STM32_Descriptors;
 
-   use HAL;
-   use STM32_SVD.Ethernet;
+   Ethernet_MAC_Periph : Net.STM32_SVD.Ethernet.Ethernet_MAC_Peripheral renames
+     Net.STM32_SVD.Ethernet.Ethernet_MAC_Periph;
+
+   Ethernet_DMA_Periph : Net.STM32_SVD.Ethernet.Ethernet_DMA_Peripheral renames
+     Net.STM32_SVD.Ethernet.Ethernet_DMA_Periph;
+
+   procedure Configure_Pin (Pin : Net.STM32_Interfaces.Pin);
 
    function W is new Ada.Unchecked_Conversion
-     (System.Address, HAL.UInt32);
+     (System.Address, Standard.Interfaces.STM32.Uint32);
 
-   type Tx_Position is new Uint32 range 0 .. TX_RING_SIZE;
-   type Rx_Position is new Uint32 range 0 .. RX_RING_SIZE;
+   type Tx_Position is new Uint32 range 0 .. Enet_Stm32_Config.TX_Ring_Size;
+   type Rx_Position is new Uint32 range 0 .. Enet_Stm32_Config.RX_Ring_Size;
 
    type Tx_Ring is limited record
       Buffer : Net.Buffers.Buffer_Type;
-      Desc   : Eth.Tx_Desc_Type;
+      Desc   : Net.STM32_Descriptors.Tx_Desc_Type;
    end record;
    type Tx_Ring_Access is access all Tx_Ring;
 
@@ -48,17 +60,25 @@ package body Net.Interfaces.STM32 is
 
    type Rx_Ring is limited record
       Buffer : Net.Buffers.Buffer_Type;
-      Desc   : Eth.Rx_Desc_Type;
+      Desc   : Net.STM32_Descriptors.Rx_Desc_Type;
    end record;
    type Rx_Ring_Access is access all Rx_Ring;
 
    type Rx_Ring_Array_Type is array (Rx_Position) of aliased Rx_Ring;
    type Rx_Ring_Array_Type_Access is access all Rx_Ring_Array_Type;
 
-   function As_Rx_Ring_Array_Type_Access is
-     new Ada.Unchecked_Conversion (System.Address, Rx_Ring_Array_Type_Access);
-
    Tx_Ring_Instance : aliased Tx_Ring_Array_Type;
+   Rx_Ring_Instance : aliased Rx_Ring_Array_Type;
+
+   Total_Buffers : constant Positive :=
+     Enet_Stm32_Config.Extra_Buffers +
+     Enet_Stm32_Config.TX_Ring_Size +
+     Enet_Stm32_Config.RX_Ring_Size;
+
+   NET_BUFFER_SIZE : constant Positive :=
+     Positive (Net.Buffers.NET_ALLOC_SIZE) * Total_Buffers;
+
+   Buffer_Memory : UInt8_Array (1 .. NET_BUFFER_SIZE);
 
    function Next_Tx (Value : in Tx_Position) return Tx_Position;
    function Next_Rx (Value : in Rx_Position) return Rx_Position;
@@ -157,20 +177,14 @@ package body Net.Interfaces.STM32 is
    --  ------------------------------
    --  Initialize the network interface.
    --  ------------------------------
-   overriding
    procedure Initialize (Ifnet : in out STM32_Ifnet) is
       pragma Unreferenced (Ifnet);
 
-      Size : constant Uint32 := Rx_Ring_Array_Type'Length * Buffers.NET_ALLOC_SIZE;
-      Addr : System.Address;
       List : Net.Buffers.Buffer_List;
    begin
-      Eth.Initialize_RMII;
-
-      --  Allocate Rx buffers.
-      Addr := SDRAM.Reserve (Amount => HAL.UInt32 (Size));
-      Net.Buffers.Add_Region (Addr => Addr,
-                              Size => Size);
+      --  Allocate buffers.
+      Net.Buffers.Add_Region (Addr => Buffer_Memory'Address,
+                              Size => Buffer_Memory'Length);
 
       --  Get the Rx buffers for the receive ring creation.
       Net.Buffers.Allocate (List, Rx_Ring_Array_Type'Length);
@@ -313,10 +327,8 @@ package body Net.Interfaces.STM32 is
       end Receive_Interrupt;
 
       procedure Initialize (List : in out Net.Buffers.Buffer_List) is
-         Addr : System.Address;
       begin
-         Addr := SDRAM.Reserve (Amount => Rx_Ring_Array_Type'Size / 8);
-         Rx_Ring := As_Rx_Ring_Array_Type_Access (Addr);
+         Rx_Ring := Rx_Ring_Instance'Access;
 
          --  Setup the RX ring and allocate buffer for each descriptor.
          for I in Rx_Ring'Range loop
@@ -441,4 +453,227 @@ package body Net.Interfaces.STM32 is
 
    end Receive_Queue;
 
-end Net.Interfaces.STM32;
+   ---------------
+   -- Configure --
+   ---------------
+
+   procedure Configure
+     (Ifnet : in out STM32_Ifnet'Class;
+      Pins  : Pin_Array;
+      RMII  : Boolean := True;
+      HCLK  : System.STM32.Frequency := System.STM32.System_Clocks.HCLK)
+   is
+      RCC_Periph : Standard.Interfaces.STM32.RCC.RCC_Peripheral renames
+        Standard.Interfaces.STM32.RCC.RCC_Periph;
+   begin
+      --  Disable clocks
+      RCC_Periph.AHB1ENR.ETHMACEN := 0;
+      RCC_Periph.AHB1ENR.ETHMACTXEN := 0;
+      RCC_Periph.AHB1ENR.ETHMACRXEN := 0;
+      RCC_Periph.AHB1ENR.ETHMACPTPEN := 0;
+      RCC_Periph.APB2ENR.SYSCFGEN := 1;
+
+      --  Select RMII (before enabling the clocks)
+      Standard.Interfaces.STM32.SYSCFG.SYSCFG_Periph.PMC.MII_RMII_SEL :=
+        Boolean'Pos (RMII);
+
+      Ifnet.MDIO.Configure (Pins, HCLK);
+
+      --  Enable clocks
+      --  RCC_Periph.AHB1ENR.ETHMACEN := 1;
+      RCC_Periph.AHB1ENR.ETHMACTXEN := 1;
+      RCC_Periph.AHB1ENR.ETHMACRXEN := 1;
+      RCC_Periph.AHB1ENR.ETHMACPTPEN := 1;
+
+      --  Reset
+      RCC_Periph.AHB1RSTR.ETHMACRST := 1;
+      RCC_Periph.AHB1RSTR.ETHMACRST := 0;
+
+      --  Software reset. This hangs if there is no CLK_REF signal
+      Ethernet_DMA_Periph.DMABMR.SR := True;
+      while Ethernet_DMA_Periph.DMABMR.SR loop
+         null;
+      end loop;
+
+      Ifnet.Initialize;
+   end Configure;
+
+   ------------------------
+   -- Configure_GPIO_Pin --
+   ------------------------
+
+   procedure Configure_GPIO_Pin
+     (Port : in out Standard.Interfaces.STM32.GPIO.GPIO_Peripheral;
+      Pin  : Pin_Index)
+   is
+      AF : constant := 11;  --  Alternate Function: Eth
+   begin
+      Port.MODER.Arr (Pin) := 2;  --  AF
+      Port.PUPDR.Arr (Pin) := 0;  --  Floating
+      Port.OTYPER.OT.Arr (Pin) := 0; --  Open drain: no
+      Port.OSPEEDR.Arr (Pin) := 3; --  Very high speed
+
+      if Pin in Port.AFRL.Arr'Range then
+         Port.AFRL.Arr (Pin) := AF;
+      else
+         Port.AFRH.Arr (Pin) := AF;
+      end if;
+   end Configure_GPIO_Pin;
+
+   -------------------
+   -- Configure_Pin --
+   -------------------
+
+   procedure Configure_Pin (Pin : Net.STM32_Interfaces.Pin) is
+      RCC_Periph : RCC.RCC_Peripheral renames RCC.RCC_Periph;
+   begin
+      case Pin.Port is
+         when 'A' =>
+            RCC_Periph.AHB1ENR.GPIOAEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOA_Periph, Pin.Index);
+         when 'B' =>
+            RCC_Periph.AHB1ENR.GPIOBEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOB_Periph, Pin.Index);
+         when 'C' =>
+            RCC_Periph.AHB1ENR.GPIOCEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOC_Periph, Pin.Index);
+         when 'D' =>
+            RCC_Periph.AHB1ENR.GPIODEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOD_Periph, Pin.Index);
+         when 'E' =>
+            RCC_Periph.AHB1ENR.GPIOEEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOE_Periph, Pin.Index);
+         when 'F' =>
+            RCC_Periph.AHB1ENR.GPIOFEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOF_Periph, Pin.Index);
+         when 'G' =>
+            RCC_Periph.AHB1ENR.GPIOGEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOG_Periph, Pin.Index);
+         when 'H' =>
+            RCC_Periph.AHB1ENR.GPIOHEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOH_Periph, Pin.Index);
+         when 'I' =>
+            RCC_Periph.AHB1ENR.GPIOIEN := 1;
+            Configure_GPIO_Pin (GPIO.GPIOI_Periph, Pin.Index);
+      end case;
+   end Configure_Pin;
+
+   ---------------
+   -- Configure --
+   ---------------
+
+   procedure Configure
+     (Self : in out STM32_MDIO_Interface'Class;
+      Pins : Pin_Array;
+      HCLK : System.STM32.Frequency := System.STM32.System_Clocks.HCLK) is
+   begin
+      for Pin of Pins loop
+         Configure_Pin (Pin);
+      end loop;
+
+      Self.Set_Clock_Frequency (HCLK);
+
+      RCC.RCC_Periph.AHB1ENR.ETHMACEN := 1;  --  Enable ETH MAC
+   end Configure;
+
+   -------------------------
+   -- Set_Clock_Frequency --
+   -------------------------
+
+   procedure Set_Clock_Frequency
+     (Self : in out STM32_MDIO_Interface'Class;
+      HCLK : System.STM32.Frequency := System.STM32.System_Clocks.HCLK) is
+   begin
+      Self.CR :=
+        (case HCLK is
+            when  60e6 .. 100e6 - 1 => 2#000#,   --  AHB clock / 42
+            when 100e6 .. 150e6 - 1 => 2#001#,   --  AHB clock / 62
+            when  20e6 ..  35e6 - 1 => 2#010#,   --  AHB clock / 16
+            when  35e6 ..  60e6 - 1 => 2#011#,   --  AHB clock / 26
+            when 150e6 .. 180e6 - 1 => 2#100#,   --  AHB clock / 102
+            when others => raise Program_Error);
+   end Set_Clock_Frequency;
+
+   -------------------
+   -- Read_Register --
+   -------------------
+
+   overriding
+   procedure Read_Register
+     (Self     : in out STM32_MDIO_Interface;
+      PHY      : Ethernet.MDIO.PHY_Index;
+      Register : Ethernet.MDIO.Register_Index;
+      Value    : out Standard.Interfaces.Unsigned_16;
+      Success  : out Boolean)
+   is
+      use type Ada.Real_Time.Time;
+
+      Eth : Net.STM32_SVD.Ethernet.Ethernet_MAC_Peripheral renames
+        Ethernet_MAC_Periph;
+
+   begin
+      Eth.MACMIIAR :=
+        (PA => Ethernet.MDIO.PHY_Index'Pos (PHY),  --  PHY address
+         MR => Ethernet.MDIO.Register_Index'Pos (Register),  --  MII register
+         CR => Self.CR,
+         MB => True,  --  MII busy
+         MW => False,  --  MII write
+         others => <>);
+
+      delay until Ada.Real_Time.Clock + Ada.Real_Time.Microseconds (25);
+      --  64 pulses at 2.5MHz takes 25.6 us
+
+      for J in 1 .. 10_000 loop
+         if not Eth.MACMIIAR.MB then
+            Value := Standard.Interfaces.Unsigned_16 (Eth.MACMIIDR.TD);
+            Success := True;
+            return;
+         end if;
+      end loop;
+
+      Value := 0;
+      Success := False;
+   end Read_Register;
+
+   --------------------
+   -- Write_Register --
+   --------------------
+
+   overriding
+   procedure Write_Register
+     (Self     : in out STM32_MDIO_Interface;
+      PHY      : Ethernet.MDIO.PHY_Index;
+      Register : Ethernet.MDIO.Register_Index;
+      Value    : Standard.Interfaces.Unsigned_16;
+      Success  : out Boolean)
+   is
+      use type Ada.Real_Time.Time;
+
+      Eth : Net.STM32_SVD.Ethernet.Ethernet_MAC_Peripheral renames
+        Ethernet_MAC_Periph;
+
+   begin
+      Eth.MACMIIDR.TD := Net.STM32_SVD.Ethernet.MACMIIDR_TD_Field (Value);
+
+      Eth.MACMIIAR :=
+        (PA => Ethernet.MDIO.PHY_Index'Pos (PHY),  --  PHY address
+         MR => Ethernet.MDIO.Register_Index'Pos (Register),  --  MII register
+         CR => Self.CR,
+         MB => True,  --  MII busy
+         MW => True,  --  MII write
+         others => <>);
+
+      delay until Ada.Real_Time.Clock + Ada.Real_Time.Microseconds (25);
+      --  64 pulses at 2.5MHz takes 25.6 us
+
+      for J in 1 .. 10_000 loop
+         if not Eth.MACMIIAR.MB then
+            Success := True;
+            return;
+         end if;
+      end loop;
+
+      Success := False;
+   end Write_Register;
+
+end Net.STM32_Interfaces;

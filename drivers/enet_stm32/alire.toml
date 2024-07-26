@@ -17,7 +17,11 @@ TX_Ring_Size  = {type = "Integer", first = 0, last = 1024, default = 8}
 RX_Ring_Size  = {type = "Integer", first = 0, last = 1024, default = 8}
 Extra_Buffers = {type = "Integer", first = 0, last = 1024, default = 8}
 
+[[actions]]
+type = "test"
+command = ["alr", "-C", "../../demos/ping_text_io", "build"]
+
 [[depends-on]]
-enet = "1.0.0"
-cortex_m = "~0.5.0 | ~0.6.0-dev"
+enet = "^1.0.0"
+cortex_m = "~0.5"
 ethernet = "^1.0.0"

@@ -13,7 +13,7 @@ jobs:
     - name: Build project
       run: |
         alr build
-        # alr -C drivers/enet_stm32 build
+        alr -C demos/ping_text_io build
 
   Make:
     runs-on: ubuntu-latest

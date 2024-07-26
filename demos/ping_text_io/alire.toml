@@ -1,0 +1,28 @@
+name = "ping_text_io"
+description = "Simple demo for stm32 driver without ADL"
+version = "0.1.0-dev"
+
+authors = ["Max Reznik"]
+maintainers = ["Max Reznik <reznikmm@gmail.com>"]
+maintainers-logins = ["reznikmm"]
+licenses = "Apache-2.0"
+
+executables = ["ping_text_io"]
+
+[configuration.values]
+enet_stm32.Extra_Buffers = 8
+enet_stm32.TX_Ring_Size = 8
+enet_stm32.RX_Ring_Size = 8
+#enet.Default_Random = "null"
+cortex_m.core = "m4f"
+
+[build-profiles]
+"*" = "development"
+
+[[depends-on]]
+enet = "*"
+enet_stm32 = "*"
+
+[[pins]]
+enet = { path='../..' }
+enet_stm32 = { path='../../drivers/enet_stm32' }

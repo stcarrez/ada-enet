@@ -1,0 +1,31 @@
+name: Build with Alire
+
+on: [push, pull_request]
+
+jobs:
+  Alire:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: alire-project/setup-alire@v3
+    - name: Build project
+      run: alr build
+
+  Make:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: alire-project/setup-alire@v3
+      with:
+        toolchain: gnat_arm_elf gprbuild
+    - name: Set PATH
+      run: |
+        for item in $HOME/.local/share/alire/toolchains/* ; do
+          echo "$item/bin" >> $GITHUB_PATH
+        done
+    - name: Do configure and make
+      run: |
+        ./configure --with-board=stm32f746
+        make checkout
+        git -C Ada_Drivers_Library checkout master
+        make ping echo dns

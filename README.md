@@ -1,5 +1,7 @@
 # Ada Embedded Network Stack
 
+[![Alire](https://img.shields.io/endpoint?url=https://alire.ada.dev/badges/enet.json)](https://alire.ada.dev/crates/enet.html)
+[![Build with Alire](https://github.com/stcarrez/ada-enet/actions/workflows/alire.yml/badge.svg)](https://github.com/stcarrez/ada-enet/actions/workflows/alire.yml)
 [![Build Status](https://img.shields.io/jenkins/s/http/jenkins.vacs.fr/Ada-Enet.svg)](http://jenkins.vacs.fr/job/Ada-Enet/)
 [![License](http://img.shields.io/badge/license-APACHE2-blue.svg)](LICENSE)
 

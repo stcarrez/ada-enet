@@ -21,8 +21,7 @@ with STM32.Board;
 with HAL.Bitmap;
 with Net;
 with Net.Buffers;
-with Net.Interfaces;
-with Net.Interfaces.STM32;
+with Net.STM32_Interfaces;
 with Net.DHCP;
 package Demos is
 
@@ -32,7 +31,7 @@ package Demos is
    NET_BUFFER_SIZE : constant Net.Uint32 := Net.Buffers.NET_ALLOC_SIZE * 256;
 
    --  The Ethernet interface driver.
-   Ifnet     : aliased Net.Interfaces.STM32.STM32_Ifnet;
+   Ifnet     : aliased Net.STM32_Interfaces.STM32_Ifnet;
 
    --  The DHCP client used by the demos.
    Dhcp      : aliased Net.DHCP.Client;

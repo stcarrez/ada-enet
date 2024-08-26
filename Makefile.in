@@ -39,7 +39,8 @@ flash-dns:		dns
 	st-flash write dns.bin 0x8000000
 
 checkout:
-	git submodule update --init --recursive
+	git clone https://github.com/AdaCore/Ada_Drivers_Library.git
+	git clone https://github.com/reznikmm/ethernet.git
 
 clean:
 	rm -rf obj ping.bin echo.bin dns.bin time.bin

@@ -8,8 +8,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - uses: alire-project/setup-alire@v3
+      with:
+        toolchain: gnat_arm_elf gnat_native gprbuild
     - name: Build project
-      run: alr build
+      run: |
+        alr build
+        alr -C demos/ping_text_io build
 
   Make:
     runs-on: ubuntu-latest

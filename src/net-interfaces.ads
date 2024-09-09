@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-interfaces -- Network interface
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,10 @@ package Net.Interfaces is
        Post'Class => not Buf.Is_Null;
 
    --  Check if the IP address is in the same subnet as the interface IP address.
-   function Is_Local_Network (Ifnet : in Ifnet_Type;
+   function Is_Local_Network (Ifnet : in Ifnet_Type'Class;
                               Ip    : in Ip_Addr) return Boolean;
 
+   --  Check if the IP address is a broadcast IP address.
+   function Is_Broadcast (Ifnet : in Ifnet_Type'Class;
+                          Ip    : in Ip_Addr) return Boolean;
 end Net.Interfaces;

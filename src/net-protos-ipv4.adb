@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-Ipv4 -- IPv4 Network protocol
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,10 @@ package body Net.Protos.IPv4 is
    begin
       Ether.Ether_Shost := Ifnet.Mac;
       Ether.Ether_Type  := Net.Headers.To_Network (Net.Protos.ETHERTYPE_IP);
-      if Ifnet.Is_Local_Network (Target_Ip) then
+      if Ifnet.Is_Broadcast (Target_Ip) then
+         Ether.Ether_Dhost := Broadcast_Mac;
+         Arp_Status := Net.Protos.Arp.ARP_FOUND;
+      elsif Ifnet.Is_Local_Network (Target_Ip) then
          Net.Protos.Arp.Resolve (Ifnet, Target_Ip, Ether.Ether_Dhost, Packet, Arp_Status);
       elsif Ifnet.Gateway /= (0, 0, 0, 0) then
          Net.Protos.Arp.Resolve (Ifnet, Ifnet.Gateway, Ether.Ether_Dhost, Packet, Arp_Status);

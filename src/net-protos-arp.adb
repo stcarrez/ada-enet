@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net-protos-arp -- ARP Network protocol
---  Copyright (C) 2016 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,8 +21,6 @@ with Net.Headers;
 package body Net.Protos.Arp is
 
    use type Ada.Real_Time.Time;
-
-   Broadcast_Mac : constant Ether_Addr := (others => 16#ff#);
 
    Arp_Retry_Timeout       : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (1);
    Arp_Entry_Timeout       : constant Ada.Real_Time.Time_Span := Ada.Real_Time.Seconds (30);

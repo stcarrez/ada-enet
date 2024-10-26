@@ -1,6 +1,6 @@
 -----------------------------------------------------------------------
 --  net -- Network stack
---  Copyright (C) 2016, 2017 Stephane Carrez
+--  Copyright (C) 2016-2024 Stephane Carrez
 --  Written by Stephane Carrez (Stephane.Carrez@gmail.com)
 --
 --  Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,6 +46,8 @@ package Net is
 
    --  Ethernet address representation.
    type Ether_Addr is array (1 .. 6) of Uint8;
+
+   Broadcast_Mac : constant Ether_Addr := (others => 16#ff#);
 
    --  The error code returned by some opeartions.
    type Error_Code is (EOK,         --  No error.

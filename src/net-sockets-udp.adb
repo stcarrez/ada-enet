@@ -35,6 +35,30 @@ package body Net.Sockets.Udp is
       Endpoint.Listen.Addr := Ifnet.Ip;
    end Bind;
 
+   procedure Unbind (Endpoint : access Socket'Class) is
+   begin
+      --  Delete socked from List
+      if List = Endpoint then
+         List := Endpoint.Next;
+      else
+         declare
+            Next : access Socket'Class := List;
+         begin
+            while Next /= null loop
+               if Next.Next = Endpoint then
+                  Next.Next := Endpoint.Next;
+                  Next := null;
+               else
+                  Next := Next.Next;
+               end if;
+            end loop;
+         end;
+      end if;
+
+      Endpoint.Ifnet := null;
+      Endpoint.Next := null;
+   end Unbind;
+
    procedure Send (Endpoint : in out Socket;
                    To       : in Sockaddr_In;
                    Packet   : in out Net.Buffers.Buffer_Type;

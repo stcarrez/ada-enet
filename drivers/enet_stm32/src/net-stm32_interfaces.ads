@@ -91,7 +91,7 @@ package Net.STM32_Interfaces is
    --  MDIO (AKA Station management interface, SMI)
    type STM32_MDIO_Interface is new Ethernet.MDIO.MDIO_Interface with private;
 
-   --  Configure pins and enable (MDIO/SMI part of) MAC
+   --  Configure pins and enable only MDIO/SMI part of MAC
    procedure Configure
      (Self : in out STM32_MDIO_Interface'Class;
       Pins : Pin_Array;
@@ -127,13 +127,37 @@ package Net.STM32_Interfaces is
    end record;
 
    --  Reset and configure STM32 peripherals.
-   --  Corresponding PHY should be configured before call this if needed to
-   --  provide CLK_REF signal to STM32 chip.
+   --
+   --  If Wait=True, the procedure will reset the STM32 peripherals
+   --  and complete the configuration before returning. Ensure that the
+   --  corresponding PHY is configured beforehand to provide the CLK_REF
+   --  signal to the STM32 chip if needed.
+   --
+   --  If Wait=False, the procedure initiates the reset and returns
+   --  immediately. In this case, you must wait for the reset to complete
+   --  (using Is_Reset_Complete) and then call Enable to finalize the
+   --  configuration.
    procedure Configure
      (Ifnet : in out STM32_Ifnet'Class;
       Pins  : Pin_Array;
+      Wait  : Boolean := True;
       RMII  : Boolean := True;
       HCLK  : System.STM32.Frequency := System.STM32.System_Clocks.HCLK);
+
+   --  Check if reset is done and CLK_REF is detected
+   function Is_Reset_Complete (Ifnet : STM32_Ifnet'Class) return Boolean;
+
+   --  Enable the STM32 Ethernet device after it has been reset or disabled.
+   procedure Enable (Ifnet : in out STM32_Ifnet'Class)
+     with Pre => Ifnet.Is_Reset_Complete;
+
+   --  Disable the STM32 Ethernet device. To re-enable it, call Reset followed
+   --  by Enable.
+   procedure Disable (Ifnet : in out STM32_Ifnet'Class);
+
+   --  Perform a software reset of the STM32 MAC subsystem, clearing
+   --  all internal registers and logic.
+   procedure Reset (Ifnet : in out STM32_Ifnet'Class);
 
    --  Send a packet to the interface.
    overriding

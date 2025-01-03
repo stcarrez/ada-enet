@@ -107,6 +107,7 @@ package body Net.STM32_Interfaces is
       procedure Transmit_Interrupt;
 
       procedure Initialize;
+      procedure Restart;
 
       --  Check if the transmit queue is initialized.
       function Is_Ready return Boolean;
@@ -125,6 +126,7 @@ package body Net.STM32_Interfaces is
       entry Wait_Packet (Buf : in out Net.Buffers.Buffer_Type);
 
       procedure Initialize (List : in out Net.Buffers.Buffer_List);
+      procedure Restart;
 
       procedure Receive_Interrupt;
       procedure Interrupt
@@ -269,8 +271,14 @@ package body Net.STM32_Interfaces is
          end loop;
          Tx_Space := Tx_Ring'Length;
          Tx_Ready := True;
-         Cur_Tx   := 0;
-         Dma_Tx   := 0;
+
+         Restart;
+      end Initialize;
+
+      procedure Restart is
+      begin
+         Cur_Tx   := Tx_Ring'First;
+         Dma_Tx   := Cur_Tx;
          Ethernet_DMA_Periph.DMATDLAR := W (Tx_Ring (Tx_Ring'First).Desc'Address);
 
          Ethernet_MAC_Periph.MACCR.TE := True;
@@ -280,7 +288,7 @@ package body Net.STM32_Interfaces is
          --  Use Store-and-forward mode for the TCP/UDP/ICMP/IP checksum offload calculation.
          Ethernet_DMA_Periph.DMAOMR.TSF := True;
          Ethernet_DMA_Periph.DMAOMR.SR := True;
-      end Initialize;
+      end Restart;
 
       --  ------------------------------
       --  Check if the transmit queue is initialized.
@@ -355,6 +363,14 @@ package body Net.STM32_Interfaces is
                Rx_Ring (I).Desc.Rdes3 := W (System.Null_Address);
             end if;
          end loop;
+
+         Restart;
+      end Initialize;
+
+      procedure Restart is
+      begin
+         Cur_Rx := Rx_Ring'First;
+         Dma_Rx := Cur_Rx;
          Ethernet_DMA_Periph.DMARDLAR := W (Rx_Ring (Rx_Ring'First).Desc'Address);
 
          --  Ethernet Ethernet_MAC_Periph initialization comes from AdaCore stm32-eth.adb.
@@ -426,7 +442,8 @@ package body Net.STM32_Interfaces is
 
          --  Start receiver.
          Ethernet_DMA_Periph.DMARPDR := 1;
-      end Initialize;
+      end Restart;
+
 
       procedure Interrupt is
       begin
@@ -453,34 +470,36 @@ package body Net.STM32_Interfaces is
 
    end Receive_Queue;
 
-   ---------------
-   -- Configure --
-   ---------------
+   procedure Disable (Ifnet : in out STM32_Ifnet'Class) is
+      pragma Unreferenced (Ifnet);
 
-   procedure Configure
-     (Ifnet : in out STM32_Ifnet'Class;
-      Pins  : Pin_Array;
-      RMII  : Boolean := True;
-      HCLK  : System.STM32.Frequency := System.STM32.System_Clocks.HCLK)
-   is
       RCC_Periph : Standard.Interfaces.STM32.RCC.RCC_Peripheral renames
         Standard.Interfaces.STM32.RCC.RCC_Periph;
    begin
-      --  Disable clocks
+      RCC_Periph.APB2ENR.SYSCFGEN := 1;
+
+      Ethernet_DMA_Periph.DMAOMR.SR := False;
+      Ethernet_DMA_Periph.DMAIER.RIE := False;
+      Ethernet_DMA_Periph.DMAIER.NISE := False;
+      Ethernet_MAC_Periph.MACCR.RE := False;
+
+      Ethernet_DMA_Periph.DMAIER.TIE := False;
+      Ethernet_DMA_Periph.DMAIER.TBUIE := False;
+      Ethernet_MAC_Periph.MACCR.TE := False;
+
       RCC_Periph.AHB1ENR.ETHMACEN := 0;
       RCC_Periph.AHB1ENR.ETHMACTXEN := 0;
       RCC_Periph.AHB1ENR.ETHMACRXEN := 0;
       RCC_Periph.AHB1ENR.ETHMACPTPEN := 0;
-      RCC_Periph.APB2ENR.SYSCFGEN := 1;
+   end Disable;
 
-      --  Select RMII (before enabling the clocks)
-      Standard.Interfaces.STM32.SYSCFG.SYSCFG_Periph.PMC.MII_RMII_SEL :=
-        Boolean'Pos (RMII);
+   procedure Reset (Ifnet : in out STM32_Ifnet'Class) is
+      pragma Unreferenced (Ifnet);
 
-      Ifnet.MDIO.Configure (Pins, HCLK);
-
-      --  Enable clocks
-      --  RCC_Periph.AHB1ENR.ETHMACEN := 1;
+      RCC_Periph : Standard.Interfaces.STM32.RCC.RCC_Peripheral renames
+        Standard.Interfaces.STM32.RCC.RCC_Periph;
+   begin
+      RCC_Periph.AHB1ENR.ETHMACEN := 1;
       RCC_Periph.AHB1ENR.ETHMACTXEN := 1;
       RCC_Periph.AHB1ENR.ETHMACRXEN := 1;
       RCC_Periph.AHB1ENR.ETHMACPTPEN := 1;
@@ -491,11 +510,70 @@ package body Net.STM32_Interfaces is
 
       --  Software reset. This hangs if there is no CLK_REF signal
       Ethernet_DMA_Periph.DMABMR.SR := True;
-      while Ethernet_DMA_Periph.DMABMR.SR loop
-         null;
-      end loop;
+   end Reset;
 
-      Ifnet.Initialize;
+   function Is_Reset_Complete (Ifnet : STM32_Ifnet'Class) return Boolean is
+      pragma Unreferenced (Ifnet);
+   begin
+      return not Ethernet_DMA_Periph.DMABMR.SR;
+   end Is_Reset_Complete;
+
+   procedure Enable (Ifnet : in out STM32_Ifnet'Class) is
+      pragma Unreferenced (Ifnet);
+   begin
+      if Receive_Queue.Is_Ready then
+         Receive_Queue.Restart;
+         Transmit_Queue.Restart;
+      else
+         declare
+            List : Net.Buffers.Buffer_List;
+         begin
+            --  Allocate buffers.
+            Net.Buffers.Add_Region
+              (Addr => Buffer_Memory'Address,
+               Size => Buffer_Memory'Length);
+
+            --  Get the Rx buffers for the receive ring creation.
+            Net.Buffers.Allocate (List, Rx_Ring_Array_Type'Length);
+            Receive_Queue.Initialize (List);
+
+            --  Setup the transmit ring (there is no buffer to allocate
+            --  because we have nothing to send).
+            Transmit_Queue.Initialize;
+         end;
+      end if;
+   end Enable;
+
+   ---------------
+   -- Configure --
+   ---------------
+
+   procedure Configure
+     (Ifnet : in out STM32_Ifnet'Class;
+      Pins  : Pin_Array;
+      Wait  : Boolean := True;
+      RMII  : Boolean := True;
+      HCLK  : System.STM32.Frequency := System.STM32.System_Clocks.HCLK) is
+   begin
+      --  Disable clocks
+      Ifnet.Disable;
+
+      --  Select RMII (before enabling the clocks)
+      Standard.Interfaces.STM32.SYSCFG.SYSCFG_Periph.PMC.MII_RMII_SEL :=
+        Boolean'Pos (RMII);
+
+      Ifnet.MDIO.Configure (Pins, HCLK);
+
+      --  Enable clocks and reset
+      Ifnet.Reset;
+
+      if Wait then
+         while not Ifnet.Is_Reset_Complete loop
+            null;
+         end loop;
+
+         Ifnet.Enable;
+      end if;
    end Configure;
 
    ------------------------

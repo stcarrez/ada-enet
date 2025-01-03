@@ -25,6 +25,8 @@ package Net.Sockets.Udp is
                    Ifnet    : access Net.Interfaces.Ifnet_Type'Class;
                    Addr     : in Sockaddr_In);
 
+   procedure Unbind (Endpoint : access Socket'Class);
+
    --  Send the UDP packet to the destination IP and port.
    procedure Send (Endpoint : in out Socket;
                    To       : in Sockaddr_In;

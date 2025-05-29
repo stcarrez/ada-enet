@@ -219,7 +219,7 @@ package body Net.STM32_Interfaces is
 
          Ethernet_DMA_Periph.DMAOMR.ST := True;
          if Ethernet_DMA_Periph.DMASR.TBUS then
-            Ethernet_DMA_Periph.DMASR.TBUS := True;
+            Ethernet_DMA_Periph.DMASR := (TBUS => True, others => <>);
          end if;
          if Ethernet_DMA_Periph.DMASR.TPS = 6 then
             Ethernet_DMA_Periph.DMAOMR.ST := False;
@@ -448,16 +448,16 @@ package body Net.STM32_Interfaces is
       procedure Interrupt is
       begin
          if Ethernet_DMA_Periph.DMASR.RS then
-            Ethernet_DMA_Periph.DMASR.RS := True;
+            Ethernet_DMA_Periph.DMASR := (RS => True, others => <>);
             Receive_Queue.Receive_Interrupt;
          end if;
          if Ethernet_DMA_Periph.DMASR.TS then
-            Ethernet_DMA_Periph.DMASR.TS := True;
+            Ethernet_DMA_Periph.DMASR := (TS => True, others => <>);
             Transmit_Queue.Transmit_Interrupt;
          elsif Ethernet_DMA_Periph.DMASR.TBUS then
-            Ethernet_DMA_Periph.DMASR.TBUS := True;
+            Ethernet_DMA_Periph.DMASR := (TBUS => True, others => <>);
          end if;
-         Ethernet_DMA_Periph.DMASR.NIS := True;
+         Ethernet_DMA_Periph.DMASR := (NIS => True, others => <>);
       end Interrupt;
 
       --  ------------------------------

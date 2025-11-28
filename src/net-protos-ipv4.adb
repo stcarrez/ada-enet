@@ -52,7 +52,7 @@ package body Net.Protos.IPv4 is
             Ifnet.Send (Packet);
             Status := EOK;
 
-         when Net.Protos.Arp.ARP_PENDING | Net.Protos.Arp.ARP_NEEDED =>
+         when Net.Protos.Arp.ARP_PENDING =>
             Status := EINPROGRESS;
 
          when Net.Protos.Arp.ARP_UNREACHABLE | Net.Protos.Arp.ARP_QUEUE_FULL =>

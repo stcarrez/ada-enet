@@ -41,24 +41,22 @@ package body Net.Protos.Arp is
    --  The maximum number of packets which can be queued for each entry.
    QUEUE_ENTRY_LIMIT : constant Uint8 := 3;
 
-   ARP_MAX_RETRY : constant Positive := 15;
+   ARP_MAX_RETRY : constant Uint8 := 15;
 
 
    type Arp_Entry;
    type Arp_Entry_Access is access all Arp_Entry;
 
+   type Arp_Entry_State is (Free, Valid, Unreachable, Pending, Stale);
+
    type Arp_Entry is record
       Ether       : Ether_Addr;
       Expire      : Ada.Real_Time.Time;
       Queue       : Net.Buffers.Buffer_List;
-      Retry       : Natural := 0;
+      Retry       : Uint8 := 0;
       Index       : Arp_Index := Arp_Index'First;
       Queue_Size  : Uint8 := 0;
-      Valid       : Boolean := False;
-      Unreachable : Boolean := False;
-      Pending     : Boolean := False;
-      Stale       : Boolean := False;
-      Free        : Boolean := True;
+      State       : Arp_Entry_State := Free;
    end record;
 
    type Arp_Entry_Table is array (1 .. ARP_MAX_ENTRIES) of aliased Arp_Entry;
@@ -75,11 +73,12 @@ package body Net.Protos.Arp is
                          Refresh : out Arp_Refresh;
                          Count   : out Natural);
 
-      procedure Resolve (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                         Ip     : in Ip_Addr;
-                         Mac    : out Ether_Addr;
-                         Packet : in out Net.Buffers.Buffer_Type;
-                         Result : out Arp_Status);
+      procedure Resolve (Ifnet      : in out Net.Interfaces.Ifnet_Type'Class;
+                         Ip         : in Ip_Addr;
+                         Mac        : out Ether_Addr;
+                         Packet     : in out Net.Buffers.Buffer_Type;
+                         Result     : out Arp_Status;
+                         Arp_Needed : out Boolean);
 
       procedure Update (Ip   : in Ip_Addr;
                         Mac  : in Ether_Addr;
@@ -111,47 +110,47 @@ package body Net.Protos.Arp is
          Now       : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
          Count := 0;
-         for I in Entries'Range loop
-            if not Entries (I).Free and then Entries (I).Expire < Now then
-               if Entries (I).Valid then
-                  Entries (I).Valid := False;
-                  Entries (I).Stale := True;
-                  Entries (I).Expire := Now + Arp_Stale_Timeout;
+         for Item of Entries loop
+            if Item.State /= Free and then Item.Expire < Now then
+               if Item.State = Valid then
+                  Item.State := Stale;
+                  Item.Expire := Now + Arp_Stale_Timeout;
 
-               elsif Entries (I).Stale then
-                  Entries (I).Free := True;
-                  Table (Entries (I).Index) := null;
+               elsif Item.State = Stale then
+                  Item.State := Free;
+                  Table (Item.Index) := null;
 
-               elsif Entries (I).Retry > 5 then
-                  Entries (I).Unreachable := True;
-                  Entries (I).Expire := Now + Arp_Unreachable_Timeout;
-                  Entries (I).Retry := 0;
-                  Drop_Queue (Ifnet, Entries (I)'Access);
+               elsif Item.State = Pending and then Item.Retry > ARP_MAX_RETRY then
+                  Item.State := Unreachable;
+                  Item.Expire := Now + Arp_Unreachable_Timeout;
+                  Item.Retry := 0;
+                  Drop_Queue (Ifnet, Item'Access);
 
-               else
+               elsif Item.State = Pending then
                   Count := Count + 1;
-                  Refresh (Count) := Entries (I).Index;
-                  Entries (I).Retry := Entries (I).Retry + 1;
-                  Entries (I).Expire := Now + Arp_Retry_Timeout;
+                  Refresh (Count) := Item.Index;
+                  Item.Retry := Item.Retry + 1;
+                  Item.Expire := Now + Arp_Retry_Timeout;
                end if;
             end if;
          end loop;
       end Timeout;
 
-      procedure Resolve (Ifnet  : in out Net.Interfaces.Ifnet_Type'Class;
-                         Ip     : in Ip_Addr;
-                         Mac    : out Ether_Addr;
-                         Packet : in out Net.Buffers.Buffer_Type;
-                         Result : out Arp_Status) is
+      procedure Resolve (Ifnet      : in out Net.Interfaces.Ifnet_Type'Class;
+                         Ip         : in Ip_Addr;
+                         Mac        : out Ether_Addr;
+                         Packet     : in out Net.Buffers.Buffer_Type;
+                         Result     : out Arp_Status;
+                         Arp_Needed : out Boolean) is
          Index : constant Arp_Index := Ip (Ip'Last);
          Rt    : Arp_Entry_Access := Table (Index);
          Now   : constant Ada.Real_Time.Time := Ada.Real_Time.Clock;
       begin
+         Arp_Needed := False;
          if Rt = null then
             for I in Entries'Range loop
-               if Entries (I).Free then
+               if Entries (I).State = Free then
                   Rt := Entries (I)'Access;
-                  Rt.Free := False;
                   Rt.Index := Index;
                   Table (Index) := Rt;
                   exit;
@@ -162,39 +161,39 @@ package body Net.Protos.Arp is
                return;
             end if;
          end if;
-         if Rt.Valid and then Now < Rt.Expire then
+         if Rt.State = Valid and then Now < Rt.Expire then
             Mac := Rt.Ether;
             Result := ARP_FOUND;
 
-         elsif Rt.Unreachable and then Now < Rt.Expire then
+         elsif Rt.State = Unreachable and then Now < Rt.Expire then
             Result := ARP_UNREACHABLE;
 
             --  Send the first ARP request for the target IP resolution.
-         elsif not Rt.Pending then
-            Rt.Pending := True;
+         elsif Rt.State /= Pending then
+            Rt.State := Pending;
             Rt.Retry   := 1;
-            Rt.Stale   := False;
             Rt.Expire  := Now + Arp_Retry_Timeout;
-            Result := ARP_NEEDED;
+            Arp_Needed := True;
+            Result := ARP_PENDING;
 
          elsif Rt.Expire < Now then
             if Rt.Retry > ARP_MAX_RETRY then
-               Rt.Unreachable := True;
+               Rt.State := Unreachable;
                Rt.Expire := Now + Arp_Unreachable_Timeout;
-               Rt.Pending := False;
                Result := ARP_UNREACHABLE;
                Drop_Queue (Ifnet, Rt);
             else
                Rt.Retry := Rt.Retry + 1;
                Rt.Expire := Now + Arp_Retry_Timeout;
-               Result := ARP_NEEDED;
+               Arp_Needed := True;
+               Result := ARP_PENDING;
             end if;
          else
             Result := ARP_PENDING;
          end if;
 
          --  Queue the packet unless the queue is full.
-         if (Result = ARP_PENDING or Result = ARP_NEEDED) and then not Packet.Is_Null then
+         if Result = ARP_PENDING and then not Packet.Is_Null then
             if Queue_Size < QUEUE_LIMIT and Rt.Queue_Size < QUEUE_ENTRY_LIMIT then
                Queue_Size := Queue_Size + 1;
                Net.Buffers.Insert (Rt.Queue, Packet);
@@ -215,10 +214,7 @@ package body Net.Protos.Arp is
          --  the arp entry before we received any ARP response.
          if Rt /= null then
             Rt.Ether := Mac;
-            Rt.Valid := True;
-            Rt.Unreachable := False;
-            Rt.Pending := False;
-            Rt.Stale   := False;
+            Rt.State := Valid;
             Rt.Expire := Ada.Real_Time.Clock + Arp_Entry_Timeout;
 
             --  If we have some packets waiting for the ARP resolution, return the packet list.
@@ -259,9 +255,10 @@ package body Net.Protos.Arp is
                       Mac       : out Ether_Addr;
                       Packet    : in out Net.Buffers.Buffer_Type;
                       Status    : out Arp_Status) is
+      Arp_Needed : Boolean;
    begin
-      Database.Resolve (Ifnet, Target_Ip, Mac, Packet, Status);
-      if Status = ARP_NEEDED then
+      Database.Resolve (Ifnet, Target_Ip, Mac, Packet, Status, Arp_Needed);
+      if Arp_Needed then
          Request (Ifnet, Ifnet.Ip, Target_Ip, Ifnet.Mac);
       end if;
    end Resolve;

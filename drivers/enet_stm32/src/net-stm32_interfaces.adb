@@ -101,7 +101,7 @@ package body Net.STM32_Interfaces is
       end if;
    end Next_Tx;
 
-   protected Transmit_Queue with Priority => Net.Network_Priority is
+   protected Transmit_Queue with Interrupt_Priority => Net.Network_Priority is
       entry Send (Buf : in out Net.Buffers.Buffer_Type);
 
       procedure Transmit_Interrupt;
